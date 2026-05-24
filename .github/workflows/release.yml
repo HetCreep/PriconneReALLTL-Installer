@@ -1,0 +1,55 @@
+name: Build and Release Patcher Installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Release PriconneReTLInstaller
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+
+      - name: Restore NuGet Packages
+        run: nuget restore PriconneReTLInstaller.sln
+
+      - name: Build C# Solution
+        run: msbuild PriconneReTLInstaller.sln /p:Configuration=Release
+
+      - name: Package Release Assets
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ("${{ github.ref_type }}" -ne "tag") {
+              $tag = "v1.0.0"
+          }
+          # Create output directory
+          New-Item -ItemType Directory -Path dist -Force
+          # Copy compiled binary with tag suffix
+          Copy-Item PriconneReTLInstaller/bin/Release/PriconneReTLInstaller.exe dist/PriconneReTLInstaller-$tag.exe -Force
+          echo "VERSION=$tag" >> $env:GITHUB_ENV
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}
+          name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }} Release
+          generate_release_notes: true
+          files: |
+            dist/PriconneReTLInstaller-${{ env.VERSION }}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
