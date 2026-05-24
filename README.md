@@ -1,25 +1,28 @@
-# <img src="PriconneReTLInstaller/Resources/Item_Jewel_Art.ico"> PriconneReTL Installer
-An installer/updater GUI for the [PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) english patch.  
-Make installing, updating and removing the unofficial english patch for Princess Connect Re:Dive japanese version easier.
+# <img src="PriconneReTLInstaller/Resources/Item_Jewel_Art.ico"> PriconneReTL Installer — Multi-Account Launcher Edition
 
-Based on [PriconneTL_Updater](https://github.com/touanu/PriconeTL_Updater) by [touanu](https://github.com/touanu)
+An installer/updater GUI for the [PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) English patch, upgraded to natively support multi-account launching!
 
-## You can download the latest version here:  
-https://github.com/tynave/PriconneReTL-Installer/releases/latest
+This is a specialized, feature-rich fork of the original [tynave/PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) that integrates perfectly with the [Priconne Multi-Account Launcher](https://github.com/HetCreep/PriconneMultiAccountLauncher) to manage, update, and switch multiple Princess Connect accounts seamlessly on a single PC.
 
-## Wiki
-Refer to the [wiki](https://github.com/tynave/PriconneReTL-Installer/wiki) for more information on usage.
+---
 
-## Important notice for updating the translation patch after the latest annual Unity update  
-After the annual Unity engine update that happened in Apr. 2024, the translation patch framework received breaking changes, which requires to <ins>**do a full reinstallation of the translation patch when trying to update from the version 20240430a and earlier.**</ins>  
+## 🌟 Upgraded Features
 
-You can achieve this using this installer in the following way:  
+* **Native PriconneMultiLauncher Integration**: Automatically detects and coordinates with the [Priconne Multi-Account Launcher](https://github.com/HetCreep/PriconneMultiAccountLauncher) database.
+* **Multi-Shortcut ListBox UI**: A newly designed, interactive UI panel that lists all configured account shortcuts, allowing you to switch profiles instantly.
+* **Auto-Launch on Update Completion**: Optionally configures the patcher to automatically launch the game under the selected account profile as soon as the translation patch update completes.
+* **Clean Cloud Compilation**: Maintained with modern CI/CD compilation and completely clean of click-once signing telemetry.
 
-**Installer version 1.4.0 and earlier**  
-Select the "Reinstall" operation and select the "Remove Config Files" option.  
-Optionally you can select the "Remove Ignored Patch Files", but not necessary.  
-<img src="PriconneReTLInstaller/Resources/wiki/14reinstall.png">
+---
 
-**Installer version 1.5.0 or later**  
-Select the "Reinstall" operation. You do not have to select any extra options, but you can, if you prefer.  
-<img src="PriconneReTLInstaller/Resources/wiki/optionsenabled.png">
+## 💾 You can download the latest version here:  
+**[Download PriconneReTLInstaller Latest Release](https://github.com/HetCreep/PriconneReTL-Installer/releases/latest)**
+
+---
+
+## 🛠️ Credits & Attribution
+
+This project is a customized fork under the MIT License. Heartfelt thanks to the original creators and contributors who made this patcher possible:
+* Based on [PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) by [tynave](https://github.com/tynave)
+* Built upon [PriconneTL_Updater](https://github.com/touanu/PriconeTL_Updater) by [touanu](https://github.com/touanu)
+* English translation patch provided by [PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL)
