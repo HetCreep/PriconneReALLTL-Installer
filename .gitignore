@@ -3,6 +3,13 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# AI agent collaboration docs — local only, must NEVER be published to GitHub
+/CLAUDE.md
+/AGENTS.md
+/MEMORY.md
+# Bundled build tool — not source
+/nuget.exe
+
 # User-specific files
 *.rsuser
 *.suo
