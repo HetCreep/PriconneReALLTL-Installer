@@ -26,3 +26,9 @@ This project is a customized fork under the MIT License. Heartfelt thanks to the
 * Based on [PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) by [tynave](https://github.com/tynave)
 * Built upon [PriconneTL_Updater](https://github.com/touanu/PriconeTL_Updater) by [touanu](https://github.com/touanu)
 * English translation patch provided by [PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL)
+
+### 🤖 Built with AI Co-Engineers
+
+We proudly acknowledge the invaluable collaborative assistance of our agentic AI coding assistants who helped refactor, secure, and compile this installer:
+- **Claude Code** (Anthropic) - Assisted in core C# codebase migration and architectural cleanup.
+- **Antigravity** (Google DeepMind) - Assisted in multi-shortcut UI ListBox design, ClickOnce deactivation, and GitHub Actions cloud compilation.
