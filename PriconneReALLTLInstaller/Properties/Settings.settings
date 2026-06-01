@@ -22,7 +22,8 @@
     </Setting>
     <Setting Name="aboutText" Type="System.String" Scope="Application">
       <Value Profile="(Default)">
-Inspired by https://github.com/touanu/PriconeTL_Updater
+Multi-Account · ALL-TL (EN/TH) edition — fork by HetCreep
+Based on tynave/PriconneReTL-Installer · Inspired by touanu/PriconeTL_Updater
 
 All assets used in this application are properties of CyberAgent, Inc., Cygames, Inc. / their respective creators.</Value>
     </Setting>

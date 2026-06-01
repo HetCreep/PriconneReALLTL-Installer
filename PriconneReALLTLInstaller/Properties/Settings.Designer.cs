@@ -64,9 +64,10 @@ namespace PriconneReALLTLInstaller.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("\r\nInspired by https://github.com/touanu/PriconeTL_Updater\r\n\r\nAll assets used in t" +
-            "his application are properties of CyberAgent, Inc., Cygames, Inc. / their respec" +
-            "tive creators.")]
+        [global::System.Configuration.DefaultSettingValueAttribute("\r\nMulti-Account · ALL-TL (EN/TH) edition — fork by HetCreep\r\nBased on tynave/Pricon" +
+            "neReTL-Installer · Inspired by touanu/PriconeTL_Updater\r\n\r\nAll assets used in thi" +
+            "s application are properties of CyberAgent, Inc., Cygames, Inc. / their respectiv" +
+            "e creators.")]
         public string aboutText {
             get {
                 return ((string)(this["aboutText"]));

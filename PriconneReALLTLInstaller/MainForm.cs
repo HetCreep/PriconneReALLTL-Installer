@@ -507,7 +507,7 @@ namespace PriconneReALLTLInstaller
 
         private void aboutMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show($"[PriconneReTL Updater version: {String.Format(Application.ProductVersion)}]\n"
+            MessageBox.Show($"[PriconneReALLTL Installer version: {String.Format(Application.ProductVersion)}]\n"
             + Settings.Default.aboutText, "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
