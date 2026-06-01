@@ -302,8 +302,11 @@ namespace InstallerFunctions
                 // so a fetch failure is a soft warning — not a red error, and it no longer blocks
                 // operations. Common cause: GitHub rate limit / 403 without an API token.
                 HttpWebResponse resp = webEx.Response as HttpWebResponse;
+                bool rateLimited = resp != null && (int)resp.StatusCode == 403;
                 string detail = resp != null ? $"HTTP {(int)resp.StatusCode}" : webEx.Message;
-                Log?.Invoke($"Could not check latest modloader version ({detail}) — skipping (install still works; set a GitHub token to avoid rate limits).", "info", false);
+                Log?.Invoke(rateLimited
+                    ? "Modloader 'Latest' check skipped — GitHub rate limit (no token). This is HARMLESS: nothing is broken, the installed modloader is untouched and all operations work. Set a GitHub token (optional) to show the latest number."
+                    : $"Modloader 'Latest' check skipped ({detail}) — harmless; the installed modloader is unaffected and operations work.", "info", false);
                 return (null, null);
             }
             catch (Exception ex)
