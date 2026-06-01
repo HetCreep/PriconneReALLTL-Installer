@@ -427,8 +427,13 @@ namespace HelperFunctions
             // source's set loads. The DLLs themselves still ship via the patch/modloader.
             public System.Collections.Generic.IReadOnlyList<string> EnablePlugins { get; }
             public System.Collections.Generic.IReadOnlyList<string> DisablePlugins { get; }
+            // External plugin DLLs this source pulls from their OWN repos (not bundled in the
+            // patch zip). e.g. TH pulls PriconneALLTLFixup.dll from HetCreep/PriconneALLTLFixup.
+            // EN declares none — its fixups (PriconneSkillTLFixup/PriconneTLFixup) ship inside the
+            // ImaterialC patch. A repo with no release yet is skipped softly (wired ahead of release).
+            public System.Collections.Generic.IReadOnlyList<PluginDownload> PluginDownloads { get; }
             public PatchSource(string displayName, string shortName, string owner, string repo, string versionFileRelPath, string versionRegex,
-                string[] enablePlugins = null, string[] disablePlugins = null)
+                string[] enablePlugins = null, string[] disablePlugins = null, PluginDownload[] pluginDownloads = null)
             {
                 DisplayName = displayName;
                 ShortName = shortName;
@@ -438,9 +443,28 @@ namespace HelperFunctions
                 VersionRegex = versionRegex;
                 EnablePlugins = enablePlugins ?? new string[0];
                 DisablePlugins = disablePlugins ?? new string[0];
+                PluginDownloads = pluginDownloads ?? new PluginDownload[0];
             }
             public string ApiBase => $"https://api.github.com/repos/{Owner}/{Repo}";
             public string RawBase => $"https://raw.githubusercontent.com/{Owner}/{Repo}";
+            public string ReleasesPage => $"https://github.com/{Owner}/{Repo}/releases/latest";
+        }
+
+        /// <summary>An external plugin DLL a source fetches from its own GitHub release (separate
+        /// from the patch zip). The latest release's matching ".dll" asset is downloaded into
+        /// BepInEx/plugins. Used for plugins maintained in a standalone repo.</summary>
+        public sealed class PluginDownload
+        {
+            public string Owner { get; }
+            public string Repo { get; }
+            public string DllName { get; }
+            public PluginDownload(string owner, string repo, string dllName)
+            {
+                Owner = owner;
+                Repo = repo;
+                DllName = dllName;
+            }
+            public string ApiBase => $"https://api.github.com/repos/{Owner}/{Repo}";
             public string ReleasesPage => $"https://github.com/{Owner}/{Repo}/releases/latest";
         }
 
@@ -454,7 +478,8 @@ namespace HelperFunctions
                 new PatchSource("Thai  (PeterkleCG / PriconneTH)", "Thai", "PeterkleCG", "PriconneTH",
                     @"BepInEx\Translation\th\Text\Version.txt", @"v?\d+\.\d+(?:\.\d+)?",
                     enablePlugins: new[] { "PriconneALLTLFixup.dll" },
-                    disablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll" }),
+                    disablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll" },
+                    pluginDownloads: new[] { new PluginDownload("HetCreep", "PriconneALLTLFixup", "PriconneALLTLFixup.dll") }),
             };
 
         /// <summary>Currently selected translation patch source (falls back to index 0 / English).</summary>

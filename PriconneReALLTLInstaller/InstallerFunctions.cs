@@ -473,8 +473,10 @@ namespace InstallerFunctions
                 }
                 extractSuccess = true;
 
-                // Apply the selected source's plugin profile (.dll <-> .dll.bak) so only the
-                // active TL source's fixup plugins load (EN: Skill/TL fixups on, ALLTL off; TH: reverse).
+                // Pull any external plugin DLLs this source needs from their own repos (e.g. TH's
+                // PriconneALLTLFixup.dll from HetCreep/PriconneALLTLFixup), then toggle the
+                // .dll <-> .dll.bak profile so only the active TL source's fixup plugins load.
+                await DownloadSourcePlugins();
                 helper.ApplyPluginProfile(priconnePath);
             }
             catch (Exception ex)
@@ -499,6 +501,81 @@ namespace InstallerFunctions
             catch (Exception ex)
             {
                 ErrorLog?.Invoke("Error extracting file: " + ex.Message);
+            }
+        }
+
+        // Pull external plugin DLLs the selected source declares (PatchSource.PluginDownloads)
+        // from their own GitHub releases into BepInEx/plugins. For plugins NOT bundled in the
+        // patch zip (e.g. TH's PriconneALLTLFixup.dll). A repo with no release yet is skipped
+        // softly, so the wiring can land before the first release is published.
+        private async Task DownloadSourcePlugins()
+        {
+            Helper.PatchSource src = Helper.GetCurrentPatchSource();
+            if (src.PluginDownloads.Count == 0) return;
+
+            string pluginsDir = Path.Combine(priconnePath, "BepInEx", "plugins");
+            Directory.CreateDirectory(pluginsDir);
+
+            string gitHubToken = Helper.DecryptString(Settings.Default.GithubAPIKey);
+            (bool tokenvalid, _) = Helper.ValidateGitHubToken(gitHubToken);
+
+            foreach (Helper.PluginDownload pd in src.PluginDownloads)
+            {
+                try
+                {
+                    using (WebClient client = new WebClient())
+                    {
+                        client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
+                        if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
+
+                        string releaseJson = client.DownloadString(pd.ApiBase + "/releases/latest");
+                        JObject release = JObject.Parse(releaseJson);
+                        JArray assets = release["assets"] as JArray;
+
+                        string assetUrl = null;
+                        if (assets != null)
+                        {
+                            // Prefer the asset matching the expected DLL name, else the first .dll.
+                            foreach (JToken asset in assets)
+                            {
+                                if (string.Equals((string)asset["name"], pd.DllName, StringComparison.OrdinalIgnoreCase))
+                                { assetUrl = (string)asset["browser_download_url"]; break; }
+                            }
+                            if (assetUrl == null)
+                            {
+                                foreach (JToken asset in assets)
+                                {
+                                    string name = (string)asset["name"];
+                                    if (name != null && name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                                    { assetUrl = (string)asset["browser_download_url"]; break; }
+                                }
+                            }
+                        }
+
+                        if (assetUrl == null)
+                        {
+                            Log?.Invoke($"Latest {pd.Owner}/{pd.Repo} release has no .dll asset — skipping {pd.DllName}.", "info", false);
+                            continue;
+                        }
+
+                        string destPath = Path.Combine(pluginsDir, pd.DllName);
+                        Log?.Invoke($"Downloading plugin {pd.DllName} from {pd.Owner}/{pd.Repo}...", "add", true);
+                        await Task.Run(() => client.DownloadFile(assetUrl, destPath));
+                        Log?.Invoke($"Installed plugin {pd.DllName}.", "add", false);
+                    }
+                }
+                catch (WebException webEx)
+                {
+                    HttpWebResponse resp = webEx.Response as HttpWebResponse;
+                    if (resp != null && resp.StatusCode == HttpStatusCode.NotFound)
+                        Log?.Invoke($"{pd.Owner}/{pd.Repo} has no release yet — {pd.DllName} will be pulled once it's published.", "info", false);
+                    else
+                        Log?.Invoke($"Could not download {pd.DllName} ({(resp != null ? "HTTP " + (int)resp.StatusCode : webEx.Message)}).", "info", false);
+                }
+                catch (Exception ex)
+                {
+                    Log?.Invoke($"Could not download {pd.DllName}: {ex.Message}", "info", false);
+                }
             }
         }
         public async Task<string[]> ProcessTree(string priconnePath, string releaseTag)
