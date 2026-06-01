@@ -193,9 +193,9 @@ namespace PriconneReALLTLInstaller
 
             helper.LogFastLauncherShortcut();
 
-            launchCheckBox.Enabled = priconnePathValid;
-            launchCheckBox.Checked = Settings.Default.launchState;
-            operationsPanel.Height = launchCheckBox.Checked ? 184 : 154;
+            launchCheckBox.Checked = false;     // Arch B: in-GUI launch retired (patch-only); launching is via shortcuts
+            launchCheckBox.Visible = false;
+            operationsPanel.Height = 154;
             showLogCheckBox.Checked = Settings.Default.showLogChecked;
 
             (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(patchgithubAPI);
@@ -555,13 +555,9 @@ namespace PriconneReALLTLInstaller
 
         private void MainForm_Activated(object sender, EventArgs e)
         {
-            string launcherName = "DMMGamePlayer";
-            if (Settings.Default.selectedLauncher == 1) launcherName = "DMMGamePlayerFastLauncher";
-            else if (Settings.Default.selectedLauncher == 2) launcherName = "PriconneMultiAccountLauncher";
-            
-            currentLauncherLinkLabel.Text = "Launcher: " + launcherName;
+            // Arch B: this link now opens the "Launch Shortcuts" manager (wrap/restore).
+            currentLauncherLinkLabel.Text = "Manage launch shortcuts";
             checkForInstallerUpdatesToolStripMenuItem.Checked = Settings.Default.checkForInstallerUpdates;
-
         }
         private void MainForm_Shown(object sender, EventArgs e)
         {

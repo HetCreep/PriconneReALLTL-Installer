@@ -69,50 +69,21 @@ namespace PriconneReALLTLInstaller
         // ─── UI Initialization ────────────────────────────────────────────────────
         private void InitializeUI()
         {
-            helper.PopulateLauncherComboBox(launcherComboBox);
-            if (Settings.Default.selectedLauncher >= 0 && Settings.Default.selectedLauncher < launcherComboBox.Items.Count)
-                launcherComboBox.SelectedIndex = Settings.Default.selectedLauncher;
-            else
-                launcherComboBox.SelectedIndex = 0;
+            // Arch B: launcher selection is retired — launching is done by pressing a
+            // wrapped (or created) AutoUpdate shortcut. This page MANAGES those shortcuts.
+            setLauncherLabel.Visible = false;
+            launcherComboBox.Visible = false;
+            dmmfastlauncherLabel.Visible = false;
+
+            setFastlauncherLinkLabel.Text = "Wrap a launcher shortcut so it updates the patch, then launches the game:";
+            shortcutListLabel.Text = "Managed shortcuts (update + launch):";
         }
 
         private void UpdateUI()
         {
-            int selected = launcherComboBox.SelectedIndex;
-            bool needsLink = (selected == 1 || selected == 2);
-
-            // Label above shortcuts panel
-            if (selected == 1)
-                setFastlauncherLinkLabel.Text = "Set DMMGamePlayerFastLauncher shortcuts:";
-            else if (selected == 2)
-                setFastlauncherLinkLabel.Text = "Set PriconneMultiAccountLauncher shortcuts:";
-            else
-                setFastlauncherLinkLabel.Text = "No shortcut configuration needed:";
-
-            // Warning label
-            if (selected == 1 && !helper.IsFastLauncherInstalled())
-            {
-                dmmfastlauncherLabel.Text = "DMMGamePlayerFastLauncher not installed! Falling back to DMMGamePlayer!";
-                dmmfastlauncherLabel.Visible = true;
-                shortcutAddButton.Enabled = false;
-                shortcutRemoveButton.Enabled = false;
-            }
-            else if (selected == 2 && !helper.IsPriconneMultiLauncherInstalled())
-            {
-                dmmfastlauncherLabel.Text = "PriconneMultiAccountLauncher not installed! Falling back to DMMGamePlayer!";
-                dmmfastlauncherLabel.Visible = true;
-                shortcutAddButton.Enabled = false;
-                shortcutRemoveButton.Enabled = false;
-            }
-            else
-            {
-                dmmfastlauncherLabel.Visible = false;
-                shortcutAddButton.Enabled = needsLink;
-                shortcutRemoveButton.Enabled = needsLink && (shortcutListBox.SelectedIndex >= 0);
-            }
-
-            // Refresh list box
+            shortcutAddButton.Enabled = true;
             RefreshListBox();
+            shortcutRemoveButton.Enabled = shortcutListBox.Enabled && shortcutListBox.SelectedIndex >= 0;
         }
 
         private void RefreshListBox()
@@ -140,22 +111,28 @@ namespace PriconneReALLTLInstaller
             try
             {
                 openFileDialog1.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                openFileDialog1.Multiselect = true;   // allow picking multiple .lnk files at once
-                if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                openFileDialog1.Multiselect = true;
+                openFileDialog1.Filter = "Shortcuts (*.lnk)|*.lnk";
+                if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
+
+                var links = GetLinks();
+                int wrapped = 0;
+                foreach (string file in openFileDialog1.FileNames)
                 {
-                    var links = GetLinks();
-                    foreach (string file in openFileDialog1.FileNames)
+                    if (helper.WrapShortcut(file))
                     {
-                        if (!links.Contains(file))
-                            links.Add(file);
+                        if (!links.Contains(file)) links.Add(file);
+                        wrapped++;
                     }
-                    SaveLinks(links);
-                    UpdateUI();
                 }
+                SaveLinks(links);
+                UpdateUI();
+                if (wrapped > 0)
+                    MessageBox.Show($"Wrapped {wrapped} shortcut(s).\nPressing them now updates the TL patch, then launches the game.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Cannot add shortcut!\nException: {ex.Message}", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Cannot wrap shortcut!\nException: {ex.Message}", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -167,6 +144,8 @@ namespace PriconneReALLTLInstaller
             var links = GetLinks();
             if (idx < links.Count)
             {
+                string path = links[idx];
+                helper.RestoreShortcut(path);   // put the original launcher target back into the .lnk
                 links.RemoveAt(idx);
                 SaveLinks(links);
                 UpdateUI();
@@ -194,29 +173,16 @@ namespace PriconneReALLTLInstaller
             UpdateUI();
         }
 
-        private void launcherComboBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            Settings.Default.selectedLauncher = launcherComboBox.SelectedIndex;
-            Settings.Default.Save();
-            UpdateUI();
-        }
+        // Retired in Arch B (launcher-selection controls are hidden); kept as no-ops so the
+        // Designer's wired event handlers still resolve.
+        private void launcherComboBox_SelectedIndexChanged(object sender, EventArgs e) { }
 
         private void shortcutListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Enable Remove button only when a real item is selected
-            int selected = launcherComboBox.SelectedIndex;
-            bool needsLink = (selected == 1 || selected == 2);
-            shortcutRemoveButton.Enabled = needsLink
-                && shortcutListBox.Enabled
-                && (shortcutListBox.SelectedIndex >= 0);
+            shortcutRemoveButton.Enabled = shortcutListBox.Enabled && shortcutListBox.SelectedIndex >= 0;
         }
 
-        private void saveButton_Click(object sender, EventArgs e)
-        {
-            Settings.Default.selectedLauncher = launcherComboBox.SelectedIndex;
-            Settings.Default.Save();
-            MessageBox.Show($"Launcher set to: {launcherComboBox.SelectedItem}", "Launcher Set!", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
+        private void saveButton_Click(object sender, EventArgs e) { }
 
         private void saveButton_EnabledChanged(object sender, EventArgs e) { }
     }

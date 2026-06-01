@@ -35,6 +35,11 @@ namespace PriconneReALLTLInstaller
         private bool modLoaderOutdated;
         private string modLoaderTooltip;
         private string assetLink;
+        // Launch target for this AutoUpdate run, set by a wrapped/created shortcut via
+        // Program args. Null/empty => launch via the DMM Game Player URI (also the fallback).
+        private readonly string launchTarget;
+        private readonly string launchArgs;
+        private readonly string launchDir;
         public AutoUpdateForm()
         {
             InitializeComponent();
@@ -57,6 +62,13 @@ namespace PriconneReALLTLInstaller
             logger = new AutoUpdateLogger("ReTLAutoUpdater.log", statusLabel);
             logger.StartSession();
 
+        }
+
+        public AutoUpdateForm(string launchTarget, string launchArgs, string launchDir) : this()
+        {
+            this.launchTarget = launchTarget;
+            this.launchArgs = launchArgs;
+            this.launchDir = launchDir;
         }
         // Functions
         private void InitializeUI()
@@ -122,41 +134,29 @@ namespace PriconneReALLTLInstaller
         }
         private async void StartGame()
         {
-            bool result = false;
-
             try
             {
-                switch (Settings.Default.selectedLauncher)
+                // Arch B: launch the target this shortcut was bound to (the wrapped original
+                // launcher exe/.lnk). No target => vanilla DMM Game Player URI (also fallback).
+                if (string.IsNullOrEmpty(launchTarget))
                 {
-                    case 0:
-                        installer.StartDMMGamePlayer();
-                        break;
-                    case 1:
-                        result = installer.StartDMMFastLauncher();
-                        if (result == false)
-                        {
-                            MessageBox.Show("Cannot start game via DMMGamePlayerFastLauncher!\nCheck logs for more details.\nFalling back to DMMGamePlayer!", "Cannot launch via DMMGamePlayerFastLauncher", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            installer.StartDMMGamePlayer();
-                            break;
-                        }
-                        break;
-                    case 2:
-                        result = installer.StartPriconneMultiLauncher();
-                        if (result == false)
-                        {
-                            MessageBox.Show("Cannot start game via PriconneMultiAccountLauncher!\nCheck logs for more details.\nFalling back to DMMGamePlayer!", "Cannot launch via PriconneMultiAccountLauncher", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            installer.StartDMMGamePlayer();
-                            break;
-                        }
-                        break;
-                    default:
-                        break;
+                    installer.StartDMMGamePlayer();
                 }
-
-            }
-            catch (Exception)
-            {
-                throw;
+                else
+                {
+                    try
+                    {
+                        ProcessStartInfo startInfo = new ProcessStartInfo { FileName = launchTarget };
+                        if (!string.IsNullOrEmpty(launchArgs)) startInfo.Arguments = launchArgs;
+                        if (!string.IsNullOrEmpty(launchDir)) startInfo.WorkingDirectory = launchDir;
+                        Process.Start(startInfo);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Log($"Cannot launch target ({launchTarget}): {ex.Message}. Falling back to DMMGamePlayer.", "error", true);
+                        installer.StartDMMGamePlayer();
+                    }
+                }
             }
             finally
             {

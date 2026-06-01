@@ -475,6 +475,114 @@ namespace HelperFunctions
                 checkedListBox.SetItemChecked(i, true);
             }
         }
+        // ─── Launch-shortcut wrapping (Arch B) ────────────────────────────────────
+        // Pressing a wrapped shortcut runs an AutoUpdate (patch update) then launches the
+        // shortcut's ORIGINAL target. The original target/args/workdir are base64-encoded
+        // into the new Arguments so the wrap is self-contained + reversible.
+        private static string B64(string s) =>
+            string.IsNullOrEmpty(s) ? "" : Convert.ToBase64String(Encoding.UTF8.GetBytes(s));
+
+        private static string DecodeFlag(string[] parts, string flag)
+        {
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                if (parts[i] == flag)
+                {
+                    try { return Encoding.UTF8.GetString(Convert.FromBase64String(parts[i + 1])); }
+                    catch { return null; }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>True if the .lnk already routes through this installer (TargetPath == our exe).</summary>
+        public bool IsWrappedShortcut(string lnkPath)
+        {
+            try
+            {
+                if (!File.Exists(lnkPath)) return false;
+                var wsh = new IWshRuntimeLibrary.WshShell();
+                var sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+                string installerExe = Assembly.GetExecutingAssembly().Location;
+                return string.Equals(sc.TargetPath, installerExe, StringComparison.OrdinalIgnoreCase);
+            }
+            catch { return false; }
+        }
+
+        /// <summary>Rewrites an existing launcher .lnk to route through the installer
+        /// (update → launch original). Keeps the original icon. Idempotent.</summary>
+        public bool WrapShortcut(string lnkPath)
+        {
+            try
+            {
+                if (!File.Exists(lnkPath)) { ErrorLog?.Invoke($"Shortcut not found: {lnkPath}"); return false; }
+
+                string installerExe = Assembly.GetExecutingAssembly().Location;
+                string installerDir = Path.GetDirectoryName(installerExe);
+
+                var wsh = new IWshRuntimeLibrary.WshShell();
+                var sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+
+                if (string.Equals(sc.TargetPath, installerExe, StringComparison.OrdinalIgnoreCase))
+                {
+                    Log?.Invoke($"Shortcut already routes through the installer: {Path.GetFileName(lnkPath)}", "info", false);
+                    return true;
+                }
+
+                string origTarget = sc.TargetPath;
+                if (string.IsNullOrEmpty(origTarget)) { ErrorLog?.Invoke($"Shortcut has no target to wrap: {lnkPath}"); return false; }
+                string origArgs = sc.Arguments;
+                string origDir = sc.WorkingDirectory;
+
+                sc.TargetPath = installerExe;
+                sc.WorkingDirectory = installerDir;
+                sc.Arguments = $"autoupdate --launch {B64(origTarget)}"
+                             + (string.IsNullOrEmpty(origArgs) ? "" : $" --targs {B64(origArgs)}")
+                             + (string.IsNullOrEmpty(origDir) ? "" : $" --tdir {B64(origDir)}");
+                // IconLocation left untouched -> the shortcut still looks the same.
+                sc.Save();
+                Log?.Invoke($"Wrapped shortcut (update+launch): {Path.GetFileName(lnkPath)} → {Path.GetFileName(origTarget)}", "success", false);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ErrorLog?.Invoke($"Error wrapping shortcut: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>Reverses WrapShortcut using the base64 payload in the .lnk Arguments.</summary>
+        public bool RestoreShortcut(string lnkPath)
+        {
+            try
+            {
+                if (!File.Exists(lnkPath)) { ErrorLog?.Invoke($"Shortcut not found: {lnkPath}"); return false; }
+
+                var wsh = new IWshRuntimeLibrary.WshShell();
+                var sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+
+                string[] parts = (sc.Arguments ?? "").Split(' ');
+                string target = DecodeFlag(parts, "--launch");
+                if (string.IsNullOrEmpty(target))
+                {
+                    Log?.Invoke($"Not a wrapped shortcut (nothing to restore): {Path.GetFileName(lnkPath)}", "info", false);
+                    return false;
+                }
+                sc.TargetPath = target;
+                sc.Arguments = DecodeFlag(parts, "--targs") ?? "";
+                string dir = DecodeFlag(parts, "--tdir");
+                if (!string.IsNullOrEmpty(dir)) sc.WorkingDirectory = dir;
+                sc.Save();
+                Log?.Invoke($"Restored shortcut to its original launcher: {Path.GetFileName(lnkPath)}", "success", false);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ErrorLog?.Invoke($"Error restoring shortcut: {ex.Message}");
+                return false;
+            }
+        }
+
         public void CreateAutoUpdaterShortcut(string priconnePath)
         {
             DialogResult messageboxResult = MessageBox.Show("The AutoUpdater is a modified version of the PriconneReALLTL-Installer, which automatically performs an update and launches the game after with the selected launcher." +
