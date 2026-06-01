@@ -106,7 +106,7 @@ namespace PriconneReALLTLInstaller
                 toolTip.SetToolTip(modExPicture, modLoaderTooltip);
             }
 
-            newPatchPictureBox.Visible = (latestVersionValid && (localVersion == latestVersion)) ? false : true;
+            newPatchPictureBox.Visible = (latestVersionValid && (Helper.NormalizeVersion(localVersion) == Helper.NormalizeVersion(latestVersion))) ? false : true;
 
             progressPicture.Visible = false;
             progressLabel.Text = "";
@@ -260,7 +260,7 @@ namespace PriconneReALLTLInstaller
 
             if (priconnePathValid  && latestVersionValid && latestModLoaderVersion != null)
             {
-                int versioncompare = localVersion.CompareTo(latestVersion);
+                int versioncompare = Helper.NormalizeVersion(localVersion).CompareTo(Helper.NormalizeVersion(latestVersion));
 
                 if (versioncompare == 0)
                 {

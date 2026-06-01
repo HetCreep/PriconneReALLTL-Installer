@@ -241,7 +241,7 @@ namespace PriconneReALLTLInstaller
             localVersionLabel.Text = localVersion;
             localModloaderVersionLabel.Text = localModLoaderVersion;
 
-            versioncompare = localVersion.CompareTo(latestVersion);
+            versioncompare = Helper.NormalizeVersion(localVersion).CompareTo(Helper.NormalizeVersion(latestVersion));
             if ((!localVersionValid || versioncompare != 0) && priconnePathValid)
             {
                 installCheckBox.Enabled = true;
@@ -262,7 +262,7 @@ namespace PriconneReALLTLInstaller
                 toolTip.SetToolTip(modExPicture, modLoaderTooltip);
             }
 
-            newPatchPictureBox.Visible = localVersion == latestVersion ? false : true;
+            newPatchPictureBox.Visible = Helper.NormalizeVersion(localVersion) == Helper.NormalizeVersion(latestVersion) ? false : true;
 
             SetUninstallandReinstallCheckBox(localVersionValid);
             UpdateModeDescription();

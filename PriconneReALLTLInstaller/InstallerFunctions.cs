@@ -648,7 +648,7 @@ namespace InstallerFunctions
         public async void ProcessOperation(string assetLink, bool install, bool uninstall, bool reinstall, bool launch, bool removeConfig, CheckedListBox configListBox, bool removeIgnored)
         {
             string processName = null;
-            int versioncompare = localVersion.CompareTo(latestVersion);
+            int versioncompare = Helper.NormalizeVersion(localVersion).CompareTo(Helper.NormalizeVersion(latestVersion));
 
             StringCollection configFilesSelected = new StringCollection();
             StringCollection configFilesUnSelected = new StringCollection();

@@ -451,6 +451,13 @@ namespace HelperFunctions
             return PatchSources[idx];
         }
 
+        /// <summary>Canonicalizes a version/tag for comparison: trims and strips a leading
+        /// "v"/"V" so "V2.1.3", "v2.1.3" and "2.1.3" all compare equal. EN date strings
+        /// (e.g. "20260531") are unaffected. For comparison/display-matching ONLY — the raw
+        /// tag is still needed for GitHub API calls (git/ref/tags/{tag}).</summary>
+        public static string NormalizeVersion(string v) =>
+            string.IsNullOrEmpty(v) ? "" : v.Trim().TrimStart('v', 'V');
+
         public void PopulatePatchSourceComboBox(ComboBox comboBox)
         {
             comboBox.Items.Clear();
