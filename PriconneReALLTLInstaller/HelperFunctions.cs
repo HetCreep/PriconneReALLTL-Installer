@@ -412,11 +412,13 @@ namespace HelperFunctions
         public sealed class PatchSource
         {
             public string DisplayName { get; }
+            public string ShortName { get; }
             public string Owner { get; }
             public string Repo { get; }
-            public PatchSource(string displayName, string owner, string repo)
+            public PatchSource(string displayName, string shortName, string owner, string repo)
             {
                 DisplayName = displayName;
+                ShortName = shortName;
                 Owner = owner;
                 Repo = repo;
             }
@@ -428,8 +430,8 @@ namespace HelperFunctions
         public static readonly System.Collections.Generic.IReadOnlyList<PatchSource> PatchSources =
             new System.Collections.Generic.List<PatchSource>
             {
-                new PatchSource("English  (ImaterialC / PriconneRe-TL)", "ImaterialC", "PriconneRe-TL"),
-                new PatchSource("Thai  (PeterkleCG / PriconneTH)", "PeterkleCG", "PriconneTH"),
+                new PatchSource("English  (ImaterialC / PriconneRe-TL)", "English", "ImaterialC", "PriconneRe-TL"),
+                new PatchSource("Thai  (PeterkleCG / PriconneTH)", "Thai", "PeterkleCG", "PriconneTH"),
             };
 
         /// <summary>Currently selected translation patch source (falls back to index 0 / English).</summary>

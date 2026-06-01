@@ -320,6 +320,14 @@ namespace InstallerFunctions
             }
             catch (WebException webEx)
             {
+                // A missing release (HTTP 404) just means there is no installer update to
+                // fetch yet (e.g. a fresh fork before its first release) — treat it as
+                // "no update", not an error, so the main UI doesn't show a red ERROR.
+                if (webEx.Response is HttpWebResponse notFoundResp && notFoundResp.StatusCode == HttpStatusCode.NotFound)
+                {
+                    Log?.Invoke("No installer release found yet — skipping installer update check.", "info", false);
+                    return (null, null, null, false);
+                }
                 // Check if the response contains JSON data (which happens in case of API errors)
                 if (webEx.Response != null)
                 {

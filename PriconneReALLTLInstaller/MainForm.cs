@@ -610,7 +610,7 @@ namespace PriconneReALLTLInstaller
                 LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline,
                 LinkColor = System.Drawing.Color.Black,
                 VisitedLinkColor = System.Drawing.Color.Black,
-                Location = new System.Drawing.Point(350, 12),
+                Location = new System.Drawing.Point(122, 1),
                 Name = "patchSourceLinkLabel",
                 TabStop = true
             };
@@ -624,7 +624,7 @@ namespace PriconneReALLTLInstaller
         private void RefreshPatchSourceLabel()
         {
             if (patchSourceLinkLabel != null)
-                patchSourceLinkLabel.Text = "TL Source: " + Helper.GetCurrentPatchSource().DisplayName + "  ▾";
+                patchSourceLinkLabel.Text = "TL Source: " + Helper.GetCurrentPatchSource().ShortName + "  ▾";
         }
 
         private void patchSourceLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
