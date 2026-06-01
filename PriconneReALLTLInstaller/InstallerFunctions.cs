@@ -374,7 +374,7 @@ namespace InstallerFunctions
         // Local zip-download cache: the patch ships as one big (~330MB) bundled zip, so re-downloading
         // it on every reinstall is wasteful. We keep the last zip per source+version under TEMP and
         // reuse it until the release version changes (then the stale one is purged + replaced).
-        private static string ZipCacheDir => Path.Combine(Path.GetTempPath(), "PriconneReALLTLInstaller", "zipcache");
+        private static string ZipCacheDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PriconneReALLTLInstaller", "zipcache");
 
         private string GetCachedZipPath()
         {
