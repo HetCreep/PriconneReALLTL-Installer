@@ -458,6 +458,12 @@ namespace HelperFunctions
         public static string NormalizeVersion(string v) =>
             string.IsNullOrEmpty(v) ? "" : v.Trim().TrimStart('v', 'V');
 
+        /// <summary>The authoritative modloader source — ALWAYS ImaterialC (the main, widely-used
+        /// patch), regardless of the selected TL source. Its bundled BepInEx interop is the baseline
+        /// (a TL source like PeterkleCG may ship its own copy, but ImaterialC's is treated as canonical).</summary>
+        public static PatchSource ModloaderSource =>
+            PatchSources.FirstOrDefault(s => s.Owner == "ImaterialC") ?? PatchSources[0];
+
         public void PopulatePatchSourceComboBox(ComboBox comboBox)
         {
             comboBox.Items.Clear();

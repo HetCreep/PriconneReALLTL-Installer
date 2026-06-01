@@ -245,24 +245,27 @@ namespace InstallerFunctions
             (bool tokenvalid, _) = Helper.ValidateGitHubToken(gitHubToken);
             try
             {
-                if (latestVersion == null)
-                {
-                    ErrorLog?.Invoke("Error getting latest modeloader release: Cannot determine due to missing latest release version!");
-                    return (null, null);
-                }
+                // Modloader is authoritative from ImaterialC (the main, widely-used source),
+                // independent of the selected TL source. Fetch ImaterialC's own latest release
+                // and read its bundled BepInEx interop version.
+                Helper.PatchSource ml = Helper.ModloaderSource;
                 using (WebClient client = new WebClient())
                 {
                     client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
                     if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
-                    string refUrl = $"{Helper.GetCurrentPatchSource().ApiBase}/git/ref/tags/{latestVersion}";
+
+                    string mlReleaseResponse = client.DownloadString(ml.ApiBase + "/releases/latest");
+                    string mlTag = (string)JObject.Parse(mlReleaseResponse)["tag_name"];
+
+                    string refUrl = $"{ml.ApiBase}/git/ref/tags/{mlTag}";
                     string refResponse = client.DownloadString(refUrl);
                     dynamic responseJson = JObject.Parse(refResponse);
                     string commitSha = responseJson["object"]["sha"]?.ToString();
 
-                    string fileUrl = $"{Helper.GetCurrentPatchSource().RawBase}/{commitSha}/src/BepInEx/interop/version";
+                    string fileUrl = $"{ml.RawBase}/{commitSha}/src/BepInEx/interop/version";
                     string fileVersion = client.DownloadString(fileUrl);
 
-                    return (fileVersion, commitSha.Substring(0,7));
+                    return (fileVersion, commitSha.Substring(0, 7));
                 }
             }
             catch (WebException webEx)
