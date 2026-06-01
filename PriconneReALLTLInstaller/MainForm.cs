@@ -42,6 +42,7 @@ namespace PriconneReALLTLInstaller
         private CheckBox[] optionCheckboxes;
         private Button[] menuButtons;
         private System.Windows.Forms.LinkLabel patchSourceLinkLabel;
+        private System.Windows.Forms.CheckedListBox ignoredListBox;   // code-created detail list for "Remove Ignored Patch Files"
 
         public MainForm()
         {
@@ -192,6 +193,7 @@ namespace PriconneReALLTLInstaller
             FitAndCenter(602);   // base height includes the +22 "TL Source" line added by SetupPatchSourceSelector
 
             SetupPatchSourceSelector();
+            SetupIgnoredList();
 
             versionLinkLabel.Text = $"v{String.Format(Application.ProductVersion)}";
 
@@ -304,6 +306,12 @@ namespace PriconneReALLTLInstaller
                 {
                     logger.Log($"Modloader check failed!", "error", true);
                     logger.Log($"{modLoaderTooltip}", "error", false);
+                    // Per-source modloader fallback (warn + switch): the authoritative modloader is
+                    // ImaterialC's. If the selected source ships a stale one, point the user at the
+                    // lightweight fix — switch to English, Update, switch back — instead of forcing a
+                    // ~330MB engine re-download.
+                    if (Helper.GetCurrentPatchSource().Owner != Helper.ModloaderSource.Owner)
+                        logger.Log("This TL source's bundled modloader is behind ImaterialC's. Switch TL Source to English, run Update to install the current modloader, then switch back.", "info", false);
                 }
                 modExPicture.Visible = modLoaderOutdated;
                 toolTip.SetToolTip(modExPicture, modLoaderTooltip);
@@ -315,6 +323,7 @@ namespace PriconneReALLTLInstaller
             UpdateModeDescription();
 
             helper.PopulateConfigChecklistbox(configListBox);
+            if (ignoredListBox != null) helper.PopulateIgnoredChecklistbox(ignoredListBox);
 
             removeConfigCheckBox.Enabled = false;
             removeIgnoredCheckBox.Enabled = false;
@@ -462,10 +471,71 @@ namespace PriconneReALLTLInstaller
             operationToolTipPicture.Location = new Point(operationLabel.Right + 5, operationToolTipPicture.Top);
         }
 
+        private void SetupIgnoredList()
+        {
+            if (ignoredListBox != null) return;
+            ignoredListBox = new System.Windows.Forms.CheckedListBox
+            {
+                BackColor = configListBox.BackColor,
+                ForeColor = configListBox.ForeColor,
+                BorderStyle = configListBox.BorderStyle,
+                Font = configListBox.Font,
+                CheckOnClick = false,
+                Location = configListBox.Location,
+                Size = configListBox.Size,
+                Visible = false,
+                Name = "ignoredListBox"
+            };
+            // Display-only: "Remove Ignored Patch Files" removes every ignored entry, so this list
+            // just shows WHAT will be removed (items stay checked / can't be toggled off).
+            ignoredListBox.ItemCheck += (s, ev) =>
+            {
+                if (ev.NewValue == System.Windows.Forms.CheckState.Unchecked)
+                    ev.NewValue = System.Windows.Forms.CheckState.Checked;
+            };
+            optionsPanel.Controls.Add(ignoredListBox);
+            removeIgnoredCheckBox.CheckedChanged += removeIgnoredCheckBox_CheckedChanged;
+        }
+
+        // Shows the config and/or ignored detail lists in the Options panel, stacking both when
+        // both are selected so neither overflows the panel.
+        private void LayoutOptionLists()
+        {
+            bool showConfig = removeConfigCheckBox.Checked;
+            bool showIgnored = removeIgnoredCheckBox.Checked;
+            configListBox.Visible = showConfig;
+            if (ignoredListBox != null) ignoredListBox.Visible = showIgnored;
+
+            if (showConfig && showIgnored && ignoredListBox != null)
+            {
+                configListBox.SetBounds(15, 85, 290, 45);
+                ignoredListBox.SetBounds(15, 133, 290, 45);
+                optionsPanel.Height = 184;
+            }
+            else if (showConfig)
+            {
+                configListBox.SetBounds(15, 85, 290, 68);
+                optionsPanel.Height = 154;
+            }
+            else if (showIgnored && ignoredListBox != null)
+            {
+                ignoredListBox.SetBounds(15, 85, 290, 68);
+                optionsPanel.Height = 154;
+            }
+            else
+            {
+                optionsPanel.Height = 87;
+            }
+        }
+
         private void removeConfigCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            configListBox.Visible = removeConfigCheckBox.Checked;
-            optionsPanel.Height = removeConfigCheckBox.Checked ? 154 : 87;
+            LayoutOptionLists();
+        }
+
+        private void removeIgnoredCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            LayoutOptionLists();
         }
 
         private void OnProcessStart()

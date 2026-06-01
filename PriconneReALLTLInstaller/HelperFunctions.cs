@@ -621,6 +621,19 @@ namespace HelperFunctions
                 checkedListBox.SetItemChecked(i, true);
             }
         }
+        // Fills the "Remove Ignored Patch Files" detail list with the user's ignored paths
+        // (mirrors PopulateConfigChecklistbox). All checked = all will be removed.
+        public void PopulateIgnoredChecklistbox(CheckedListBox checkedListBox)
+        {
+            checkedListBox.Items.Clear();
+            if (Settings.Default.ignoreFiles != null)
+                checkedListBox.Items.AddRange(Settings.Default.ignoreFiles.Cast<object>().ToArray());
+
+            for (int i = 0; i < checkedListBox.Items.Count; i++)
+            {
+                checkedListBox.SetItemChecked(i, true);
+            }
+        }
         // ─── Launch-shortcut wrapping (Arch B) ────────────────────────────────────
         // Pressing a wrapped shortcut runs an AutoUpdate (patch update) then launches the
         // shortcut's ORIGINAL target. The original target/args/workdir are base64-encoded
