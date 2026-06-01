@@ -559,14 +559,17 @@ namespace HelperFunctions
         private sealed class CacheEntry { public string Val { get; set; } public DateTime Ts { get; set; } }
 
         /// <summary>Cached JSON value for key if fresh (&lt; TTL) and not bypassed; else null.</summary>
-        public static string GetCachedVersion(string key)
+        public static string GetCachedVersion(string key, bool allowStale = false)
         {
-            if (BypassVersionCache) return null;
+            // allowStale: ignore the TTL AND the bypass flag — used as a fallback when a live fetch
+            // fails (e.g. HTTP 403 rate-limit) so the app keeps showing the last known value tokenless
+            // instead of "N/A", even during a source-switch (which sets BypassVersionCache).
+            if (BypassVersionCache && !allowStale) return null;
             try
             {
                 var dict = JsonConvert.DeserializeObject<Dictionary<string, CacheEntry>>(Settings.Default.versionCacheJson ?? "");
                 if (dict != null && dict.TryGetValue(key, out var e) && e != null
-                    && (DateTime.UtcNow - e.Ts).TotalHours < VersionCacheTtlHours)
+                    && (allowStale || (DateTime.UtcNow - e.Ts).TotalHours < VersionCacheTtlHours))
                     return e.Val;
             }
             catch { }

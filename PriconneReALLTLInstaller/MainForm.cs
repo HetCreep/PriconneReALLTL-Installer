@@ -190,7 +190,7 @@ namespace PriconneReALLTLInstaller
             Icon = Resources.jewel;
             this.StartPosition = FormStartPosition.CenterScreen;
             optionsPanel.Height = 87;
-            FitAndCenter(602);   // base height includes the +22 "TL Source" line added by SetupPatchSourceSelector
+            FitAndCenter(610);   // base height includes the +30 "TL Source" line added by SetupPatchSourceSelector
 
             SetupPatchSourceSelector();
             SetupIgnoredList();
@@ -422,7 +422,7 @@ namespace PriconneReALLTLInstaller
 
                 if (checkBox == showLogCheckBox)
                 {
-                    FitAndCenter(checkBox.Checked ? 882 : 602);
+                    FitAndCenter(checkBox.Checked ? 890 : 610);
                     Settings.Default.showLogChecked = checkBox.Checked;
                 }
             }
@@ -508,9 +508,11 @@ namespace PriconneReALLTLInstaller
 
             if (showConfig && showIgnored && ignoredListBox != null)
             {
-                configListBox.SetBounds(15, 85, 290, 45);
-                ignoredListBox.SetBounds(15, 133, 290, 45);
-                optionsPanel.Height = 184;
+                // Stay within the proven box height (154) so neither list spills outside the panel;
+                // stack the two borderless lists contiguously so they read as one cohesive list.
+                configListBox.SetBounds(15, 85, 290, 33);
+                ignoredListBox.SetBounds(15, 118, 290, 33);
+                optionsPanel.Height = 154;
             }
             else if (showConfig)
             {
@@ -718,7 +720,7 @@ namespace PriconneReALLTLInstaller
 
             // Give "TL Source:" its own line between the panel title ("TL Patch Information")
             // and "TL Patch Versions:" — shift the existing version content down once.
-            const int shift = 22;
+            const int shift = 30;
             foreach (System.Windows.Forms.Control c in patchInfoPanel.Controls)
                 if (c != patchInfoLabel) c.Top += shift;
             patchInfoPanel.Height += shift;
@@ -738,7 +740,7 @@ namespace PriconneReALLTLInstaller
                 LinkBehavior = System.Windows.Forms.LinkBehavior.AlwaysUnderline,
                 LinkColor = System.Drawing.Color.MediumVioletRed,
                 VisitedLinkColor = System.Drawing.Color.MediumVioletRed,
-                Location = new System.Drawing.Point(8, patchInfoLabel.Bottom),
+                Location = new System.Drawing.Point(8, patchInfoLabel.Bottom + 3),
                 Name = "patchSourceLinkLabel",
                 TabStop = true
             };

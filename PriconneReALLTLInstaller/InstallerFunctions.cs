@@ -218,33 +218,23 @@ namespace InstallerFunctions
             }
             catch (WebException webEx)
             {
-                // Check if the response contains JSON data (which happens in case of API errors)
-                if (webEx.Response != null)
+                // GitHub error (often a 403 rate-limit without a token). Fall back to the last known
+                // cached value so the app keeps working tokenless after any prior success — even mid
+                // source-switch (allowStale ignores the bypass flag).
+                string stale = Helper.GetCachedVersion("patch:" + githubAPI, allowStale: true);
+                if (stale != null)
                 {
-                    using (var reader = new StreamReader(webEx.Response.GetResponseStream()))
-                    {
-                        string errorResponse = reader.ReadToEnd();
-                        try
-                        {
-                            dynamic errorJson = JsonConvert.DeserializeObject(errorResponse);
-                            string errorMessage = errorJson.message;
-                            ErrorLog?.Invoke("Error getting latest patch release: " + errorMessage);
-                        }
-                        catch (Exception innerEx)
-                        {
-                            ErrorLog?.Invoke("Error reading API error message: " + innerEx.Message);
-                        }
-                    }
+                    try { var cj = JObject.Parse(stale); Log?.Invoke("Using last known patch version (GitHub unavailable / rate-limited).", "info", false); return (latestVersion = (string)cj["v"], latestVersionValid = true, assetLink = (string)cj["a"]); }
+                    catch { }
                 }
-                else
-                {
-                    ErrorLog?.Invoke("Error getting latest patch release: " + webEx.Message);
-                }
+                HttpWebResponse resp = webEx.Response as HttpWebResponse;
+                string detail = resp != null ? $"HTTP {(int)resp.StatusCode}" : webEx.Message;
+                Log?.Invoke($"Could not check latest patch version ({detail}). Set a GitHub token to avoid rate limits.", "info", false);
                 return (latestVersion = null, latestVersionValid = false, null);
             }
             catch (Exception ex)
             {
-                ErrorLog?.Invoke("Error getting latest patch release: " + ex.Message);
+                Log?.Invoke("Could not check latest patch version: " + ex.Message, "info", false);
                 return (latestVersion = null, latestVersionValid = false, null);
             }
         }
@@ -288,6 +278,15 @@ namespace InstallerFunctions
             }
             catch (WebException webEx)
             {
+                // Fall back to the last known modloader version so a 403 rate-limit shows the cached
+                // value instead of "N/A" — works tokenless after any prior success, even mid
+                // source-switch (allowStale ignores the bypass flag).
+                string stale = Helper.GetCachedVersion("modloader", allowStale: true);
+                if (stale != null)
+                {
+                    try { var cj = JObject.Parse(stale); return ((string)cj["v"], (string)cj["s"]); }
+                    catch { }
+                }
                 // Modloader-latest is informational (the patch zip already bundles the modloader),
                 // so a fetch failure is a soft warning — not a red error, and it no longer blocks
                 // operations. Common cause: GitHub rate limit / 403 without an API token.
@@ -374,12 +373,56 @@ namespace InstallerFunctions
             }
         }
 
+        // Local zip-download cache: the patch ships as one big (~330MB) bundled zip, so re-downloading
+        // it on every reinstall is wasteful. We keep the last zip per source+version under TEMP and
+        // reuse it until the release version changes (then the stale one is purged + replaced).
+        private static string ZipCacheDir => Path.Combine(Path.GetTempPath(), "PriconneReALLTLInstaller", "zipcache");
+
+        private string GetCachedZipPath()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(latestVersion)) return null;
+                Helper.PatchSource src = Helper.GetCurrentPatchSource();
+                Directory.CreateDirectory(ZipCacheDir);
+                string ver = Helper.NormalizeVersion(latestVersion);
+                foreach (char ch in Path.GetInvalidFileNameChars()) ver = ver.Replace(ch, '_');
+                return Path.Combine(ZipCacheDir, $"{src.Owner}_{ver}.zip");
+            }
+            catch { return null; }
+        }
+
+        private void PurgeStaleCachedZips(string keepPath)
+        {
+            try
+            {
+                if (!Directory.Exists(ZipCacheDir)) return;
+                Helper.PatchSource src = Helper.GetCurrentPatchSource();
+                foreach (string f in Directory.GetFiles(ZipCacheDir, src.Owner + "_*.zip"))
+                    if (!string.Equals(f, keepPath, StringComparison.OrdinalIgnoreCase)) File.Delete(f);
+            }
+            catch { }
+        }
+
         public async Task DownloadPatchFiles(string assetLink, string fileToSave = null)
         {
             string gitHubToken = Helper.DecryptString(Settings.Default.GithubAPIKey);
             (bool tokenvalid, _) = Helper.ValidateGitHubToken(gitHubToken);
             try
             {
+                // Reuse the cached zip for this source+version if present (no re-download); otherwise
+                // purge stale versions and download into the cache. fileToSave != null bypasses caching.
+                string cachePath = (fileToSave == null) ? GetCachedZipPath() : null;
+                if (cachePath != null && File.Exists(cachePath))
+                {
+                    tempFile = cachePath;
+                    downloadSuccess = true;
+                    Log?.Invoke("Using the cached download (same version) — skipping re-download.", "info", true);
+                    return;
+                }
+                if (cachePath != null) PurgeStaleCachedZips(cachePath);
+                string target = cachePath ?? (fileToSave ?? tempFile);
+
                 Log?.Invoke("Downloading compressed files...", "info", true);
                 ProgressPictureChange?.Invoke(Resources.pecorun);
 
@@ -399,7 +442,7 @@ namespace InstallerFunctions
                         string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
 
                         using (var contentStream = await response.Content.ReadAsStreamAsync())
-                        using (var fileStream = new FileStream(fileToSave == null ? tempFile : fileToSave, FileMode.Create, FileAccess.Write))
+                        using (var fileStream = new FileStream(target, FileMode.Create, FileAccess.Write))
                         {
                             var buffer = new byte[4096];
                             long downloadedBytes = 0;
@@ -418,7 +461,7 @@ namespace InstallerFunctions
 
                 Log?.Invoke("Download completed.", "info", true);
                 downloadSuccess = true;
-
+                if (cachePath != null) tempFile = cachePath;   // extract from (and keep) the cached zip
             }
             catch (Exception ex)
             {
@@ -1000,7 +1043,7 @@ namespace InstallerFunctions
                 {
                     helper.CannotExitNotification(e, "file removal");
                 }
-                else if (File.Exists(tempFile)) File.Delete(tempFile);
+                else if (File.Exists(tempFile) && !tempFile.StartsWith(ZipCacheDir, StringComparison.OrdinalIgnoreCase)) File.Delete(tempFile);   // keep cached zips for reuse across sessions
 
                 Settings.Default.Save();
             }
