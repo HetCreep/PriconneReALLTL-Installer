@@ -658,16 +658,26 @@ namespace PriconneReALLTLInstaller
         // and refresh the version UI. Mirrors the source-dependent part of InitializeUI.
         private void RefreshLatestVersionInfo()
         {
-            patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
-            (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(patchgithubAPI);
-            latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
+            // Source switch / manual refresh: force a live fetch (skip the version cache),
+            // then re-enable the cache for subsequent launches.
+            Helper.BypassVersionCache = true;
+            try
+            {
+                patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
+                (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(patchgithubAPI);
+                latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
 
-            (latestModLoaderVersion, commitSha) = installer.GetLatestModloaderRelease();
-            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "ERROR!";
-            if (commitSha != null) toolTip.SetToolTip(latestModloaderVersionLabel, $"Commit SHA: {commitSha}");
+                (latestModLoaderVersion, commitSha) = installer.GetLatestModloaderRelease();
+                latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "ERROR!";
+                if (commitSha != null) toolTip.SetToolTip(latestModloaderVersionLabel, $"Commit SHA: {commitSha}");
 
-            UpdateUI();
-            startButton.Enabled = (!latestVersionValid || latestModLoaderVersion == null) ? false : helper.isAnyChecked(operationCheckboxes);
+                UpdateUI();
+                startButton.Enabled = (!latestVersionValid || latestModLoaderVersion == null) ? false : helper.isAnyChecked(operationCheckboxes);
+            }
+            finally
+            {
+                Helper.BypassVersionCache = false;
+            }
         }
 
         private void checkForInstallerUpdatesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)

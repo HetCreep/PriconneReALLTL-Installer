@@ -385,5 +385,17 @@ You can set the shortcut in the Installer by clicking the ""Settings"" icon (scr
                 this["GithubAPIKey"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string versionCacheJson {
+            get {
+                return ((string)(this["versionCacheJson"]));
+            }
+            set {
+                this["versionCacheJson"] = value;
+            }
+        }
     }
 }

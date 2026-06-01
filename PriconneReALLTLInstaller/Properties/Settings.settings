@@ -133,5 +133,8 @@ Please update your game!</Value>
     <Setting Name="GithubAPIKey" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="versionCacheJson" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

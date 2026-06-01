@@ -183,6 +183,15 @@ namespace InstallerFunctions
                 string releaseUrl = githubAPI + "/releases/latest";
                 string gitHubToken = Helper.DecryptString(Settings.Default.GithubAPIKey);
                 (bool tokenvalid, _) = Helper.ValidateGitHubToken(gitHubToken);
+
+                string cacheKey = "patch:" + githubAPI;
+                string cachedPatch = Helper.GetCachedVersion(cacheKey);
+                if (cachedPatch != null)
+                {
+                    try { var cj = JObject.Parse(cachedPatch); return (latestVersion = (string)cj["v"], latestVersionValid = true, assetLink = (string)cj["a"]); }
+                    catch { }
+                }
+
                 using (WebClient client = new WebClient())
                 {
                     client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
@@ -203,6 +212,7 @@ namespace InstallerFunctions
                         }
                     }
                     if (assetLink == null) assetLink = releaseJson.assets[0].browser_download_url;
+                    Helper.SetCachedVersion(cacheKey, new JObject { ["v"] = version, ["a"] = assetLink }.ToString(Newtonsoft.Json.Formatting.None));
                     return (latestVersion = version, latestVersionValid = true, assetLink);
                 }
             }
@@ -245,6 +255,13 @@ namespace InstallerFunctions
             (bool tokenvalid, _) = Helper.ValidateGitHubToken(gitHubToken);
             try
             {
+                string cachedMl = Helper.GetCachedVersion("modloader");
+                if (cachedMl != null)
+                {
+                    try { var cj = JObject.Parse(cachedMl); return ((string)cj["v"], (string)cj["s"]); }
+                    catch { }
+                }
+
                 // Modloader is authoritative from ImaterialC (the main, widely-used source),
                 // independent of the selected TL source. Fetch ImaterialC's own latest release
                 // and read its bundled BepInEx interop version.
@@ -265,6 +282,7 @@ namespace InstallerFunctions
                     string fileUrl = $"{ml.RawBase}/{commitSha}/src/BepInEx/interop/version";
                     string fileVersion = client.DownloadString(fileUrl);
 
+                    Helper.SetCachedVersion("modloader", new JObject { ["v"] = fileVersion, ["s"] = commitSha.Substring(0, 7) }.ToString(Newtonsoft.Json.Formatting.None));
                     return (fileVersion, commitSha.Substring(0, 7));
                 }
             }
@@ -310,6 +328,14 @@ namespace InstallerFunctions
             try
             {
                 string releaseUrl = "https://api.github.com/repos/HetCreep/PriconneReALLTL-Installer/releases/latest";
+
+                string cachedInst = Helper.GetCachedVersion("installer");
+                if (cachedInst != null)
+                {
+                    try { var cj = JObject.Parse(cachedInst); return ((string)cj["v"], (string)cj["b"], (string)cj["a"], true); }
+                    catch { }
+                }
+
                 using (WebClient client = new WebClient())
                 {
                     client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
@@ -319,6 +345,7 @@ namespace InstallerFunctions
                     string version = releaseJson.tag_name;
                     string body = releaseJson.body;
                     assetLink = releaseJson.assets[0].browser_download_url;
+                    Helper.SetCachedVersion("installer", new JObject { ["v"] = version, ["b"] = body, ["a"] = assetLink }.ToString(Newtonsoft.Json.Formatting.None));
                     return (version, body, assetLink, true);
                 }
             }

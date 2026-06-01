@@ -464,6 +464,45 @@ namespace HelperFunctions
         public static PatchSource ModloaderSource =>
             PatchSources.FirstOrDefault(s => s.Owner == "ImaterialC") ?? PatchSources[0];
 
+        // ─── Version-check cache (rate-limit friendly) ────────────────────────────
+        // Persisted in Settings.versionCacheJson. Each GetLatest* result is cached by key
+        // for VersionCacheTtlHours so repeated app launches don't re-hit the GitHub API.
+        // Switching TL source / manual refresh sets BypassVersionCache to force a fresh fetch.
+        private const double VersionCacheTtlHours = 6.0;
+        public static bool BypassVersionCache = false;
+
+        private sealed class CacheEntry { public string Val { get; set; } public DateTime Ts { get; set; } }
+
+        /// <summary>Cached JSON value for key if fresh (&lt; TTL) and not bypassed; else null.</summary>
+        public static string GetCachedVersion(string key)
+        {
+            if (BypassVersionCache) return null;
+            try
+            {
+                var dict = JsonConvert.DeserializeObject<Dictionary<string, CacheEntry>>(Settings.Default.versionCacheJson ?? "");
+                if (dict != null && dict.TryGetValue(key, out var e) && e != null
+                    && (DateTime.UtcNow - e.Ts).TotalHours < VersionCacheTtlHours)
+                    return e.Val;
+            }
+            catch { }
+            return null;
+        }
+
+        public static void SetCachedVersion(string key, string value)
+        {
+            try
+            {
+                Dictionary<string, CacheEntry> dict = null;
+                try { dict = JsonConvert.DeserializeObject<Dictionary<string, CacheEntry>>(Settings.Default.versionCacheJson ?? ""); }
+                catch { }
+                if (dict == null) dict = new Dictionary<string, CacheEntry>();
+                dict[key] = new CacheEntry { Val = value, Ts = DateTime.UtcNow };
+                Settings.Default.versionCacheJson = JsonConvert.SerializeObject(dict);
+                Settings.Default.Save();
+            }
+            catch { }
+        }
+
         public void PopulatePatchSourceComboBox(ComboBox comboBox)
         {
             comboBox.Items.Clear();
