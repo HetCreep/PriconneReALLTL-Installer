@@ -50,7 +50,10 @@ namespace PriconneReALLTLInstaller
             Version currentVersion = Assembly.GetEntryAssembly().GetName().Version;
 
             // Get the last known assembly version from settings
-            Version lastKnownVersion = new Version(Properties.Settings.Default.LastKnownVersion);
+            // Fresh installs have an empty LastKnownVersion; new Version("") would throw before the
+            // form even initializes. Fall back to 0.0.0.0 so the upgrade check runs instead of crashing.
+            if (!Version.TryParse(Properties.Settings.Default.LastKnownVersion, out Version lastKnownVersion))
+                lastKnownVersion = new Version(0, 0, 0, 0);
 
             // Compare the current version with the last known version
             if (currentVersion > lastKnownVersion)

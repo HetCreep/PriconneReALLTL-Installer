@@ -196,6 +196,11 @@ namespace InstallerFunctions
                     if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
                     string response = client.DownloadString(releaseUrl);
                     dynamic releaseJson = JsonConvert.DeserializeObject(response);
+                    if (releaseJson == null)
+                    {
+                        Log?.Invoke("Empty response from GitHub — skipping patch version check.", "info", false);
+                        return (latestVersion = null, latestVersionValid = false, null);
+                    }
                     string version = releaseJson.tag_name;
                     // Pick the .zip patch asset (some sources also ship an .exe installer
                     // in the same release); fall back to the first asset if none match.
@@ -209,7 +214,15 @@ namespace InstallerFunctions
                             break;
                         }
                     }
-                    if (assetLink == null) assetLink = releaseJson.assets[0].browser_download_url;
+                    if (assetLink == null)
+                    {
+                        if (releaseJson.assets == null || releaseJson.assets.Count == 0)
+                        {
+                            Log?.Invoke("Latest release has no downloadable asset yet — skipping.", "info", false);
+                            return (latestVersion = null, latestVersionValid = false, null);
+                        }
+                        assetLink = releaseJson.assets[0].browser_download_url;
+                    }
                     Helper.SetCachedVersion(cacheKey, new JObject { ["v"] = version, ["a"] = assetLink }.ToString(Newtonsoft.Json.Formatting.None));
                     return (latestVersion = version, latestVersionValid = true, assetLink);
                 }
@@ -261,11 +274,12 @@ namespace InstallerFunctions
 
                     string mlReleaseResponse = client.DownloadString(ml.ApiBase + "/releases/latest");
                     string mlTag = (string)JObject.Parse(mlReleaseResponse)["tag_name"];
+                    if (string.IsNullOrEmpty(mlTag)) return (null, null);
 
                     string refUrl = $"{ml.ApiBase}/git/ref/tags/{mlTag}";
                     string refResponse = client.DownloadString(refUrl);
-                    dynamic responseJson = JObject.Parse(refResponse);
-                    string commitSha = responseJson["object"]["sha"]?.ToString();
+                    string commitSha = (string)JObject.Parse(refResponse)["object"]?["sha"];
+                    if (string.IsNullOrEmpty(commitSha)) return (null, null);
 
                     string fileUrl = $"{ml.RawBase}/{commitSha}/src/BepInEx/interop/version";
                     string fileVersion = client.DownloadString(fileUrl);
@@ -322,8 +336,18 @@ namespace InstallerFunctions
                     if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
                     string response = client.DownloadString(releaseUrl);
                     dynamic releaseJson = JsonConvert.DeserializeObject(response);
+                    if (releaseJson == null)
+                    {
+                        Log?.Invoke("Empty response from GitHub — skipping installer update check.", "info", false);
+                        return (null, null, null, false);
+                    }
                     string version = releaseJson.tag_name;
                     string body = releaseJson.body;
+                    if (releaseJson.assets == null || releaseJson.assets.Count == 0)
+                    {
+                        Log?.Invoke("No installer release asset found yet — skipping installer update.", "info", false);
+                        return (null, null, null, false);
+                    }
                     assetLink = releaseJson.assets[0].browser_download_url;
                     Helper.SetCachedVersion("installer", new JObject { ["v"] = version, ["b"] = body, ["a"] = assetLink }.ToString(Newtonsoft.Json.Formatting.None));
                     return (version, body, assetLink, true);
@@ -791,6 +815,10 @@ namespace InstallerFunctions
 
         public async void ProcessOperation(string assetLink, bool install, bool uninstall, bool reinstall, bool launch, bool removeConfig, CheckedListBox configListBox, bool removeIgnored)
         {
+            // Reset per-operation status flags. They persist across operations otherwise, so a
+            // failure in a previous run would make this one silently skip extraction (ExtractPatchFiles
+            // early-returns on !removeSuccess/!downloadSuccess) and/or report a false success.
+            removeSuccess = true; downloadSuccess = true; extractSuccess = true; cancelledByUser = false;
             string processName = null;
             int versioncompare = Helper.NormalizeVersion(localVersion).CompareTo(Helper.NormalizeVersion(latestVersion));
 

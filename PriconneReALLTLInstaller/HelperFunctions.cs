@@ -895,9 +895,13 @@ namespace HelperFunctions
 
         public (bool,string) CompareGameandModloaderVersions(string gameVersion, string modloaderLocalVersion, string modLoaderLatestRelease)
         {
-            Version a = new Version(gameVersion);
-            Version b = new Version(modloaderLocalVersion);
-            Version c = new Version(modLoaderLatestRelease);
+            // Guard non-numeric strings ("Not found", "ERROR!", "N/A", raw GitHub content with
+            // whitespace) — a raw new Version(...) would throw ArgumentException/FormatException and
+            // crash the caller (MainForm.UpdateUI / AutoUpdateForm.UpdateUI).
+            if (!Version.TryParse((gameVersion ?? "").Trim(), out Version a)
+                || !Version.TryParse((modloaderLocalVersion ?? "").Trim(), out Version b)
+                || !Version.TryParse((modLoaderLatestRelease ?? "").Trim(), out Version c))
+                return (false, null);
 
             if (a < b && a < c)
             {
@@ -1011,9 +1015,18 @@ namespace HelperFunctions
             if (string.IsNullOrEmpty(encryptedText))
                 return encryptedText;
 
-            byte[] bytes = Convert.FromBase64String(encryptedText);
-            byte[] unprotectedBytes = ProtectedData.Unprotect(bytes, null, DataProtectionScope.CurrentUser);
-            return Encoding.UTF8.GetString(unprotectedBytes);
+            try
+            {
+                byte[] bytes = Convert.FromBase64String(encryptedText);
+                byte[] unprotectedBytes = ProtectedData.Unprotect(bytes, null, DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(unprotectedBytes);
+            }
+            catch
+            {
+                // Corrupt / foreign DPAPI blob or bad base64 (e.g. settings copied from another
+                // Windows account or hand-edited) — treat as "no token" instead of crashing every caller.
+                return null;
+            }
         }
         public void ExportSettings(string filePath)
         {
