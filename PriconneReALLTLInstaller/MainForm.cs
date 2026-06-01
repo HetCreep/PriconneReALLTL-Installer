@@ -182,14 +182,14 @@ namespace PriconneReALLTLInstaller
             this.Top = wa.Top + Math.Max(0, (wa.Height - this.Height) / 2);
         }
 
-        private void InitializeUI()
+        private async void InitializeUI()
         {
             string fastLauncherLink = Settings.Default.fastLauncherLink;
 
             Icon = Resources.jewel;
             this.StartPosition = FormStartPosition.CenterScreen;
             optionsPanel.Height = 87;
-            FitAndCenter(580);
+            FitAndCenter(602);   // base height includes the +22 "TL Source" line added by SetupPatchSourceSelector
 
             SetupPatchSourceSelector();
 
@@ -210,12 +210,11 @@ namespace PriconneReALLTLInstaller
             operationsPanel.Height = launchCheckBox.Checked ? 184 : 154;
             showLogCheckBox.Checked = Settings.Default.showLogChecked;
 
-            (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(patchgithubAPI);
-            latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
-
-            (latestModLoaderVersion, commitSha) = installer.GetLatestModloaderRelease();
-            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "N/A";
-            if (commitSha != null) toolTip.SetToolTip(latestModloaderVersionLabel, $"Commit SHA: {commitSha}");
+            // Latest-version checks hit GitHub. Show placeholders now; the actual fetch runs off
+            // the UI thread in LoadLatestVersionInfoAsync so the window never freezes on a slow or
+            // rate-limited request.
+            latestVersionLinkLabel.Text = "Checking…";
+            latestModloaderVersionLabel.Text = "Checking…";
 
             exclusiveCheckboxes = new CheckBox[] { installCheckBox, reinstallCheckBox, uninstallCheckBox };
             operationCheckboxes = new CheckBox[] { installCheckBox, reinstallCheckBox, uninstallCheckBox, launchCheckBox };
@@ -232,11 +231,47 @@ namespace PriconneReALLTLInstaller
                 checkBox.CheckedChanged += OperationCheckbox_CheckedChanged;
             }
 
+            await LoadLatestVersionInfoAsync(bypassCache: false);
+        }
+
+        // Fetches latest patch + modloader versions OFF the UI thread, then refreshes the version
+        // UI. Used on startup and on TL-source switch (bypassCache forces a live re-fetch). The
+        // window stays responsive throughout — a slow or rate-limited (HTTP 403) response no longer
+        // freezes the app the way the old synchronous calls did.
+        private async Task LoadLatestVersionInfoAsync(bool bypassCache)
+        {
+            latestVersionLinkLabel.Text = "Checking…";
+            latestModloaderVersionLabel.Text = "Checking…";
+            patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
+            string api = patchgithubAPI;
+            string token = Helper.DecryptString(Settings.Default.GithubAPIKey);
+
+            var result = await Task.Run(() =>
+            {
+                if (bypassCache) Helper.BypassVersionCache = true;
+                try
+                {
+                    Helper.ValidateGitHubToken(token);   // pre-warm token validation off the UI thread
+                    var p = installer.GetLatestPatchRelease(api);
+                    var m = installer.GetLatestModloaderRelease();
+                    return (patch: p, ml: m);
+                }
+                finally { if (bypassCache) Helper.BypassVersionCache = false; }
+            });
+
+            (latestVersion, latestVersionValid, assetLink) = result.patch;
+            latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
+
+            (latestModLoaderVersion, commitSha) = result.ml;
+            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "N/A";
+            if (commitSha != null) toolTip.SetToolTip(latestModloaderVersionLabel, $"Commit SHA: {commitSha}");
+
             UpdateUI();
 
-            if (versioncompare == 0 && !modLoaderOutdated && latestModLoaderVersion != null) logger.Log("You already have the latest translation patch version installed!", "success", true);
+            if (versioncompare == 0 && !modLoaderOutdated && latestModLoaderVersion != null)
+                logger.Log("You already have the latest translation patch version installed!", "success", true);
 
-            startButton.Enabled = (!latestVersionValid ) ? false : helper.isAnyChecked(operationCheckboxes);
+            startButton.Enabled = (!latestVersionValid) ? false : helper.isAnyChecked(operationCheckboxes);
         }
 
         private void UpdateUI()
@@ -378,7 +413,7 @@ namespace PriconneReALLTLInstaller
 
                 if (checkBox == showLogCheckBox)
                 {
-                    FitAndCenter(checkBox.Checked ? 860 : 580);
+                    FitAndCenter(checkBox.Checked ? 882 : 602);
                     Settings.Default.showLogChecked = checkBox.Checked;
                 }
             }
@@ -571,14 +606,15 @@ namespace PriconneReALLTLInstaller
             currentLauncherLinkLabel.Text = "Manage launch shortcuts";
             checkForInstallerUpdatesToolStripMenuItem.Checked = Settings.Default.checkForInstallerUpdates;
         }
-        private void MainForm_Shown(object sender, EventArgs e)
+        private async void MainForm_Shown(object sender, EventArgs e)
         {
             if (Settings.Default.checkForInstallerUpdates)
             {
                 try
                 {
-                    (string version, string body, string installerAssetlink, bool versionValid) = installer.GetLatestInstallerRelease();
-                    helper.CheckForInstallerUpdate(version, body, installerAssetlink, versionValid);
+                    // Off the UI thread so the self-update check never freezes the window on show.
+                    var r = await Task.Run(() => installer.GetLatestInstallerRelease());
+                    helper.CheckForInstallerUpdate(r.version, r.body, r.assetLink, r.versionValid);
                 }
                 catch (Exception ex)
                 {
@@ -616,6 +652,13 @@ namespace PriconneReALLTLInstaller
             foreach (System.Windows.Forms.Control c in patchInfoPanel.Controls)
                 if (c != patchInfoLabel) c.Top += shift;
             patchInfoPanel.Height += shift;
+
+            // The patch panel just grew by `shift`; push everything below it (the Operations /
+            // Options panels and the start/log area) down by the same amount so nothing overlaps.
+            // The form's base height already accounts for this (FitAndCenter 602 / 882).
+            int belowTop = operationsPanel.Top;
+            foreach (System.Windows.Forms.Control c in this.Controls)
+                if (c.Top >= belowTop) c.Top += shift;
 
             patchSourceLinkLabel = new System.Windows.Forms.LinkLabel
             {
@@ -659,7 +702,7 @@ namespace PriconneReALLTLInstaller
             menu.Show(patchSourceLinkLabel, new System.Drawing.Point(0, patchSourceLinkLabel.Height));
         }
 
-        private void SelectPatchSource(int index)
+        private async void SelectPatchSource(int index)
         {
             if (index == Settings.Default.selectedPatchSource)
             {
@@ -669,36 +712,11 @@ namespace PriconneReALLTLInstaller
             Settings.Default.selectedPatchSource = index;
             Settings.Default.Save();
             RefreshPatchSourceLabel();
-            RefreshLatestVersionInfo();
+            // Source switch: re-fetch latest off the UI thread (bypass the cache for a live read).
+            await LoadLatestVersionInfoAsync(bypassCache: true);
             // Toggle plugin DLLs (.dll <-> .dll.bak) to match the newly selected source right
             // away, so an already-installed patch reflects the active source without reinstalling.
             helper.ApplyPluginProfile(priconnePath);
-        }
-
-        // Re-fetch latest patch + modloader from the (possibly newly selected) source
-        // and refresh the version UI. Mirrors the source-dependent part of InitializeUI.
-        private void RefreshLatestVersionInfo()
-        {
-            // Source switch / manual refresh: force a live fetch (skip the version cache),
-            // then re-enable the cache for subsequent launches.
-            Helper.BypassVersionCache = true;
-            try
-            {
-                patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
-                (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(patchgithubAPI);
-                latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
-
-                (latestModLoaderVersion, commitSha) = installer.GetLatestModloaderRelease();
-                latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "N/A";
-                if (commitSha != null) toolTip.SetToolTip(latestModloaderVersionLabel, $"Commit SHA: {commitSha}");
-
-                UpdateUI();
-                startButton.Enabled = (!latestVersionValid) ? false : helper.isAnyChecked(operationCheckboxes);
-            }
-            finally
-            {
-                Helper.BypassVersionCache = false;
-            }
         }
 
         private void checkForInstallerUpdatesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)

@@ -791,12 +791,20 @@ namespace HelperFunctions
             // Check if the file path starts with the folder path.
             return filePath.StartsWith(folderPath, StringComparison.OrdinalIgnoreCase);
         }
+        // Session cache for the last validated token (valid results only — failures aren't cached,
+        // so a transient error is retried). Cuts the repeated /user calls that each GetLatest* and
+        // every UI refresh would otherwise make on the UI thread.
+        private static string _validatedToken;
+        private static string _validatedUser;
         public static (bool, string) ValidateGitHubToken(string token)
         {
             string username = null;
 
             if (string.IsNullOrWhiteSpace(token))
                 return (false, null);
+
+            if (token == _validatedToken)
+                return (true, _validatedUser);
 
             try
             {
@@ -809,6 +817,8 @@ namespace HelperFunctions
                     dynamic userJson = JsonConvert.DeserializeObject(response);
 
                     username = userJson.login;
+                    _validatedToken = token;   // cache valid tokens only
+                    _validatedUser = username;
                     return (true, username); // Token is valid
                 }
             }
