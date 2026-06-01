@@ -690,7 +690,7 @@ namespace HelperFunctions
 
         public void CheckForInstallerUpdate(string version, string body, string installerAssetLink, bool versionValid)
         {
-            int versioncompare = String.Format(Application.ProductVersion).CompareTo(version);
+            int versioncompare = NormalizeVersion(String.Format(Application.ProductVersion)).CompareTo(NormalizeVersion(version));
 
             if (versionValid && versioncompare < 0)
             {

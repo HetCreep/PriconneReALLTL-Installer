@@ -599,15 +599,22 @@ namespace PriconneReALLTLInstaller
         {
             if (patchSourceLinkLabel != null) return; // create once
 
+            // Give "TL Source:" its own line between the panel title ("TL Patch Information")
+            // and "TL Patch Versions:" — shift the existing version content down once.
+            const int shift = 22;
+            foreach (System.Windows.Forms.Control c in patchInfoPanel.Controls)
+                if (c != patchInfoLabel) c.Top += shift;
+            patchInfoPanel.Height += shift;
+
             patchSourceLinkLabel = new System.Windows.Forms.LinkLabel
             {
                 AutoSize = true,
                 BackColor = System.Drawing.Color.Transparent,
-                Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238))),
+                Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0))),
                 LinkBehavior = System.Windows.Forms.LinkBehavior.AlwaysUnderline,
                 LinkColor = System.Drawing.Color.MediumVioletRed,
                 VisitedLinkColor = System.Drawing.Color.MediumVioletRed,
-                Location = new System.Drawing.Point(122, 1),
+                Location = new System.Drawing.Point(8, patchInfoLabel.Bottom),
                 Name = "patchSourceLinkLabel",
                 TabStop = true
             };
