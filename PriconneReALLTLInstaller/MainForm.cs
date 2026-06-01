@@ -1,7 +1,7 @@
 using HelperFunctions;
 using InstallerFunctions;
 using LoggerFunctions;
-using PriconneReTLInstaller.Properties;
+using PriconneReALLTLInstaller.Properties;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
 
-namespace PriconneReTLInstaller
+namespace PriconneReALLTLInstaller
 {
     public partial class MainForm : BaseForm
     {
@@ -485,7 +485,7 @@ namespace PriconneReTLInstaller
         }
         private void versionLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://github.com/tynave/PriconneReTL-Installer/releases/latest");
+            Process.Start("https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest");
         }
         private void latestReleaseLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
@@ -499,7 +499,7 @@ namespace PriconneReTLInstaller
 
         private void helpMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("https://github.com/tynave/PriconneReTL-Installer/wiki");
+            Process.Start("https://github.com/HetCreep/PriconneReALLTL-Installer/wiki");
         }
 
         private void aboutMenuItem_Click(object sender, EventArgs e)

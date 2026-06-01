@@ -1,4 +1,4 @@
-﻿namespace PriconneReTLInstaller
+﻿namespace PriconneReALLTLInstaller
 {
     partial class AutoUpdateForm
     {
@@ -91,7 +91,7 @@
             // progressPicture
             // 
             this.progressPicture.BackColor = System.Drawing.Color.Transparent;
-            this.progressPicture.Image = global::PriconneReTLInstaller.Properties.Resources.pecorun;
+            this.progressPicture.Image = global::PriconneReALLTLInstaller.Properties.Resources.pecorun;
             this.progressPicture.Location = new System.Drawing.Point(30, 266);
             this.progressPicture.Name = "progressPicture";
             this.progressPicture.Size = new System.Drawing.Size(64, 64);
@@ -149,7 +149,7 @@
             // modExPicture
             // 
             this.modExPicture.BackColor = System.Drawing.Color.Transparent;
-            this.modExPicture.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.exclamation_t;
+            this.modExPicture.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.exclamation_t;
             this.modExPicture.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.modExPicture.Location = new System.Drawing.Point(574, 46);
             this.modExPicture.Name = "modExPicture";
@@ -286,7 +286,7 @@
             // newPatchPictureBox
             // 
             this.newPatchPictureBox.BackColor = System.Drawing.Color.Transparent;
-            this.newPatchPictureBox.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources._new;
+            this.newPatchPictureBox.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources._new;
             this.newPatchPictureBox.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.newPatchPictureBox.Location = new System.Drawing.Point(245, 53);
             this.newPatchPictureBox.Name = "newPatchPictureBox";
@@ -349,7 +349,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.bg2;
+            this.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.bg2;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.ClientSize = new System.Drawing.Size(668, 338);
             this.ControlBox = false;

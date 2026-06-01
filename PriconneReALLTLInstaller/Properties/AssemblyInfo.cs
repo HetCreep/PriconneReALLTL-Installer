@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("PriconneReTLInstaller")]
-[assembly: AssemblyDescription("An installer GUI for the PriconneRe-TL english patch")]
+[assembly: AssemblyTitle("PriconneReALLTLInstaller")]
+[assembly: AssemblyDescription("An installer GUI for Princess Connect Re:Dive translation patches (EN/TH)")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("PriconneReTLInstaller")]
-[assembly: AssemblyCopyright("Copyright ©  2024")]
+[assembly: AssemblyProduct("PriconneReALLTLInstaller")]
+[assembly: AssemblyCopyright("Copyright © 2024 tynave, © 2026 HetCreep")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("95c5619a-1878-46fb-9b64-58cc3e675dc2")]
+[assembly: Guid("0f635fa5-3931-4b87-a7e8-bedc9c64e2bc")]
 
 // Version information for an assembly consists of the following four values:
 //

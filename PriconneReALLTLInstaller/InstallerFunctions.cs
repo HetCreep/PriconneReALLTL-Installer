@@ -2,8 +2,8 @@ using HelperFunctions;
 using LoggerFunctions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using PriconneReTLInstaller;
-using PriconneReTLInstaller.Properties;
+using PriconneReALLTLInstaller;
+using PriconneReALLTLInstaller.Properties;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -184,7 +184,7 @@ namespace InstallerFunctions
                 (bool tokenvalid, _) = Helper.ValidateGitHubToken(gitHubToken);
                 using (WebClient client = new WebClient())
                 {
-                    client.Headers.Add("User-Agent", "PriconneReTLInstaller");
+                    client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
                     if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
                     string response = client.DownloadString(releaseUrl);
                     dynamic releaseJson = JsonConvert.DeserializeObject(response);
@@ -239,7 +239,7 @@ namespace InstallerFunctions
                 }
                 using (WebClient client = new WebClient())
                 {
-                    client.Headers.Add("User-Agent", "PriconneReTLInstaller");
+                    client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
                     if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
                     string refUrl = $"https://api.github.com/repos/ImaterialC/PriconneRe-TL/git/ref/tags/{latestVersion}";
                     string refResponse = client.DownloadString(refUrl);
@@ -293,10 +293,10 @@ namespace InstallerFunctions
             (bool tokenvalid, _) = Helper.ValidateGitHubToken(gitHubToken);
             try
             {
-                string releaseUrl = "https://api.github.com/repos/tynave/PriconneReTL-Installer/releases/latest";
+                string releaseUrl = "https://api.github.com/repos/HetCreep/PriconneReALLTL-Installer/releases/latest";
                 using (WebClient client = new WebClient())
                 {
-                    client.Headers.Add("User-Agent", "PriconneReTLInstaller");
+                    client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
                     if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
                     string response = client.DownloadString(releaseUrl);
                     dynamic releaseJson = JsonConvert.DeserializeObject(response);
@@ -351,7 +351,7 @@ namespace InstallerFunctions
 
                 using (HttpClient client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd("PriconneReTLInstaller");
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd("PriconneReALLTLInstaller");
                     if (tokenvalid) client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", gitHubToken);
 
                     using (var response = await client.GetAsync(assetLink, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
@@ -463,7 +463,7 @@ namespace InstallerFunctions
 
             using (HttpClient client = new HttpClient())
             {
-                client.DefaultRequestHeaders.UserAgent.ParseAdd("PriconneReTLInstaller");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("PriconneReALLTLInstaller");
                 if (tokenvalid) client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", gitHubToken);
 
                 string treeUrl = $"{Settings.Default.patchGithubApi}/git/trees/{releaseTag}?recursive=1";
@@ -779,12 +779,12 @@ namespace InstallerFunctions
             if (result == DialogResult.OK)
             {
                 string selectedFile = saveFileDialog.FileName;
-                Log?.Invoke("Downloading latest PriconneReTLInstaller version..", "info", true);
+                Log?.Invoke("Downloading latest PriconneReALLTLInstaller version..", "info", true);
                 await DownloadPatchFiles(installerAssetLink, selectedFile);
 
                 if (downloadSuccess)
                 {
-                    Log?.Invoke($"New PriconneReTLInstaller version successfully downloaded to: {selectedFile}", "info", false);
+                    Log?.Invoke($"New PriconneReALLTLInstaller version successfully downloaded to: {selectedFile}", "info", false);
                     DialogResult result2 = MessageBox.Show($"New installer version successfully downloaded to:\n{selectedFile}\n\nWould you like to close the application?", "Download successful!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                     if (result2 == DialogResult.Yes) Application.Exit();
                     else form.Close();

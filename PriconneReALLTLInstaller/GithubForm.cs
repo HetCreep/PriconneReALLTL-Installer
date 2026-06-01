@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using HelperFunctions;
 using Newtonsoft.Json.Linq;
-using PriconneReTLInstaller.Properties;
+using PriconneReALLTLInstaller.Properties;
 
-namespace PriconneReTLInstaller
+namespace PriconneReALLTLInstaller
 {
     public partial class GithubForm: BaseForm
     {

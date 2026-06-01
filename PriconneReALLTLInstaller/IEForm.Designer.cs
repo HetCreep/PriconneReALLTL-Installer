@@ -1,4 +1,4 @@
-﻿namespace PriconneReTLInstaller
+﻿namespace PriconneReALLTLInstaller
 {
     partial class IEForm
     {
@@ -46,7 +46,7 @@
             // backButton
             // 
             this.backButton.BackColor = System.Drawing.Color.Transparent;
-            this.backButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.back_arrow;
+            this.backButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.back_arrow;
             this.backButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.backButton.FlatAppearance.BorderSize = 0;
             this.backButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -63,7 +63,7 @@
             // exportButton
             // 
             this.exportButton.BackColor = System.Drawing.Color.Transparent;
-            this.exportButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.export_button;
+            this.exportButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.export_button;
             this.exportButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.exportButton.FlatAppearance.BorderSize = 0;
             this.exportButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -79,7 +79,7 @@
             // importButton
             // 
             this.importButton.BackColor = System.Drawing.Color.Transparent;
-            this.importButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.import_button;
+            this.importButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.import_button;
             this.importButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.importButton.FlatAppearance.BorderSize = 0;
             this.importButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -139,13 +139,13 @@
             // openFileDialog1
             // 
             this.openFileDialog1.DefaultExt = "xml";
-            this.openFileDialog1.FileName = "PriconneReTLInstallerSettings";
+            this.openFileDialog1.FileName = "PriconneReALLTLInstallerSettings";
             this.openFileDialog1.Filter = "XML files (*.xml)|*.xml";
             // 
             // saveFileDialog1
             // 
             this.saveFileDialog1.DefaultExt = "xml";
-            this.saveFileDialog1.FileName = "PriconneReTLInstallerSettings";
+            this.saveFileDialog1.FileName = "PriconneReALLTLInstallerSettings";
             this.saveFileDialog1.Filter = "XML files (*.xml)|*.xml";
             // 
             // importExportDescriptionLabel
@@ -162,7 +162,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.bg2;
+            this.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.bg2;
             this.ClientSize = new System.Drawing.Size(451, 268);
             this.ControlBox = false;
             this.Controls.Add(this.importExportDescriptionLabel);

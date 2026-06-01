@@ -1,4 +1,4 @@
-﻿namespace PriconneReTLInstaller
+﻿namespace PriconneReALLTLInstaller
 {
     partial class IgnoreForm
     {
@@ -41,7 +41,7 @@
             // defaultsButton
             // 
             this.defaultsButton.BackColor = System.Drawing.Color.Transparent;
-            this.defaultsButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.defaults_button;
+            this.defaultsButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.defaults_button;
             this.defaultsButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.defaultsButton.FlatAppearance.BorderSize = 0;
             this.defaultsButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -57,7 +57,7 @@
             // removeButton
             // 
             this.removeButton.BackColor = System.Drawing.Color.Transparent;
-            this.removeButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.remove_button_disabled;
+            this.removeButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.remove_button_disabled;
             this.removeButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.removeButton.Enabled = false;
             this.removeButton.FlatAppearance.BorderSize = 0;
@@ -75,7 +75,7 @@
             // addButton
             // 
             this.addButton.BackColor = System.Drawing.Color.Transparent;
-            this.addButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.add_button;
+            this.addButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.add_button;
             this.addButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.addButton.FlatAppearance.BorderSize = 0;
             this.addButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -112,7 +112,7 @@
             // backButton
             // 
             this.backButton.BackColor = System.Drawing.Color.Transparent;
-            this.backButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.back_arrow;
+            this.backButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.back_arrow;
             this.backButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.backButton.FlatAppearance.BorderSize = 0;
             this.backButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -129,7 +129,7 @@
             // saveButton
             // 
             this.saveButton.BackColor = System.Drawing.Color.Transparent;
-            this.saveButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.save_button_disabled;
+            this.saveButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.save_button_disabled;
             this.saveButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.saveButton.Enabled = false;
             this.saveButton.FlatAppearance.BorderSize = 0;
@@ -153,7 +153,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.bg2;
+            this.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.bg2;
             this.ClientSize = new System.Drawing.Size(676, 360);
             this.ControlBox = false;
             this.Controls.Add(this.saveButton);

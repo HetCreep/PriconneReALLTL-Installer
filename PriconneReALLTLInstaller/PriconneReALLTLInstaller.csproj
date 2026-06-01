@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{95C5619A-1878-46FB-9B64-58CC3E675DC2}</ProjectGuid>
+    <ProjectGuid>{E68E7BF8-5569-40D4-9081-730263313A29}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>PriconneReTLInstaller</RootNamespace>
-    <AssemblyName>PriconneReTLInstaller</AssemblyName>
+    <RootNamespace>PriconneReALLTLInstaller</RootNamespace>
+    <AssemblyName>PriconneReALLTLInstaller</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -72,7 +72,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>PriconneTLInstaller.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>PriconneReALLTLInstaller.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -267,8 +267,7 @@
     </EmbeddedResource>
     <None Include="app.manifest" />
     <None Include="packages.config" />
-    <None Include="PriconneReTLInstaller_TemporaryKey.pfx" />
-    <None Include="PriconneTLInstaller.snk" />
+    <None Include="PriconneReALLTLInstaller.snk" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

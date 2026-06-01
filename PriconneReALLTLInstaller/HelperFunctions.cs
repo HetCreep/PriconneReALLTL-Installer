@@ -2,8 +2,8 @@ using InstallerFunctions;
 using LoggerFunctions;
 using Microsoft.Win32;
 using Newtonsoft.Json;
-using PriconneReTLInstaller;
-using PriconneReTLInstaller.Properties;
+using PriconneReALLTLInstaller;
+using PriconneReALLTLInstaller.Properties;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -433,7 +433,7 @@ namespace HelperFunctions
         }
         public void CreateAutoUpdaterShortcut(string priconnePath)
         {
-            DialogResult messageboxResult = MessageBox.Show("The AutoUpdater is a modified version of the PriconneReTL-Installer, which automatically performs an update and launches the game after with the selected launcher." +
+            DialogResult messageboxResult = MessageBox.Show("The AutoUpdater is a modified version of the PriconneReALLTL-Installer, which automatically performs an update and launches the game after with the selected launcher." +
                 "\n\nWould you like to create an AutoUpdate shortcut?", "Create shortcut?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (messageboxResult == DialogResult.No) return;
@@ -444,7 +444,7 @@ namespace HelperFunctions
 
             var saveFileDialog = new SaveFileDialog();
             saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            saveFileDialog.FileName = "PriconneReTL-Installer AutoUpdater";
+            saveFileDialog.FileName = "PriconneReALLTL-Installer AutoUpdater";
             saveFileDialog.Filter = "Shortcut files (*.lnk)|*.lnk";
             saveFileDialog.FilterIndex = 1;
             saveFileDialog.RestoreDirectory = true;
@@ -458,7 +458,7 @@ namespace HelperFunctions
                 IWshRuntimeLibrary.IWshShortcut shortcut = (IWshRuntimeLibrary.IWshShortcut)wshShell.CreateShortcut(shortcutPath);
 
                 shortcut.TargetPath = targetPath;
-                shortcut.Description = "PriconneReTL-Installer AutoUpdater";
+                shortcut.Description = "PriconneReALLTL-Installer AutoUpdater";
                 shortcut.WorkingDirectory = currentDirectory;
                 shortcut.IconLocation = Path.Combine(priconnePath, "PrincessConnectReDive.exe");
                 shortcut.Arguments = "autoupdate";
@@ -467,7 +467,7 @@ namespace HelperFunctions
 
                 Console.WriteLine("Shortcut created successfully!");
 
-                MessageBox.Show("Shortcut created!\n\nPlease note that the shortcut points to the PriconneReTL-Installer! If you move or remove the installer, you have to recreate the shortcut!", "Shortcut created!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Shortcut created!\n\nPlease note that the shortcut points to the PriconneReALLTL-Installer! If you move or remove the installer, you have to recreate the shortcut!", "Shortcut created!", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
@@ -504,7 +504,7 @@ namespace HelperFunctions
             {
                 using (WebClient client = new WebClient())
                 {
-                    client.Headers.Add("User-Agent", "PriconneReTLInstaller");
+                    client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
                     client.Headers.Add("Authorization", "token " + token);
 
                     string response = client.DownloadString("https://api.github.com/user");
@@ -549,7 +549,7 @@ namespace HelperFunctions
                 string rateUrl = "https://api.github.com/rate_limit";
                 using (WebClient client = new WebClient())
                 {
-                    client.Headers.Add("User-Agent", "PriconneReTLInstaller");
+                    client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
                     if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
                     string response = client.DownloadString(rateUrl);
                     dynamic json = JsonConvert.DeserializeObject(response);

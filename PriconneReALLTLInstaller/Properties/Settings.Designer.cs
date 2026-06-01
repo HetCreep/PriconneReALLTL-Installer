@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace PriconneReTLInstaller.Properties {
+namespace PriconneReALLTLInstaller.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -219,7 +219,7 @@ namespace PriconneReTLInstaller.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://api.github.com/repos/tynave/PriconneReTL-AutoUpdater")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://api.github.com/repos/HetCreep/PriconneReALLTL-AutoUpdater")]
         public string auGithubApi {
             get {
                 return ((string)(this["auGithubApi"]));
@@ -228,7 +228,7 @@ namespace PriconneReTLInstaller.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://api.github.com/repos/tynave/PriconneReTL-AutoUpdaterApp")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://api.github.com/repos/HetCreep/PriconneReALLTL-AutoUpdaterApp")]
         public string auAppGithubApi {
             get {
                 return ((string)(this["auAppGithubApi"]));

@@ -1,4 +1,4 @@
-# <img src="PriconneReTLInstaller/Resources/Item_Jewel_Art.ico"> PriconneReTL Installer — Multi-Account Launcher Edition
+# <img src="PriconneReALLTLInstaller/Resources/Item_Jewel_Art.ico"> PriconneReALLTL Installer — Multi-Account Launcher Edition
 
 An installer/updater GUI for the [PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) English patch, upgraded to natively support multi-account launching!
 
@@ -16,7 +16,7 @@ This is a specialized, feature-rich fork of the original [tynave/PriconneReTL-In
 ---
 
 ## 💾 You can download the latest version here:  
-**[Download PriconneReTLInstaller Latest Release](https://github.com/HetCreep/PriconneReTL-Installer/releases/latest)**
+**[Download PriconneReALLTLInstaller Latest Release](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest)**
 
 ---
 

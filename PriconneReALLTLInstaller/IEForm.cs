@@ -1,5 +1,5 @@
 ﻿using LoggerFunctions;
-using PriconneReTLInstaller.Properties;
+using PriconneReALLTLInstaller.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace PriconneReTLInstaller
+namespace PriconneReALLTLInstaller
 {
     public partial class IEForm : BaseForm
     {

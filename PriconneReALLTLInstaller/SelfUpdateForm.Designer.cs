@@ -1,4 +1,4 @@
-﻿namespace PriconneReTLInstaller
+﻿namespace PriconneReALLTLInstaller
 {
     partial class SelfUpdateForm
     {
@@ -53,7 +53,7 @@
             this.newVersionLabel.Name = "newVersionLabel";
             this.newVersionLabel.Size = new System.Drawing.Size(414, 24);
             this.newVersionLabel.TabIndex = 13;
-            this.newVersionLabel.Text = "New version of PriconneReTL-Installer available!";
+            this.newVersionLabel.Text = "New version of PriconneReALLTL-Installer available!";
             // 
             // currentVersionLabel
             // 
@@ -89,7 +89,7 @@
             // downloadButton
             // 
             this.downloadButton.BackColor = System.Drawing.Color.Transparent;
-            this.downloadButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.dlbutton;
+            this.downloadButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.dlbutton;
             this.downloadButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.downloadButton.FlatAppearance.BorderSize = 0;
             this.downloadButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -105,7 +105,7 @@
             // cancelButton
             // 
             this.cancelButton.BackColor = System.Drawing.Color.Transparent;
-            this.cancelButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.cancel;
+            this.cancelButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.cancel;
             this.cancelButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.cancelButton.FlatAppearance.BorderSize = 0;
             this.cancelButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -128,7 +128,7 @@
             this.checkForUpdatesCheckbox.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.checkForUpdatesCheckbox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.checkForUpdatesCheckbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.checkForUpdatesCheckbox.Image = global::PriconneReTLInstaller.Properties.Resources.check_empty_24x24_2;
+            this.checkForUpdatesCheckbox.Image = global::PriconneReALLTLInstaller.Properties.Resources.check_empty_24x24_2;
             this.checkForUpdatesCheckbox.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
             this.checkForUpdatesCheckbox.Location = new System.Drawing.Point(15, 278);
             this.checkForUpdatesCheckbox.Name = "checkForUpdatesCheckbox";
@@ -180,14 +180,14 @@
             // 
             // saveFileDialog1
             // 
-            this.saveFileDialog1.FileName = "PriconneReTLInstaller.zip";
+            this.saveFileDialog1.FileName = "PriconneReALLTLInstaller.zip";
             this.saveFileDialog1.Filter = "ZIP files (*.zip)|*.zip";
             // 
             // SelfUpdateForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.bg2;
+            this.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.bg2;
             this.ClientSize = new System.Drawing.Size(593, 413);
             this.ControlBox = false;
             this.Controls.Add(this.statusStrip1);

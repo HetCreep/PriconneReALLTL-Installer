@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build:
-    name: Build and Release PriconneReTLInstaller
+    name: Build and Release PriconneReALLTLInstaller
     runs-on: windows-latest
 
     steps:
@@ -25,10 +25,10 @@ jobs:
         uses: nuget/setup-nuget@v2
 
       - name: Restore NuGet Packages
-        run: nuget restore PriconneReTLInstaller.sln
+        run: nuget restore PriconneReALLTLInstaller.sln
 
       - name: Build C# Solution
-        run: msbuild PriconneReTLInstaller.sln /p:Configuration=Release
+        run: msbuild PriconneReALLTLInstaller.sln /p:Configuration=Release
 
       - name: Package Release Assets
         shell: pwsh
@@ -40,7 +40,7 @@ jobs:
           # Create output directory
           New-Item -ItemType Directory -Path dist -Force
           # Copy compiled binary with tag suffix
-          Copy-Item PriconneReTLInstaller/bin/Release/PriconneReTLInstaller.exe dist/PriconneReTLInstaller-$tag.exe -Force
+          Copy-Item PriconneReALLTLInstaller/bin/Release/PriconneReALLTLInstaller.exe dist/PriconneReALLTLInstaller-$tag.exe -Force
           echo "VERSION=$tag" >> $env:GITHUB_ENV
 
       - name: Upload Release Assets
@@ -50,6 +50,6 @@ jobs:
           name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }} Release
           generate_release_notes: true
           files: |
-            dist/PriconneReTLInstaller-${{ env.VERSION }}.exe
+            dist/PriconneReALLTLInstaller-${{ env.VERSION }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

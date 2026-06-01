@@ -9,10 +9,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using LoggerFunctions;
-using PriconneReTLInstaller.Properties;
+using PriconneReALLTLInstaller.Properties;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
-namespace PriconneReTLInstaller
+namespace PriconneReALLTLInstaller
 {
     public partial class SelfUpdateForm : BaseForm
     {

@@ -1,4 +1,4 @@
-﻿namespace PriconneReTLInstaller
+﻿namespace PriconneReALLTLInstaller
 {
     partial class MainForm
     {
@@ -123,7 +123,7 @@
             this.reinstallCheckBox.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.reinstallCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.reinstallCheckBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.reinstallCheckBox.Image = global::PriconneReTLInstaller.Properties.Resources.check_empty_24x24_2;
+            this.reinstallCheckBox.Image = global::PriconneReALLTLInstaller.Properties.Resources.check_empty_24x24_2;
             this.reinstallCheckBox.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
             this.reinstallCheckBox.Location = new System.Drawing.Point(6, 50);
             this.reinstallCheckBox.Margin = new System.Windows.Forms.Padding(0);
@@ -145,7 +145,7 @@
             this.uninstallCheckBox.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.uninstallCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.uninstallCheckBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.uninstallCheckBox.Image = global::PriconneReTLInstaller.Properties.Resources.check_empty_24x24_2;
+            this.uninstallCheckBox.Image = global::PriconneReALLTLInstaller.Properties.Resources.check_empty_24x24_2;
             this.uninstallCheckBox.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
             this.uninstallCheckBox.Location = new System.Drawing.Point(6, 81);
             this.uninstallCheckBox.Name = "uninstallCheckBox";
@@ -158,7 +158,7 @@
             // startButton
             // 
             this.startButton.BackColor = System.Drawing.Color.Transparent;
-            this.startButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.start_idle;
+            this.startButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.start_idle;
             this.startButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.startButton.FlatAppearance.BorderSize = 0;
             this.startButton.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
@@ -269,7 +269,7 @@
             this.launchCheckBox.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.launchCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.launchCheckBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.launchCheckBox.Image = global::PriconneReTLInstaller.Properties.Resources.check_checked_24x24_2;
+            this.launchCheckBox.Image = global::PriconneReALLTLInstaller.Properties.Resources.check_checked_24x24_2;
             this.launchCheckBox.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
             this.launchCheckBox.Location = new System.Drawing.Point(6, 113);
             this.launchCheckBox.Name = "launchCheckBox";
@@ -290,7 +290,7 @@
             this.installCheckBox.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.installCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.installCheckBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.installCheckBox.Image = global::PriconneReTLInstaller.Properties.Resources.check_empty_24x24_2;
+            this.installCheckBox.Image = global::PriconneReALLTLInstaller.Properties.Resources.check_empty_24x24_2;
             this.installCheckBox.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
             this.installCheckBox.Location = new System.Drawing.Point(6, 20);
             this.installCheckBox.Margin = new System.Windows.Forms.Padding(0);
@@ -323,7 +323,7 @@
             this.removeIgnoredCheckBox.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.removeIgnoredCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.removeIgnoredCheckBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.removeIgnoredCheckBox.Image = global::PriconneReTLInstaller.Properties.Resources.check_empty_24x24_2;
+            this.removeIgnoredCheckBox.Image = global::PriconneReALLTLInstaller.Properties.Resources.check_empty_24x24_2;
             this.removeIgnoredCheckBox.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
             this.removeIgnoredCheckBox.Location = new System.Drawing.Point(7, 20);
             this.removeIgnoredCheckBox.Name = "removeIgnoredCheckBox";
@@ -344,7 +344,7 @@
             this.removeConfigCheckBox.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.removeConfigCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.removeConfigCheckBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.removeConfigCheckBox.Image = global::PriconneReTLInstaller.Properties.Resources.check_empty_24x24_2;
+            this.removeConfigCheckBox.Image = global::PriconneReALLTLInstaller.Properties.Resources.check_empty_24x24_2;
             this.removeConfigCheckBox.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
             this.removeConfigCheckBox.Location = new System.Drawing.Point(7, 50);
             this.removeConfigCheckBox.Name = "removeConfigCheckBox";
@@ -366,7 +366,7 @@
             this.showLogCheckBox.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
             this.showLogCheckBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.showLogCheckBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.showLogCheckBox.Image = global::PriconneReTLInstaller.Properties.Resources.check_empty_24x24_2;
+            this.showLogCheckBox.Image = global::PriconneReALLTLInstaller.Properties.Resources.check_empty_24x24_2;
             this.showLogCheckBox.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
             this.showLogCheckBox.Location = new System.Drawing.Point(29, 506);
             this.showLogCheckBox.Name = "showLogCheckBox";
@@ -381,7 +381,7 @@
             // newPatchPictureBox
             // 
             this.newPatchPictureBox.BackColor = System.Drawing.Color.Transparent;
-            this.newPatchPictureBox.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources._new;
+            this.newPatchPictureBox.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources._new;
             this.newPatchPictureBox.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.newPatchPictureBox.Location = new System.Drawing.Point(245, 53);
             this.newPatchPictureBox.Name = "newPatchPictureBox";
@@ -394,7 +394,7 @@
             // exitButton
             // 
             this.exitButton.BackColor = System.Drawing.Color.Transparent;
-            this.exitButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.door_closed;
+            this.exitButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.door_closed;
             this.exitButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.exitButton.FlatAppearance.BorderSize = 0;
             this.exitButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -485,7 +485,7 @@
             // modExPicture
             // 
             this.modExPicture.BackColor = System.Drawing.Color.Transparent;
-            this.modExPicture.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.exclamation_t;
+            this.modExPicture.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.exclamation_t;
             this.modExPicture.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.modExPicture.Location = new System.Drawing.Point(574, 46);
             this.modExPicture.Name = "modExPicture";
@@ -497,7 +497,7 @@
             // minimizeButton
             // 
             this.minimizeButton.BackColor = System.Drawing.Color.Transparent;
-            this.minimizeButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.arrow_blue;
+            this.minimizeButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.arrow_blue;
             this.minimizeButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.minimizeButton.FlatAppearance.BorderSize = 0;
             this.minimizeButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -513,7 +513,7 @@
             // aboutButton
             // 
             this.aboutButton.BackColor = System.Drawing.Color.Transparent;
-            this.aboutButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.i_bubble;
+            this.aboutButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.i_bubble;
             this.aboutButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.aboutButton.ContextMenuStrip = this.helpMenuStrip;
             this.aboutButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
@@ -573,7 +573,7 @@
             // settingsButton
             // 
             this.settingsButton.BackColor = System.Drawing.Color.Transparent;
-            this.settingsButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.scroll_closed_res2;
+            this.settingsButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.scroll_closed_res2;
             this.settingsButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.settingsButton.ContextMenuStrip = this.settingsMenuStrip;
             this.settingsButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
@@ -632,7 +632,7 @@
             // auButton
             // 
             this.auButton.BackColor = System.Drawing.Color.Transparent;
-            this.auButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.crystal_normal_res;
+            this.auButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.crystal_normal_res;
             this.auButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.auButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
             this.auButton.FlatAppearance.BorderSize = 0;
@@ -650,7 +650,7 @@
             // pictureBox1
             // 
             this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
-            this.pictureBox1.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.ReTLlogo;
+            this.pictureBox1.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.ReTLlogo;
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.pictureBox1.Location = new System.Drawing.Point(15, 7);
             this.pictureBox1.Name = "pictureBox1";
@@ -698,7 +698,7 @@
             // operationToolTipPicture
             // 
             this.operationToolTipPicture.BackColor = System.Drawing.Color.Transparent;
-            this.operationToolTipPicture.Image = global::PriconneReTLInstaller.Properties.Resources.q_bubble;
+            this.operationToolTipPicture.Image = global::PriconneReALLTLInstaller.Properties.Resources.q_bubble;
             this.operationToolTipPicture.Location = new System.Drawing.Point(348, 469);
             this.operationToolTipPicture.Name = "operationToolTipPicture";
             this.operationToolTipPicture.Size = new System.Drawing.Size(32, 32);
@@ -877,7 +877,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.bg_enlarged;
+            this.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.bg_enlarged;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(714, 858);
             this.ControlBox = false;

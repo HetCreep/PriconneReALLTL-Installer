@@ -1,4 +1,4 @@
-namespace PriconneReTLInstaller
+namespace PriconneReALLTLInstaller
 {
     partial class LauncherForm
     {
@@ -58,7 +58,7 @@ namespace PriconneReTLInstaller
             // backButton
             // 
             this.backButton.BackColor = System.Drawing.Color.Transparent;
-            this.backButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.back_arrow;
+            this.backButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.back_arrow;
             this.backButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.backButton.FlatAppearance.BorderSize = 0;
             this.backButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -126,7 +126,7 @@ namespace PriconneReTLInstaller
             // shortcutAddButton
             // 
             this.shortcutAddButton.BackColor = System.Drawing.Color.Transparent;
-            this.shortcutAddButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.shortcutadd_button;
+            this.shortcutAddButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.shortcutadd_button;
             this.shortcutAddButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.shortcutAddButton.FlatAppearance.BorderSize = 0;
             this.shortcutAddButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -143,7 +143,7 @@ namespace PriconneReTLInstaller
             // shortcutRemoveButton
             // 
             this.shortcutRemoveButton.BackColor = System.Drawing.Color.Transparent;
-            this.shortcutRemoveButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.shortcutremove_button_disabled;
+            this.shortcutRemoveButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.shortcutremove_button_disabled;
             this.shortcutRemoveButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.shortcutRemoveButton.Enabled = false;
             this.shortcutRemoveButton.FlatAppearance.BorderSize = 0;
@@ -200,7 +200,7 @@ namespace PriconneReTLInstaller
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.bg2;
+            this.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.bg2;
             this.ClientSize = new System.Drawing.Size(640, 315);
             this.ControlBox = false;
             this.Controls.Add(this.panel2);

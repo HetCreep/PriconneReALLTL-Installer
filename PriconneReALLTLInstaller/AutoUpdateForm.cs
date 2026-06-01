@@ -1,7 +1,7 @@
 using HelperFunctions;
 using InstallerFunctions;
 using LoggerFunctions;
-using PriconneReTLInstaller.Properties;
+using PriconneReALLTLInstaller.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,7 +17,7 @@ using System.Windows.Forms;
 using System.Timers;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
-namespace PriconneReTLInstaller
+namespace PriconneReALLTLInstaller
 {
     public partial class AutoUpdateForm: BaseForm
     {

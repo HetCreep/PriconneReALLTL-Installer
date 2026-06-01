@@ -1,4 +1,4 @@
-﻿namespace PriconneReTLInstaller
+﻿namespace PriconneReALLTLInstaller
 {
     partial class GithubForm
     {
@@ -38,7 +38,7 @@
             // saveButton
             // 
             this.saveButton.BackColor = System.Drawing.Color.Transparent;
-            this.saveButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.savetokenbutton_disabled;
+            this.saveButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.savetokenbutton_disabled;
             this.saveButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.saveButton.Enabled = false;
             this.saveButton.FlatAppearance.BorderSize = 0;
@@ -75,7 +75,7 @@
             // backButton
             // 
             this.backButton.BackColor = System.Drawing.Color.Transparent;
-            this.backButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.back_arrow;
+            this.backButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.back_arrow;
             this.backButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.backButton.FlatAppearance.BorderSize = 0;
             this.backButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -92,7 +92,7 @@
             // validateButton
             // 
             this.validateButton.BackColor = System.Drawing.Color.Transparent;
-            this.validateButton.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.validatetokenbutton;
+            this.validateButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.validatetokenbutton;
             this.validateButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.validateButton.FlatAppearance.BorderSize = 0;
             this.validateButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
@@ -110,7 +110,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackgroundImage = global::PriconneReTLInstaller.Properties.Resources.bg2;
+            this.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.bg2;
             this.ClientSize = new System.Drawing.Size(675, 154);
             this.ControlBox = false;
             this.Controls.Add(this.validateButton);

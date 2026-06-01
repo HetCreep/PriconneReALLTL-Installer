@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace PriconneReTLInstaller
+namespace PriconneReALLTLInstaller
 {
     internal static class Program
     {

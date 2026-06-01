@@ -1,4 +1,4 @@
-﻿using PriconneReTLInstaller.Properties;
+﻿using PriconneReALLTLInstaller.Properties;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace PriconneReTLInstaller
+namespace PriconneReALLTLInstaller
 {
     public partial class IgnoreForm : BaseForm
     {
