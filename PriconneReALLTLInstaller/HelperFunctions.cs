@@ -388,8 +388,8 @@ namespace HelperFunctions
         public void LogFastLauncherShortcut()
         {
             var links = GetFastLauncherLinks();
-            if (links.Count == 0) Log?.Invoke("No launch shortcuts set (covers all launchers — DMM / DMMGamePlayerFastLauncher / PriconneMultiAccountLauncher; wrap one to enable update + launch).", "info", false);
-            else Log?.Invoke("Launch shortcuts (update + launch): " + string.Join(", ", links), "info", false);
+            if (links.Count == 0) Log?.Invoke("No launch shortcut set yet — wrap a launcher shortcut to enable one-click update + play.", "info", false);
+            else Log?.Invoke("Launch shortcuts (update + play): " + string.Join(", ", links), "info", false);
         }
         /// <summary>Returns the full list of configured shortcut paths (merging legacy single-link if needed).</summary>
         public System.Collections.Generic.List<string> GetFastLauncherLinks()
@@ -614,6 +614,52 @@ namespace HelperFunctions
                 Log?.Invoke("Found PriconneMultiAccountLauncher!", "info", false);
             } else Log?.Invoke("PriconneMultiAccountLauncher not installed!", "info", false);
         }
+        // Smart-uninstall foundation: record which source(s) own each installed patch file
+        // (path -> owner list) in BepInEx\.priconnerealltl-manifest.json. Written after each successful
+        // extract; merged across sources so a shared file (e.g. the modloader engine) ends up owned by
+        // EVERY source that installed it. A later stage uses this for ref-counted per-source uninstall.
+        public void WriteInstallManifest(string priconnePath, System.Collections.Generic.List<string> extractedRelPaths)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(priconnePath) || !Directory.Exists(priconnePath)) return;
+                string owner = GetCurrentPatchSource().ShortName;
+                string manifestPath = Path.Combine(priconnePath, "BepInEx", ".priconnerealltl-manifest.json");
+
+                var files = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>(StringComparer.OrdinalIgnoreCase);
+                if (File.Exists(manifestPath))
+                {
+                    try
+                    {
+                        var existing = JsonConvert.DeserializeObject<InstallManifest>(File.ReadAllText(manifestPath));
+                        if (existing?.files != null)
+                            foreach (var kv in existing.files) files[kv.Key] = kv.Value ?? new System.Collections.Generic.List<string>();
+                    }
+                    catch { }
+                }
+
+                var owned = new System.Collections.Generic.List<string>(extractedRelPaths ?? new System.Collections.Generic.List<string>());
+                foreach (PluginDownload pd in GetCurrentPatchSource().PluginDownloads) owned.Add("BepInEx/plugins/" + pd.DllName);
+
+                foreach (string rel in owned)
+                {
+                    string key = (rel ?? "").Replace('\\', '/');
+                    if (key.Length == 0) continue;
+                    if (!files.TryGetValue(key, out var owners)) { owners = new System.Collections.Generic.List<string>(); files[key] = owners; }
+                    if (!owners.Contains(owner)) owners.Add(owner);
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
+                File.WriteAllText(manifestPath, JsonConvert.SerializeObject(new InstallManifest { files = files }, Newtonsoft.Json.Formatting.Indented));
+            }
+            catch (Exception ex) { Log?.Invoke("Could not write install manifest: " + ex.Message, "info", false); }
+        }
+
+        private sealed class InstallManifest
+        {
+            public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> files { get; set; }
+        }
+
         public void PopulateConfigChecklistbox(CheckedListBox checkedListBox)
         {
             checkedListBox.Items.Clear();

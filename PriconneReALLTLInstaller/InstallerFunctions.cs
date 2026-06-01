@@ -502,6 +502,7 @@ namespace InstallerFunctions
             try
             {
                 int counter = 0;
+                var extractedFiles = new List<string>();   // install manifest (files this source owns)
                 using (var zip = ZipFile.OpenRead(tempFile))
                 {
                     Log?.Invoke("Extracting files to game folder...", "add", true);
@@ -515,8 +516,7 @@ namespace InstallerFunctions
                         counter++;
                         string fileName = entry.FullName;
 
-                        Log?.Invoke("Extracting: " + entry.FullName, "add", false);
-                        DownloadProgress?.Invoke(counter, zip.Entries.Count);
+                        DownloadProgress?.Invoke(counter, zip.Entries.Count);   // progress bar; per-entry logging removed (5844 file-IO log writes caused jitter)
 
                         // Zip-slip guard: the resolved destination must stay inside the game
                         // folder. A crafted entry (e.g. "..\..\evil") must not escape priconnePath.
@@ -535,16 +535,21 @@ namespace InstallerFunctions
                                 Directory.CreateDirectory(destinationPath);
 
                             await Task.Run(() => ExtractZipEntry(entry, Path.Combine(priconnePath, fileName)));
+                            if (entry.Name != "") extractedFiles.Add(fileName.Replace('\\', '/'));
                         }
                     }
                 }
                 extractSuccess = true;
+                Log?.Invoke($"Extracted {extractedFiles.Count} file(s).", "add", false);
 
                 // Pull any external plugin DLLs this source needs from their own repos (e.g. TH's
                 // PriconneALLTLFixup.dll from HetCreep/PriconneALLTLFixup), then toggle the
                 // .dll <-> .dll.bak profile so only the active TL source's fixup plugins load.
                 await DownloadSourcePlugins();
                 helper.ApplyPluginProfile(priconnePath);
+
+                // Record what this source installed (path -> owning sources) for smart uninstall.
+                helper.WriteInstallManifest(priconnePath, extractedFiles);
             }
             catch (Exception ex)
             {
