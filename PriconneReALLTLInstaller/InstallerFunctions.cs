@@ -33,8 +33,6 @@ namespace InstallerFunctions
     {
         Helper helper = new Helper();
 
-        private string patchgithubAPI = Settings.Default.patchGithubApi;
-
         private string assetLink;
         private string priconnePath;
         private bool priconnePathValid;
