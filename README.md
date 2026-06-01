@@ -12,6 +12,7 @@ A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx trans
 * **Shortcut-wrapped launching** — the GUI focuses on patching. To play, "wrap" an existing launcher shortcut (DMM, [DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), or a [PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher) account shortcut). Pressing the wrapped shortcut updates the patch, then launches that exact target — one click, *update + play*, per account. Reversible (un-wrap restores the original).
 * **PriconneMultiAccountLauncher integration** — auto-detected via its Inno Setup uninstall key (HKCU/HKLM) with an `%APPDATA%` fallback.
 * **Modloader pinned to ImaterialC** — the BepInEx IL2CPP interop baseline always comes from the canonical ImaterialC release, independent of the chosen TL source.
+* **Per-source plugin profiles** — each TL source declares which BepInEx fixup plugins it uses; installing or switching a source toggles the rest off via a `.bak` rename (English loads `PriconneSkillTLFixup`/`PriconneTLFixup`; other languages shelve those and load their own). Every fixup DLL stays on disk — only the active source's set loads.
 * **Rate-limit friendly** — GitHub version checks are cached (~6h), so a GitHub API token is *optional* for typical use. If set, the token is stored encrypted (Windows DPAPI), never logged.
 * **Clean cloud builds** — strong-name signed, GitHub Actions MSBuild release workflow; ClickOnce manifest signing disabled.
 
