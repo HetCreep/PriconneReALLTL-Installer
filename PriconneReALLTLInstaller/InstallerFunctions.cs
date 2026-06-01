@@ -113,14 +113,15 @@ namespace InstallerFunctions
                     return (localVersion = "N/A", localVersionValid = false);
                 }
 
-                string tlVersionFilePath = Path.Combine(priconnePath, "BepInEx", "Translation", "en", "Text", "Version.txt");
+                Helper.PatchSource src = Helper.GetCurrentPatchSource();
+                string tlVersionFilePath = Path.Combine(priconnePath, src.VersionFileRelPath);
 
                 if (!File.Exists(tlVersionFilePath))
                 {
                     return (localVersion = "None", localVersionValid = false);
                 }
                 string rawVersionFile = File.ReadAllText(tlVersionFilePath);
-                Match match = Regex.Match(rawVersionFile, @"\d{8}[a-z]?");
+                Match match = Regex.Match(rawVersionFile, src.VersionRegex);
 
                 if (match == null || !match.Success)
                 {
@@ -696,8 +697,12 @@ namespace InstallerFunctions
 
                 if (install)
                 {
-
-                    if (versioncompare < 0)
+                    // Update (remove old files via the patch repo's file tree, then extract) ONLY
+                    // when a valid same-source version is installed and it differs from latest.
+                    // Fresh/invalid/cross-source (localVersionValid == false) -> plain Install (no
+                    // remove) — avoids ProcessTree fetching a tag that doesn't exist in the source
+                    // (e.g. installed="None" vs a TH semver tag would 404 the recursive tree call).
+                    if (localVersionValid && versioncompare != 0)
                     {
                         processName = "Update";
                         Log?.Invoke("Updating translation patch...", "info", true);

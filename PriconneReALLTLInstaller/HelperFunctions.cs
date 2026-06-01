@@ -415,12 +415,19 @@ namespace HelperFunctions
             public string ShortName { get; }
             public string Owner { get; }
             public string Repo { get; }
-            public PatchSource(string displayName, string shortName, string owner, string repo)
+            // Installed-version detection per source: where the version file lives (relative
+            // to the game folder) + a regex to extract the version from it. EN ships an
+            // 8-digit date in en/Text/Version.txt; TH a semver in th/Text/Version.txt.
+            public string VersionFileRelPath { get; }
+            public string VersionRegex { get; }
+            public PatchSource(string displayName, string shortName, string owner, string repo, string versionFileRelPath, string versionRegex)
             {
                 DisplayName = displayName;
                 ShortName = shortName;
                 Owner = owner;
                 Repo = repo;
+                VersionFileRelPath = versionFileRelPath;
+                VersionRegex = versionRegex;
             }
             public string ApiBase => $"https://api.github.com/repos/{Owner}/{Repo}";
             public string RawBase => $"https://raw.githubusercontent.com/{Owner}/{Repo}";
@@ -430,8 +437,10 @@ namespace HelperFunctions
         public static readonly System.Collections.Generic.IReadOnlyList<PatchSource> PatchSources =
             new System.Collections.Generic.List<PatchSource>
             {
-                new PatchSource("English  (ImaterialC / PriconneRe-TL)", "English", "ImaterialC", "PriconneRe-TL"),
-                new PatchSource("Thai  (PeterkleCG / PriconneTH)", "Thai", "PeterkleCG", "PriconneTH"),
+                new PatchSource("English  (ImaterialC / PriconneRe-TL)", "English", "ImaterialC", "PriconneRe-TL",
+                    @"BepInEx\Translation\en\Text\Version.txt", @"\d{8}[a-z]?"),
+                new PatchSource("Thai  (PeterkleCG / PriconneTH)", "Thai", "PeterkleCG", "PriconneTH",
+                    @"BepInEx\Translation\th\Text\Version.txt", @"v?\d+\.\d+(?:\.\d+)?"),
             };
 
         /// <summary>Currently selected translation patch source (falls back to index 0 / English).</summary>
