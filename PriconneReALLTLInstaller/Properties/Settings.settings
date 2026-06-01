@@ -107,6 +107,9 @@ You can set the shortcut in the Installer by clicking the "Settings" icon (scrol
     <Setting Name="selectedLauncher" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="selectedPatchSource" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
     <Setting Name="checkForInstallerUpdates" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>

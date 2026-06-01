@@ -189,7 +189,19 @@ namespace InstallerFunctions
                     string response = client.DownloadString(releaseUrl);
                     dynamic releaseJson = JsonConvert.DeserializeObject(response);
                     string version = releaseJson.tag_name;
-                    assetLink = releaseJson.assets[0].browser_download_url;
+                    // Pick the .zip patch asset (some sources also ship an .exe installer
+                    // in the same release); fall back to the first asset if none match.
+                    assetLink = null;
+                    foreach (var asset in releaseJson.assets)
+                    {
+                        string assetName = (string)asset.name;
+                        if (!string.IsNullOrEmpty(assetName) && assetName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                        {
+                            assetLink = (string)asset.browser_download_url;
+                            break;
+                        }
+                    }
+                    if (assetLink == null) assetLink = releaseJson.assets[0].browser_download_url;
                     return (latestVersion = version, latestVersionValid = true, assetLink);
                 }
             }
@@ -241,12 +253,12 @@ namespace InstallerFunctions
                 {
                     client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
                     if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
-                    string refUrl = $"https://api.github.com/repos/ImaterialC/PriconneRe-TL/git/ref/tags/{latestVersion}";
+                    string refUrl = $"{Helper.GetCurrentPatchSource().ApiBase}/git/ref/tags/{latestVersion}";
                     string refResponse = client.DownloadString(refUrl);
                     dynamic responseJson = JObject.Parse(refResponse);
                     string commitSha = responseJson["object"]["sha"]?.ToString();
 
-                    string fileUrl = $"https://raw.githubusercontent.com/ImaterialC/PriconneRe-TL/{commitSha}/src/BepInEx/interop/version";
+                    string fileUrl = $"{Helper.GetCurrentPatchSource().RawBase}/{commitSha}/src/BepInEx/interop/version";
                     string fileVersion = client.DownloadString(fileUrl);
 
                     return (fileVersion, commitSha.Substring(0,7));
@@ -466,7 +478,7 @@ namespace InstallerFunctions
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("PriconneReALLTLInstaller");
                 if (tokenvalid) client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", gitHubToken);
 
-                string treeUrl = $"{Settings.Default.patchGithubApi}/git/trees/{releaseTag}?recursive=1";
+                string treeUrl = $"{Helper.GetCurrentPatchSource().ApiBase}/git/trees/{releaseTag}?recursive=1";
 
                 HttpResponseMessage response = await client.GetAsync(treeUrl);
                 if (response.IsSuccessStatusCode)

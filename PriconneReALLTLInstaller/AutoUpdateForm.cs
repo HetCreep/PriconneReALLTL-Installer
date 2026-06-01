@@ -67,7 +67,7 @@ namespace PriconneReALLTLInstaller
             gamePathLinkLabel.Text = "Game Path: " + priconnePath;
             gameVersionLabel.Text = "Game Version: " + gameVersion;
 
-            (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(Settings.Default.patchGithubApi);
+            (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(Helper.GetCurrentPatchSource().ApiBase);
             latestVersionLinkLabel.Text = latestVersionValid ? latestVersion : "ERROR!";
 
             (latestModLoaderVersion, _) = installer.GetLatestModloaderRelease();
@@ -305,7 +305,7 @@ namespace PriconneReALLTLInstaller
 
         private void latestVersionLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            if (latestVersion != null) Process.Start("https://github.com/ImaterialC/PriconneRe-TL/releases/latest");
+            if (latestVersion != null) Process.Start(Helper.GetCurrentPatchSource().ReleasesPage);
         }
 
         private void button1_Click(object sender, EventArgs e)

@@ -298,6 +298,18 @@ You can set the shortcut in the Installer by clicking the ""Settings"" icon (scr
                 this["selectedLauncher"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int selectedPatchSource {
+            get {
+                return ((int)(this["selectedPatchSource"]));
+            }
+            set {
+                this["selectedPatchSource"] = value;
+            }
+        }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]

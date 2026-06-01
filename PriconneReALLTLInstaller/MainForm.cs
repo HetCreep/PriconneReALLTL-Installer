@@ -21,7 +21,7 @@ namespace PriconneReALLTLInstaller
 {
     public partial class MainForm : BaseForm
     {
-        private string patchgithubAPI = Settings.Default.patchGithubApi;
+        private string patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
         private string assetLink;
         private string priconnePath;
         private bool priconnePathValid;
@@ -41,6 +41,7 @@ namespace PriconneReALLTLInstaller
         private CheckBox[] operationCheckboxes;
         private CheckBox[] optionCheckboxes;
         private Button[] menuButtons;
+        private System.Windows.Forms.LinkLabel patchSourceLinkLabel;
 
         public MainForm()
         {
@@ -178,6 +179,8 @@ namespace PriconneReALLTLInstaller
             Icon = Resources.jewel;
             Height = 580;
             optionsPanel.Height = 87;
+
+            SetupPatchSourceSelector();
 
             versionLinkLabel.Text = $"v{String.Format(Application.ProductVersion)}";
 
@@ -489,7 +492,7 @@ namespace PriconneReALLTLInstaller
         }
         private void latestReleaseLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            if (latestVersion != null) Process.Start("https://github.com/ImaterialC/PriconneRe-TL/releases/latest");
+            if (latestVersion != null) Process.Start(Helper.GetCurrentPatchSource().ReleasesPage);
         }
 
         private void aboutButton_Click(object sender, EventArgs e)
@@ -592,6 +595,82 @@ namespace PriconneReALLTLInstaller
         {
             LauncherForm LauncherForm = new LauncherForm();
             LauncherForm.ShowDialog();
+        }
+
+        // ─── Translation patch source selector (created in code; no Designer edit) ───
+        private void SetupPatchSourceSelector()
+        {
+            if (patchSourceLinkLabel != null) return; // create once
+
+            patchSourceLinkLabel = new System.Windows.Forms.LinkLabel
+            {
+                AutoSize = true,
+                BackColor = System.Drawing.Color.Transparent,
+                Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238))),
+                LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline,
+                LinkColor = System.Drawing.Color.Black,
+                VisitedLinkColor = System.Drawing.Color.Black,
+                Location = new System.Drawing.Point(350, 12),
+                Name = "patchSourceLinkLabel",
+                TabStop = true
+            };
+            toolTip.SetToolTip(patchSourceLinkLabel, "Click to choose the translation patch source (English / Thai).");
+            patchSourceLinkLabel.LinkClicked += patchSourceLinkLabel_LinkClicked;
+            patchInfoPanel.Controls.Add(patchSourceLinkLabel);
+            patchSourceLinkLabel.BringToFront();
+            RefreshPatchSourceLabel();
+        }
+
+        private void RefreshPatchSourceLabel()
+        {
+            if (patchSourceLinkLabel != null)
+                patchSourceLinkLabel.Text = "TL Source: " + Helper.GetCurrentPatchSource().DisplayName + "  ▾";
+        }
+
+        private void patchSourceLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            var menu = new ContextMenuStrip();
+            var sources = Helper.PatchSources;
+            for (int i = 0; i < sources.Count; i++)
+            {
+                int index = i;
+                var item = new ToolStripMenuItem(sources[i].DisplayName)
+                {
+                    Checked = (index == Settings.Default.selectedPatchSource)
+                };
+                item.Click += (s, ev) => SelectPatchSource(index);
+                menu.Items.Add(item);
+            }
+            menu.Show(patchSourceLinkLabel, new System.Drawing.Point(0, patchSourceLinkLabel.Height));
+        }
+
+        private void SelectPatchSource(int index)
+        {
+            if (index == Settings.Default.selectedPatchSource)
+            {
+                RefreshPatchSourceLabel();
+                return;
+            }
+            Settings.Default.selectedPatchSource = index;
+            Settings.Default.Save();
+            RefreshPatchSourceLabel();
+            RefreshLatestVersionInfo();
+        }
+
+        // Re-fetch latest patch + modloader from the (possibly newly selected) source
+        // and refresh the version UI. Mirrors the source-dependent part of InitializeUI.
+        private void RefreshLatestVersionInfo()
+        {
+            patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
+            (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(patchgithubAPI);
+            latestVersionLinkLabel.Text = latestVersionValid ? latestVersion : "ERROR!";
+
+            (latestModLoaderVersion, commitSha) = installer.GetLatestModloaderRelease();
+            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "ERROR!";
+            if (commitSha != null) toolTip.SetToolTip(latestModloaderVersionLabel, $"Commit SHA: {commitSha}");
+
+            UpdateUI();
+            startButton.Enabled = (!latestVersionValid || latestModLoaderVersion == null) ? false : helper.isAnyChecked(operationCheckboxes);
         }
 
         private void checkForInstallerUpdatesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)

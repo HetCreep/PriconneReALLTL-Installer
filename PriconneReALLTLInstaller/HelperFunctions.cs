@@ -404,6 +404,48 @@ namespace HelperFunctions
                 list.Add(legacy);
             return list;
         }
+        // ─── Translation patch source selection (EN/TH) ──────────────────────────
+        // The installer can target multiple translation repositories. The chosen
+        // index is persisted in Settings.selectedPatchSource (user-scoped). Every
+        // patch URL (release API, modloader ref/raw, releases page) derives from
+        // the selected source — never hardcode a repo elsewhere.
+        public sealed class PatchSource
+        {
+            public string DisplayName { get; }
+            public string Owner { get; }
+            public string Repo { get; }
+            public PatchSource(string displayName, string owner, string repo)
+            {
+                DisplayName = displayName;
+                Owner = owner;
+                Repo = repo;
+            }
+            public string ApiBase => $"https://api.github.com/repos/{Owner}/{Repo}";
+            public string RawBase => $"https://raw.githubusercontent.com/{Owner}/{Repo}";
+            public string ReleasesPage => $"https://github.com/{Owner}/{Repo}/releases/latest";
+        }
+
+        public static readonly System.Collections.Generic.IReadOnlyList<PatchSource> PatchSources =
+            new System.Collections.Generic.List<PatchSource>
+            {
+                new PatchSource("English  (ImaterialC / PriconneRe-TL)", "ImaterialC", "PriconneRe-TL"),
+                new PatchSource("Thai  (PeterkleCG / PriconneTH)", "PeterkleCG", "PriconneTH"),
+            };
+
+        /// <summary>Currently selected translation patch source (falls back to index 0 / English).</summary>
+        public static PatchSource GetCurrentPatchSource()
+        {
+            int idx = Settings.Default.selectedPatchSource;
+            if (idx < 0 || idx >= PatchSources.Count) idx = 0;
+            return PatchSources[idx];
+        }
+
+        public void PopulatePatchSourceComboBox(ComboBox comboBox)
+        {
+            comboBox.Items.Clear();
+            foreach (var source in PatchSources) comboBox.Items.Add(source.DisplayName);
+        }
+
         public void PopulateLauncherComboBox(ComboBox comboBox)
         {
             comboBox.Items.Clear();
