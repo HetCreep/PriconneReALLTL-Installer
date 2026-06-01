@@ -261,10 +261,15 @@ namespace PriconneReALLTLInstaller
             // LATEST one's result so stale fetches from earlier switches can't overwrite the labels
             // out of order ("Installed/Latest lagging behind" + half-shown "Checking").
             int seq = ++versionLoadSeq;
+            // Only the LATEST values come from GitHub → show "Checking…" for those while fetching.
             latestVersionLinkLabel.Text = "Checking…";
             latestModloaderVersionLabel.Text = "Checking…";
-            localVersionLabel.Text = "Checking…";
-            localModloaderVersionLabel.Text = "Checking…";
+            // Installed TL/modloader are LOCAL reads (instant) — read + show right away so a source
+            // switch updates Installed at once (the TL one is per-source). No "Checking" (not network).
+            (localVersion, localVersionValid) = installer.GetInstalledPatchVersion();
+            localVersionLabel.Text = Helper.NormalizeVersion(localVersion);
+            (localModLoaderVersion, localModLoaderVersionValid) = installer.GetInstalledModloaderVersion();
+            localModloaderVersionLabel.Text = localModLoaderVersion;
             patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
             string api = patchgithubAPI;
             string token = Helper.DecryptString(Settings.Default.GithubAPIKey);
