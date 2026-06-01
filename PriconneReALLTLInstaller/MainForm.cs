@@ -670,6 +670,9 @@ namespace PriconneReALLTLInstaller
             Settings.Default.Save();
             RefreshPatchSourceLabel();
             RefreshLatestVersionInfo();
+            // Toggle plugin DLLs (.dll <-> .dll.bak) to match the newly selected source right
+            // away, so an already-installed patch reflects the active source without reinstalling.
+            helper.ApplyPluginProfile(priconnePath);
         }
 
         // Re-fetch latest patch + modloader from the (possibly newly selected) source

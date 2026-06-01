@@ -420,7 +420,15 @@ namespace HelperFunctions
             // 8-digit date in en/Text/Version.txt; TH a semver in th/Text/Version.txt.
             public string VersionFileRelPath { get; }
             public string VersionRegex { get; }
-            public PatchSource(string displayName, string shortName, string owner, string repo, string versionFileRelPath, string versionRegex)
+            // Per-source plugin profile, applied in BepInEx/plugins via a ".bak" toggle:
+            // EnablePlugins are restored (.dll.bak -> .dll), DisablePlugins are shelved
+            // (.dll -> .dll.bak). Lets EN-only fixup DLLs (PriconneSkillTLFixup/PriconneTLFixup)
+            // and a TH-only fixup DLL (PriconneALLTLFixup) coexist on disk while only the active
+            // source's set loads. The DLLs themselves still ship via the patch/modloader.
+            public System.Collections.Generic.IReadOnlyList<string> EnablePlugins { get; }
+            public System.Collections.Generic.IReadOnlyList<string> DisablePlugins { get; }
+            public PatchSource(string displayName, string shortName, string owner, string repo, string versionFileRelPath, string versionRegex,
+                string[] enablePlugins = null, string[] disablePlugins = null)
             {
                 DisplayName = displayName;
                 ShortName = shortName;
@@ -428,6 +436,8 @@ namespace HelperFunctions
                 Repo = repo;
                 VersionFileRelPath = versionFileRelPath;
                 VersionRegex = versionRegex;
+                EnablePlugins = enablePlugins ?? new string[0];
+                DisablePlugins = disablePlugins ?? new string[0];
             }
             public string ApiBase => $"https://api.github.com/repos/{Owner}/{Repo}";
             public string RawBase => $"https://raw.githubusercontent.com/{Owner}/{Repo}";
@@ -438,9 +448,13 @@ namespace HelperFunctions
             new System.Collections.Generic.List<PatchSource>
             {
                 new PatchSource("English  (ImaterialC / PriconneRe-TL)", "English", "ImaterialC", "PriconneRe-TL",
-                    @"BepInEx\Translation\en\Text\Version.txt", @"\d{8}[a-z]?"),
+                    @"BepInEx\Translation\en\Text\Version.txt", @"\d{8}[a-z]?",
+                    enablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll" },
+                    disablePlugins: new[] { "PriconneALLTLFixup.dll" }),
                 new PatchSource("Thai  (PeterkleCG / PriconneTH)", "Thai", "PeterkleCG", "PriconneTH",
-                    @"BepInEx\Translation\th\Text\Version.txt", @"v?\d+\.\d+(?:\.\d+)?"),
+                    @"BepInEx\Translation\th\Text\Version.txt", @"v?\d+\.\d+(?:\.\d+)?",
+                    enablePlugins: new[] { "PriconneALLTLFixup.dll" },
+                    disablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll" }),
             };
 
         /// <summary>Currently selected translation patch source (falls back to index 0 / English).</summary>
@@ -449,6 +463,52 @@ namespace HelperFunctions
             int idx = Settings.Default.selectedPatchSource;
             if (idx < 0 || idx >= PatchSources.Count) idx = 0;
             return PatchSources[idx];
+        }
+
+        /// <summary>
+        /// Applies the currently selected source's plugin profile in BepInEx/plugins by toggling
+        /// the ".bak" suffix: DisablePlugins are shelved (.dll -> .dll.bak), EnablePlugins are
+        /// restored (.dll.bak -> .dll). Idempotent and safe to call on launch, after install, and
+        /// on source switch. Plugins not present on disk are simply skipped.
+        /// </summary>
+        public void ApplyPluginProfile(string priconnePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(priconnePath)) return;
+                string pluginsDir = Path.Combine(priconnePath, "BepInEx", "plugins");
+                if (!Directory.Exists(pluginsDir)) return;
+
+                PatchSource src = GetCurrentPatchSource();
+                foreach (string dll in src.DisablePlugins) ShelvePluginDll(pluginsDir, dll);
+                foreach (string dll in src.EnablePlugins) RestorePluginDll(pluginsDir, dll);
+            }
+            catch (Exception ex)
+            {
+                Log?.Invoke("Could not apply plugin profile: " + ex.Message, "error", false);
+            }
+        }
+
+        // Disable a plugin: rename "<dll>" -> "<dll>.bak" so BepInEx no longer loads it.
+        private void ShelvePluginDll(string pluginsDir, string dll)
+        {
+            string dllPath = Path.Combine(pluginsDir, dll);
+            if (!File.Exists(dllPath)) return;                 // already disabled / not installed
+            string bakPath = dllPath + ".bak";
+            if (File.Exists(bakPath)) File.Delete(bakPath);    // drop a stale backup so Move succeeds
+            File.Move(dllPath, bakPath);
+            Log?.Invoke($"Disabled plugin (not used by this TL source): {dll}", "info", false);
+        }
+
+        // Enable a plugin: restore "<dll>.bak" -> "<dll>" so BepInEx loads it again.
+        private void RestorePluginDll(string pluginsDir, string dll)
+        {
+            string dllPath = Path.Combine(pluginsDir, dll);
+            if (File.Exists(dllPath)) return;                  // already enabled
+            string bakPath = dllPath + ".bak";
+            if (!File.Exists(bakPath)) return;                 // nothing to restore
+            File.Move(bakPath, dllPath);
+            Log?.Invoke($"Enabled plugin for this TL source: {dll}", "info", false);
         }
 
         /// <summary>Canonicalizes a version/tag for comparison: trims and strips a leading

@@ -473,6 +473,9 @@ namespace InstallerFunctions
                 }
                 extractSuccess = true;
 
+                // Apply the selected source's plugin profile (.dll <-> .dll.bak) so only the
+                // active TL source's fixup plugins load (EN: Skill/TL fixups on, ALLTL off; TH: reverse).
+                helper.ApplyPluginProfile(priconnePath);
             }
             catch (Exception ex)
             {
