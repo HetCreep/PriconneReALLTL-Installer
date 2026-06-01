@@ -172,13 +172,24 @@ namespace PriconneReALLTLInstaller
             }
         }
 
+        // Keep the window within the user's screen working area and centered, even when the
+        // layout grows (Show Logs) or on high-DPI displays where the form scales up.
+        private void FitAndCenter(int desiredHeight)
+        {
+            System.Drawing.Rectangle wa = Screen.FromControl(this).WorkingArea;
+            this.Height = Math.Min(desiredHeight, wa.Height);
+            this.Left = wa.Left + Math.Max(0, (wa.Width - this.Width) / 2);
+            this.Top = wa.Top + Math.Max(0, (wa.Height - this.Height) / 2);
+        }
+
         private void InitializeUI()
         {
             string fastLauncherLink = Settings.Default.fastLauncherLink;
 
             Icon = Resources.jewel;
-            Height = 580;
+            this.StartPosition = FormStartPosition.CenterScreen;
             optionsPanel.Height = 87;
+            FitAndCenter(580);
 
             SetupPatchSourceSelector();
 
@@ -367,7 +378,7 @@ namespace PriconneReALLTLInstaller
 
                 if (checkBox == showLogCheckBox)
                 {
-                    this.Height = checkBox.Checked ? 860 : 580;
+                    FitAndCenter(checkBox.Checked ? 860 : 580);
                     Settings.Default.showLogChecked = checkBox.Checked;
                 }
             }
@@ -618,7 +629,7 @@ namespace PriconneReALLTLInstaller
                 Name = "patchSourceLinkLabel",
                 TabStop = true
             };
-            toolTip.SetToolTip(patchSourceLinkLabel, "Click to choose the translation patch source (English / Thai).");
+            toolTip.SetToolTip(patchSourceLinkLabel, "Click to choose the translation patch source.");
             patchSourceLinkLabel.LinkClicked += patchSourceLinkLabel_LinkClicked;
             patchInfoPanel.Controls.Add(patchSourceLinkLabel);
             patchSourceLinkLabel.BringToFront();

@@ -69,11 +69,14 @@ namespace PriconneReALLTLInstaller
         // ─── UI Initialization ────────────────────────────────────────────────────
         private void InitializeUI()
         {
-            // Arch B: launcher selection is retired — launching is done by pressing a
-            // wrapped (or created) AutoUpdate shortcut. This page MANAGES those shortcuts.
-            setLauncherLabel.Visible = false;
-            launcherComboBox.Visible = false;
-            dmmfastlauncherLabel.Visible = false;
+            // Arch B: launcher selection is retired — launching is via wrapped shortcuts.
+            // Hide the whole launcher-select panel (panel1, which holds the combobox) and
+            // pull the shortcut-manager panel (panel2) up to fill the gap, then shrink the
+            // form so the page isn't a big blank area on top.
+            panel1.Visible = false;
+            int gap = panel2.Top - panel1.Top;
+            panel2.Top = panel1.Top;
+            this.Height -= gap;
 
             setFastlauncherLinkLabel.Text = "Wrap a launcher shortcut so it updates the patch, then launches the game:";
             shortcutListLabel.Text = "Managed shortcuts (update + launch):";
