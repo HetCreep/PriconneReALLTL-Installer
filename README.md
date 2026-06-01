@@ -1,34 +1,38 @@
-# <img src="PriconneReALLTLInstaller/Resources/Item_Jewel_Art.ico"> PriconneReALLTL Installer — Multi-Account Launcher Edition
+# <img src="PriconneReALLTLInstaller/Resources/Item_Jewel_Art.ico"> PriconneReALLTL Installer
 
-An installer/updater GUI for the [PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) English patch, upgraded to natively support multi-account launching!
+A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx translation patches — supporting **multiple, user-selectable translation sources (English / ไทย)** and one-click *update + play* launch shortcuts.
 
-This is a specialized, feature-rich fork of the original [tynave/PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) that integrates perfectly with the [Priconne Multi-Account Launcher](https://github.com/HetCreep/PriconneMultiAccountLauncher) to manage, update, and switch multiple Princess Connect accounts seamlessly on a single PC.
-
----
-
-## 🌟 Upgraded Features
-
-* **Native PriconneMultiLauncher Integration**: Automatically detects and coordinates with the [Priconne Multi-Account Launcher](https://github.com/HetCreep/PriconneMultiAccountLauncher) database.
-* **Multi-Shortcut ListBox UI**: A newly designed, interactive UI panel that lists all configured account shortcuts, allowing you to switch profiles instantly.
-* **Auto-Launch on Update Completion**: Optionally configures the patcher to automatically launch the game under the selected account profile as soon as the translation patch update completes.
-* **Clean Cloud Compilation**: Maintained with modern CI/CD compilation and completely clean of click-once signing telemetry.
+**"ReALLTL"** = supports **all** translation patches. A rebranded, fully detached fork of [tynave/PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) with its own identity (name, GUIDs, strong-name key, self-update URL) so the two installers never collide.
 
 ---
 
-## 💾 You can download the latest version here:  
-**[Download PriconneReALLTLInstaller Latest Release](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest)**
+## 🌟 Features
+
+* **Selectable translation source (EN / TH)** — switch between [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) and [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) right from the main screen. Every patch URL derives from the selected source — adding another source is a single list entry.
+* **Shortcut-wrapped launching** — the GUI focuses on patching. To play, "wrap" an existing launcher shortcut (DMM, [DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), or a [PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher) account shortcut). Pressing the wrapped shortcut updates the patch, then launches that exact target — one click, *update + play*, per account. Reversible (un-wrap restores the original).
+* **PriconneMultiAccountLauncher integration** — auto-detected via its Inno Setup uninstall key (HKCU/HKLM) with an `%APPDATA%` fallback.
+* **Modloader pinned to ImaterialC** — the BepInEx IL2CPP interop baseline always comes from the canonical ImaterialC release, independent of the chosen TL source.
+* **Rate-limit friendly** — GitHub version checks are cached (~6h), so a GitHub API token is *optional* for typical use. If set, the token is stored encrypted (Windows DPAPI), never logged.
+* **Clean cloud builds** — strong-name signed, GitHub Actions MSBuild release workflow; ClickOnce manifest signing disabled.
+
+---
+
+## 💾 Download
+
+**[Latest release →](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest)**
 
 ---
 
 ## 🛠️ Credits & Attribution
 
-This project is a customized fork under the MIT License. Heartfelt thanks to the original creators and contributors who made this patcher possible:
-* Based on [PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) by [tynave](https://github.com/tynave)
-* Built upon [PriconneTL_Updater](https://github.com/touanu/PriconeTL_Updater) by [touanu](https://github.com/touanu)
-* English translation patch provided by [PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL)
+MIT-licensed fork. Heartfelt thanks to:
+
+* [PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) by [tynave](https://github.com/tynave) — the upstream installer this is forked from
+* [PriconeTL_Updater](https://github.com/touanu/PriconeTL_Updater) by [touanu](https://github.com/touanu) — original inspiration
+* Translation patches: [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) · [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย)
+* All in-game assets are the property of CyberAgent, Inc. / Cygames, Inc. and their respective creators.
 
 ### 🤖 Built with AI Co-Engineers
 
-We proudly acknowledge the invaluable collaborative assistance of our agentic AI coding assistants who helped refactor, secure, and compile this installer:
-- **Claude Code** (Anthropic) - Assisted in core C# codebase migration and architectural cleanup.
-- **Antigravity** (Google DeepMind) - Assisted in multi-shortcut UI ListBox design, ClickOnce deactivation, and GitHub Actions cloud compilation.
+- **Claude Code** (Anthropic) — C# rebrand + detachment, multi-source EN/TH, shortcut-wrap launch architecture, per-source version detection, rate-limit caching, build/CI.
+- **Antigravity** (Google DeepMind) — earlier native multi-launcher UI, ClickOnce deactivation, and GitHub Actions cloud compilation.
