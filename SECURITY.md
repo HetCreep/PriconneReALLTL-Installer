@@ -22,6 +22,7 @@ What the installer does (and doesn't) do with sensitive data and the system:
 - **No telemetry.** The app makes no analytics or tracking calls. Network traffic is limited to GitHub (`api.github.com`, `raw.githubusercontent.com`, release asset downloads) and launching the game.
 - **Archive extraction is path-guarded.** Patch archives are extracted with a zip-slip guard: any entry whose resolved path escapes the game folder is skipped, preventing path-traversal writes.
 - **Downloads are from GitHub over HTTPS.** Patch, modloader, and plugin assets come from the configured source repositories' GitHub releases / raw content.
+- **Download sources are hardcoded in the exe, not the config.** Every repository URL (translation sources, modloader, self-update, external plugins) is compiled into the program (the `PatchSource` registry, `ModloaderSource`, the self-update URL, and `PluginDownloads`). The editable `*.exe.config` contains no download URLs, so editing it cannot redirect the installer to a malicious source. Tampering with the config requires local write access to the install folder — the same access needed to replace the exe itself, so the config is not a distinct weak point.
 - **No elevation by default.** The app operates on the game folder and its own per-user settings; it does not require administrator rights for normal use.
 
 ## Scope
