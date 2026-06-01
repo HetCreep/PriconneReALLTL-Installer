@@ -200,7 +200,7 @@ namespace PriconneReALLTLInstaller
             showLogCheckBox.Checked = Settings.Default.showLogChecked;
 
             (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(patchgithubAPI);
-            latestVersionLinkLabel.Text = latestVersionValid ? latestVersion : "ERROR!";
+            latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
 
             (latestModLoaderVersion, commitSha) = installer.GetLatestModloaderRelease();
             latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "ERROR!";
@@ -239,7 +239,7 @@ namespace PriconneReALLTLInstaller
 
             installCheckBox.Text = localVersionValid ? " Update" : " Install";
 
-            localVersionLabel.Text = localVersion;
+            localVersionLabel.Text = Helper.NormalizeVersion(localVersion);
             localModloaderVersionLabel.Text = localModLoaderVersion;
 
             versioncompare = Helper.NormalizeVersion(localVersion).CompareTo(Helper.NormalizeVersion(latestVersion));
@@ -660,7 +660,7 @@ namespace PriconneReALLTLInstaller
         {
             patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
             (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(patchgithubAPI);
-            latestVersionLinkLabel.Text = latestVersionValid ? latestVersion : "ERROR!";
+            latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
 
             (latestModLoaderVersion, commitSha) = installer.GetLatestModloaderRelease();
             latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "ERROR!";

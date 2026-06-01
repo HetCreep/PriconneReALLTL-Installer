@@ -80,7 +80,7 @@ namespace PriconneReALLTLInstaller
             gameVersionLabel.Text = "Game Version: " + gameVersion;
 
             (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(Helper.GetCurrentPatchSource().ApiBase);
-            latestVersionLinkLabel.Text = latestVersionValid ? latestVersion : "ERROR!";
+            latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
 
             (latestModLoaderVersion, _) = installer.GetLatestModloaderRelease();
             latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "ERROR!";
@@ -93,7 +93,7 @@ namespace PriconneReALLTLInstaller
         private void UpdateUI()
         {
             (localVersion, localVersionValid) = installer.GetInstalledPatchVersion();
-            localVersionLabel.Text = localVersion;
+            localVersionLabel.Text = Helper.NormalizeVersion(localVersion);
 
             (localModLoaderVersion, localModLoaderVersionValid) = installer.GetInstalledModloaderVersion();
             localModloaderVersionLabel.Text = localModLoaderVersion;
