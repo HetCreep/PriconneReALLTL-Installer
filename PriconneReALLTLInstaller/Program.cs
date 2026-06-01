@@ -14,6 +14,11 @@ namespace PriconneReALLTLInstaller
         [STAThread]
         static void Main(string[] args)
         {
+            // Single-exe: Newtonsoft.Json is embedded as a resource (see the .csproj EmbeddedResource)
+            // and resolved from there, so the installer runs without a loose Newtonsoft.Json.dll
+            // sitting next to the exe. Registered before any Newtonsoft type is touched.
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveEmbeddedAssembly;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -31,6 +36,23 @@ namespace PriconneReALLTLInstaller
             else
             {
                 Application.Run(new MainForm());
+            }
+        }
+
+        // Loads an embedded assembly (e.g. Newtonsoft.Json.dll) from the exe's resources when the
+        // runtime can't find it on disk. Returns null for anything not embedded so normal probing continues.
+        private static System.Reflection.Assembly ResolveEmbeddedAssembly(object sender, ResolveEventArgs eventArgs)
+        {
+            string wanted = new System.Reflection.AssemblyName(eventArgs.Name).Name + ".dll";
+            System.Reflection.Assembly self = System.Reflection.Assembly.GetExecutingAssembly();
+            string resource = self.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith(wanted, StringComparison.OrdinalIgnoreCase));
+            if (resource == null) return null;
+            using (System.IO.Stream stream = self.GetManifestResourceStream(resource))
+            {
+                if (stream == null) return null;
+                byte[] bytes = new byte[stream.Length];
+                stream.Read(bytes, 0, bytes.Length);
+                return System.Reflection.Assembly.Load(bytes);
             }
         }
 
