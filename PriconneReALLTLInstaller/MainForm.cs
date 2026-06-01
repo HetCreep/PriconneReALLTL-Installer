@@ -186,6 +186,17 @@ namespace PriconneReALLTLInstaller
             this.Top = wa.Top + Math.Max(0, (wa.Height - this.Height) / 2);
         }
 
+        // After Show Logs resizes the window (FitAndCenter may have clamped it to the screen), size
+        // the log box to fill the gap between its top and the status bar — so the last line isn't cut
+        // off — and Refresh() to repaint the newly revealed area (which can flash black otherwise).
+        private void FitLogBox()
+        {
+            int bottom = this.ClientSize.Height - statusStrip1.Height - 8;
+            int h = bottom - outputTextBox.Top;
+            if (h > 60) outputTextBox.Height = h;
+            outputTextBox.Refresh();
+        }
+
         private async void InitializeUI()
         {
             string fastLauncherLink = Settings.Default.fastLauncherLink;
@@ -252,6 +263,8 @@ namespace PriconneReALLTLInstaller
             int seq = ++versionLoadSeq;
             latestVersionLinkLabel.Text = "Checking…";
             latestModloaderVersionLabel.Text = "Checking…";
+            localVersionLabel.Text = "Checking…";
+            localModloaderVersionLabel.Text = "Checking…";
             patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
             string api = patchgithubAPI;
             string token = Helper.DecryptString(Settings.Default.GithubAPIKey);
@@ -431,6 +444,7 @@ namespace PriconneReALLTLInstaller
                 {
                     FitAndCenter(checkBox.Checked ? 890 : 610);
                     Settings.Default.showLogChecked = checkBox.Checked;
+                    if (checkBox.Checked) FitLogBox();
                 }
             }
             UpdateModeDescription();

@@ -388,8 +388,8 @@ namespace HelperFunctions
         public void LogFastLauncherShortcut()
         {
             var links = GetFastLauncherLinks();
-            if (links.Count == 0) Log?.Invoke("Fast launcher links not set!", "info", false);
-            else Log?.Invoke("Fast launcher links: " + string.Join(", ", links), "info", false);
+            if (links.Count == 0) Log?.Invoke("No launch shortcuts set (covers all launchers — DMM / DMMGamePlayerFastLauncher / PriconneMultiAccountLauncher; wrap one to enable update + launch).", "info", false);
+            else Log?.Invoke("Launch shortcuts (update + launch): " + string.Join(", ", links), "info", false);
         }
         /// <summary>Returns the full list of configured shortcut paths (merging legacy single-link if needed).</summary>
         public System.Collections.Generic.List<string> GetFastLauncherLinks()
