@@ -83,7 +83,7 @@ namespace PriconneReALLTLInstaller
             latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
 
             (latestModLoaderVersion, _) = installer.GetLatestModloaderRelease();
-            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "ERROR!";
+            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "N/A";
 
             progressLabel.Text = "";
 
@@ -258,7 +258,7 @@ namespace PriconneReALLTLInstaller
                 return;
             }
 
-            if (priconnePathValid  && latestVersionValid && latestModLoaderVersion != null)
+            if (priconnePathValid && latestVersionValid)
             {
                 int versioncompare = Helper.NormalizeVersion(localVersion).CompareTo(Helper.NormalizeVersion(latestVersion));
 

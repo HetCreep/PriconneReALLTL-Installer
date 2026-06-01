@@ -288,34 +288,17 @@ namespace InstallerFunctions
             }
             catch (WebException webEx)
             {
-                // Check if the response contains JSON data (which happens in case of API errors)
-                if (webEx.Response != null)
-                {
-                    using (var reader = new StreamReader(webEx.Response.GetResponseStream()))
-                    {
-                        string errorResponse = reader.ReadToEnd();
-                        try
-                        {
-                            dynamic errorJson = JsonConvert.DeserializeObject(errorResponse);
-                            string errorMessage = errorJson.message;
-                            ErrorLog?.Invoke("Error getting latest modloader version: " + errorMessage);
-                        }
-                        catch (Exception innerEx)
-                        {
-                            ErrorLog?.Invoke("Error reading API error message: " + innerEx.Message);
-                        }
-                    }
-                }
-                else
-                {
-                    ErrorLog?.Invoke("Error getting latest modloader release: " + webEx.Message);
-                }
-
+                // Modloader-latest is informational (the patch zip already bundles the modloader),
+                // so a fetch failure is a soft warning — not a red error, and it no longer blocks
+                // operations. Common cause: GitHub rate limit / 403 without an API token.
+                HttpWebResponse resp = webEx.Response as HttpWebResponse;
+                string detail = resp != null ? $"HTTP {(int)resp.StatusCode}" : webEx.Message;
+                Log?.Invoke($"Could not check latest modloader version ({detail}) — skipping (install still works; set a GitHub token to avoid rate limits).", "info", false);
                 return (null, null);
             }
             catch (Exception ex)
             {
-                ErrorLog?.Invoke("Error getting latest modeloader release: " + ex.Message);
+                Log?.Invoke("Could not check latest modloader version: " + ex.Message, "info", false);
                 return (null, null);
             }
 

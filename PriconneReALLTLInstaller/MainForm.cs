@@ -214,7 +214,7 @@ namespace PriconneReALLTLInstaller
             latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
 
             (latestModLoaderVersion, commitSha) = installer.GetLatestModloaderRelease();
-            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "ERROR!";
+            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "N/A";
             if (commitSha != null) toolTip.SetToolTip(latestModloaderVersionLabel, $"Commit SHA: {commitSha}");
 
             exclusiveCheckboxes = new CheckBox[] { installCheckBox, reinstallCheckBox, uninstallCheckBox };
@@ -236,7 +236,7 @@ namespace PriconneReALLTLInstaller
 
             if (versioncompare == 0 && !modLoaderOutdated && latestModLoaderVersion != null) logger.Log("You already have the latest translation patch version installed!", "success", true);
 
-            startButton.Enabled = (!latestVersionValid || latestModLoaderVersion == null ) ? false : helper.isAnyChecked(operationCheckboxes);
+            startButton.Enabled = (!latestVersionValid ) ? false : helper.isAnyChecked(operationCheckboxes);
         }
 
         private void UpdateUI()
@@ -284,7 +284,7 @@ namespace PriconneReALLTLInstaller
             removeConfigCheckBox.Enabled = false;
             removeIgnoredCheckBox.Enabled = false;
 
-            if (!latestVersionValid || latestModLoaderVersion == null)
+            if (!latestVersionValid)
             {
                 foreach (CheckBox checkBox in operationCheckboxes)
                 {
@@ -686,11 +686,11 @@ namespace PriconneReALLTLInstaller
                 latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
 
                 (latestModLoaderVersion, commitSha) = installer.GetLatestModloaderRelease();
-                latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "ERROR!";
+                latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "N/A";
                 if (commitSha != null) toolTip.SetToolTip(latestModloaderVersionLabel, $"Commit SHA: {commitSha}");
 
                 UpdateUI();
-                startButton.Enabled = (!latestVersionValid || latestModLoaderVersion == null) ? false : helper.isAnyChecked(operationCheckboxes);
+                startButton.Enabled = (!latestVersionValid) ? false : helper.isAnyChecked(operationCheckboxes);
             }
             finally
             {
