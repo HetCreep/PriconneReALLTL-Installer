@@ -33,7 +33,7 @@ namespace LoggerFunctions
             {
                 using (StreamWriter writer = new StreamWriter(logFilePath, false))
                 {
-                    writer.WriteLine($"[PriconneReTL Installer version: {String.Format(System.Windows.Forms.Application.ProductVersion)}]");
+                    writer.WriteLine($"[PriconneReALLTL Installer version: {String.Format(System.Windows.Forms.Application.ProductVersion)}]");
                     writer.WriteLine($"[Log file created at: {DateTime.Now}]");
                 }
             }
@@ -108,7 +108,7 @@ namespace LoggerFunctions
             {
                 using (StreamWriter writer = new StreamWriter(logFilePath, false))
                 {
-                    writer.WriteLine($"[PriconneReTL Installer (Autoupdate) version: {String.Format(System.Windows.Forms.Application.ProductVersion)}]");
+                    writer.WriteLine($"[PriconneReALLTL Installer (Autoupdate) version: {String.Format(System.Windows.Forms.Application.ProductVersion)}]");
                     writer.WriteLine($"[Log file created at: {DateTime.Now}]");
                 }
             }

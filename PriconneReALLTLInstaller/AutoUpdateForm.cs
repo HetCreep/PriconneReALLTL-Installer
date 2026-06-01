@@ -59,7 +59,7 @@ namespace PriconneReALLTLInstaller
 
             RegisterMouseDrag(new List<Control> { gameInfoPanel, patchInfoPanel });
 
-            logger = new AutoUpdateLogger("ReTLAutoUpdater.log", statusLabel);
+            logger = new AutoUpdateLogger("ReALLTLAutoUpdater.log", statusLabel);
             logger.StartSession();
 
         }

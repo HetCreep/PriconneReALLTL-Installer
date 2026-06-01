@@ -35,7 +35,7 @@ namespace PriconneReALLTLInstaller
 
             priconnePath = arg;
 
-            ielogger = new Logger("ReTLInstaller.log", null , toolStripStatusLabel1);
+            ielogger = new Logger("ReALLTLInstaller.log", null , toolStripStatusLabel1);
         }
 
         private void backButton_Click(object sender, EventArgs e)

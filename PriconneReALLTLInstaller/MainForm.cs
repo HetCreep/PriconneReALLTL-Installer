@@ -95,7 +95,7 @@ namespace PriconneReALLTLInstaller
             operationLabel.TextChanged += OnOperationLabelChange;
 
 
-            logger = new Logger("ReTLInstaller.log", outputTextBox, toolStripStatusLabel1);
+            logger = new Logger("ReALLTLInstaller.log", outputTextBox, toolStripStatusLabel1);
             logger.StartSession();
 
         }
