@@ -243,26 +243,30 @@ namespace PriconneReALLTLInstaller
         // UI. Used on startup and on TL-source switch (bypassCache forces a live re-fetch). The
         // window stays responsive throughout — a slow or rate-limited (HTTP 403) response no longer
         // freezes the app the way the old synchronous calls did.
+        private int versionLoadSeq = 0;
         private async Task LoadLatestVersionInfoAsync(bool bypassCache)
         {
+            // Rapid source-switching fires several of these at once. Tag each run; apply only the
+            // LATEST one's result so stale fetches from earlier switches can't overwrite the labels
+            // out of order ("Installed/Latest lagging behind" + half-shown "Checking").
+            int seq = ++versionLoadSeq;
             latestVersionLinkLabel.Text = "Checking…";
             latestModloaderVersionLabel.Text = "Checking…";
             patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
             string api = patchgithubAPI;
             string token = Helper.DecryptString(Settings.Default.GithubAPIKey);
+            if (bypassCache) Helper.BypassVersionCache = true;
 
             var result = await Task.Run(() =>
             {
-                if (bypassCache) Helper.BypassVersionCache = true;
-                try
-                {
-                    Helper.ValidateGitHubToken(token);   // pre-warm token validation off the UI thread
-                    var p = installer.GetLatestPatchRelease(api);
-                    var m = installer.GetLatestModloaderRelease();
-                    return (patch: p, ml: m);
-                }
-                finally { if (bypassCache) Helper.BypassVersionCache = false; }
+                Helper.ValidateGitHubToken(token);   // pre-warm token validation off the UI thread
+                var p = installer.GetLatestPatchRelease(api);
+                var m = installer.GetLatestModloaderRelease();
+                return (patch: p, ml: m);
             });
+
+            if (seq != versionLoadSeq) return;        // superseded by a newer switch — discard stale result
+            if (bypassCache) Helper.BypassVersionCache = false;
 
             (latestVersion, latestVersionValid, assetLink) = result.patch;
             latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";

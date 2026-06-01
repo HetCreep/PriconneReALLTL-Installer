@@ -276,16 +276,15 @@ namespace InstallerFunctions
                     string mlTag = (string)JObject.Parse(mlReleaseResponse)["tag_name"];
                     if (string.IsNullOrEmpty(mlTag)) return (null, null);
 
-                    string refUrl = $"{ml.ApiBase}/git/ref/tags/{mlTag}";
-                    string refResponse = client.DownloadString(refUrl);
-                    string commitSha = (string)JObject.Parse(refResponse)["object"]?["sha"];
-                    if (string.IsNullOrEmpty(commitSha)) return (null, null);
+                    // Read the bundled interop version directly at the release TAG via raw.githubusercontent
+                    // (raw accepts a tag ref) — this skips the extra git/ref/tags API call, so the modloader
+                    // check costs ONE rate-limited request instead of two. raw.githubusercontent doesn't
+                    // count against the GitHub API rate limit, easing the tokenless 403s.
+                    string fileUrl = $"{ml.RawBase}/{mlTag}/src/BepInEx/interop/version";
+                    string fileVersion = client.DownloadString(fileUrl).Trim();
 
-                    string fileUrl = $"{ml.RawBase}/{commitSha}/src/BepInEx/interop/version";
-                    string fileVersion = client.DownloadString(fileUrl);
-
-                    Helper.SetCachedVersion("modloader", new JObject { ["v"] = fileVersion, ["s"] = commitSha.Substring(0, 7) }.ToString(Newtonsoft.Json.Formatting.None));
-                    return (fileVersion, commitSha.Substring(0, 7));
+                    Helper.SetCachedVersion("modloader", new JObject { ["v"] = fileVersion, ["s"] = mlTag }.ToString(Newtonsoft.Json.Formatting.None));
+                    return (fileVersion, mlTag);
                 }
             }
             catch (WebException webEx)
