@@ -554,7 +554,7 @@ namespace PriconneReTLInstaller
         {
             string launcherName = "DMMGamePlayer";
             if (Settings.Default.selectedLauncher == 1) launcherName = "DMMGamePlayerFastLauncher";
-            else if (Settings.Default.selectedLauncher == 2) launcherName = "PriconneMultiLauncher";
+            else if (Settings.Default.selectedLauncher == 2) launcherName = "PriconneMultiAccountLauncher";
             
             currentLauncherLinkLabel.Text = "Launcher: " + launcherName;
             checkForInstallerUpdatesToolStripMenuItem.Checked = Settings.Default.checkForInstallerUpdates;

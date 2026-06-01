@@ -144,7 +144,7 @@ namespace PriconneReTLInstaller
                         result = installer.StartPriconneMultiLauncher();
                         if (result == false)
                         {
-                            MessageBox.Show("Cannot start game via PriconneMultiLauncher!\nCheck logs for more details.\nFalling back to DMMGamePlayer!", "Cannot launch via PriconneMultiLauncher", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            MessageBox.Show("Cannot start game via PriconneMultiAccountLauncher!\nCheck logs for more details.\nFalling back to DMMGamePlayer!", "Cannot launch via PriconneMultiAccountLauncher", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             installer.StartDMMGamePlayer();
                             break;
                         }

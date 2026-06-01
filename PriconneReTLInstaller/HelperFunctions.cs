@@ -1,5 +1,6 @@
 using InstallerFunctions;
 using LoggerFunctions;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using PriconneReTLInstaller;
 using PriconneReTLInstaller.Properties;
@@ -291,18 +292,84 @@ namespace HelperFunctions
                 return false;
             }
         }
+        // ─── PriconneMultiAccountLauncher integration ─────────────────────────────
+        // Product name + exe of the launcher this installer integrates with.
+        // Source of truth: HetCreep/PriconneMultiAccountLauncher setup.iss.
+        private const string PmalFolderName = "PriconneMultiAccountLauncher";
+        private const string PmalExeName = "PriconneMultiAccountLauncher.exe";
+        // Inno Setup uninstall registry subkey: AppId + "_is1". AppId is fixed in
+        // the launcher's setup.iss ({ECD76E8C-1446-453B-BCB6-80C4CCD5FE53}).
+        private const string PmalUninstallSubKey =
+            @"Software\Microsoft\Windows\CurrentVersion\Uninstall\{ECD76E8C-1446-453B-BCB6-80C4CCD5FE53}_is1";
+
+        /// <summary>
+        /// Resolves the full path to PriconneMultiAccountLauncher.exe.
+        /// Detection order: the launcher's own Inno Setup uninstall key
+        /// (InstallLocation) under HKCU, then HKLM (32- and 64-bit views, because
+        /// the Inno installer runs 32-bit and writes to WOW6432Node on x64),
+        /// then a fixed fallback of %APPDATA%\PriconneMultiAccountLauncher.
+        /// The returned path is a best candidate; callers must File.Exists-check it.
+        /// </summary>
+        public string GetPriconneMultiLauncherExePath()
+        {
+            string installDir = ReadPmalInstallLocationFromRegistry();
+
+            if (string.IsNullOrEmpty(installDir))
+            {
+                installDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    PmalFolderName);
+            }
+
+            return Path.Combine(installDir, PmalExeName);
+        }
+
+        private string ReadPmalInstallLocationFromRegistry()
+        {
+            // Default install is per-user (setup.iss PrivilegesRequired=lowest) -> HKCU.
+            // An elevated install lands in HKLM; the 32-bit Inno installer writes the
+            // key under WOW6432Node on 64-bit Windows, so probe both HKLM views.
+            var probes = new (RegistryHive hive, RegistryView view)[]
+            {
+                (RegistryHive.CurrentUser, RegistryView.Registry64),
+                (RegistryHive.LocalMachine, RegistryView.Registry32),
+                (RegistryHive.LocalMachine, RegistryView.Registry64),
+            };
+
+            foreach (var probe in probes)
+            {
+                try
+                {
+                    using (var baseKey = RegistryKey.OpenBaseKey(probe.hive, probe.view))
+                    using (var key = baseKey.OpenSubKey(PmalUninstallSubKey))
+                    {
+                        string location = key?.GetValue("InstallLocation") as string;
+                        if (!string.IsNullOrEmpty(location) &&
+                            File.Exists(Path.Combine(location, PmalExeName)))
+                        {
+                            return location;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Registry read is best-effort; fall through to the next probe / fallback.
+                    Console.WriteLine($"PMAL registry probe failed ({probe.hive}/{probe.view}): {ex.Message}");
+                }
+            }
+
+            return null;
+        }
+
         public bool IsPriconneMultiLauncherInstalled()
         {
             try
             {
-                string priconneLauncherPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Priconne Multi-Account Launcher");
-                string priconneLauncherExe = Path.Combine(priconneLauncherPath, "PriconneMultiLauncher.exe");
-
-                if (File.Exists(priconneLauncherExe)) return true; else return false;
+                return File.Exists(GetPriconneMultiLauncherExePath());
             }
             catch (Exception ex)
             {
-                ErrorLog?.Invoke("Error checking PriconneMultiLauncher: " + ex.Message);
+                ErrorLog?.Invoke("Error checking PriconneMultiAccountLauncher: " + ex.Message);
                 return false;
             }
         }
@@ -342,17 +409,17 @@ namespace HelperFunctions
             comboBox.Items.Clear();
             comboBox.Items.Add("DMMGamePlayer");
             comboBox.Items.Add("DMMGamePlayerFastLauncher");
-            comboBox.Items.Add("PriconneMultiLauncher");
+            comboBox.Items.Add("PriconneMultiAccountLauncher");
 
-            if (IsFastLauncherInstalled()) 
-            { 
+            if (IsFastLauncherInstalled())
+            {
                 Log?.Invoke("Found DMMGamePlayerFastLauncher!", "info", false);
             } else Log?.Invoke("DMMGamePlayerFastLauncher not installed!", "info", false);
 
             if (IsPriconneMultiLauncherInstalled())
             {
-                Log?.Invoke("Found PriconneMultiLauncher!", "info", false);
-            } else Log?.Invoke("PriconneMultiLauncher not installed!", "info", false);
+                Log?.Invoke("Found PriconneMultiAccountLauncher!", "info", false);
+            } else Log?.Invoke("PriconneMultiAccountLauncher not installed!", "info", false);
         }
         public void PopulateConfigChecklistbox(CheckedListBox checkedListBox)
         {

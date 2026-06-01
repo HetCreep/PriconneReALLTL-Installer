@@ -835,8 +835,7 @@ namespace InstallerFunctions
         {
             try
             {
-                string priconneLauncherPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Priconne Multi-Account Launcher");
-                string priconneLauncherExe = Path.Combine(priconneLauncherPath, "PriconneMultiLauncher.exe");
+                string priconneLauncherExe = helper.GetPriconneMultiLauncherExePath();
 
                 if (File.Exists(priconneLauncherExe))
                 {
@@ -845,7 +844,7 @@ namespace InstallerFunctions
                     string firstValidLink = helper.GetFastLauncherLinks().FirstOrDefault(l => System.IO.File.Exists(l));
                     string targetFile = !string.IsNullOrEmpty(firstValidLink) ? firstValidLink : priconneLauncherExe;
 
-                    Log?.Invoke("Starting game via PriconneMultiLauncher.", "info", true);
+                    Log?.Invoke("Starting game via PriconneMultiAccountLauncher.", "info", true);
                     ProcessStartInfo startInfo = new ProcessStartInfo
                     {
                         FileName = targetFile,
@@ -853,12 +852,12 @@ namespace InstallerFunctions
                     Process.Start(startInfo);
                     return true;
                 }
-                Log?.Invoke("Cannot start game! PriconneMultiLauncher not found!", "error", true);
+                Log?.Invoke("Cannot start game! PriconneMultiAccountLauncher not found!", "error", true);
                 return false;
             }
             catch (Exception ex)
             {
-                ErrorLog?.Invoke("Error starting PriconneMultiLauncher: " + ex.Message);
+                ErrorLog?.Invoke("Error starting PriconneMultiAccountLauncher: " + ex.Message);
                 return false;
             }
         }

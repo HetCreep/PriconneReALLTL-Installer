@@ -85,7 +85,7 @@ namespace PriconneReTLInstaller
             if (selected == 1)
                 setFastlauncherLinkLabel.Text = "Set DMMGamePlayerFastLauncher shortcuts:";
             else if (selected == 2)
-                setFastlauncherLinkLabel.Text = "Set PriconneMultiLauncher shortcuts:";
+                setFastlauncherLinkLabel.Text = "Set PriconneMultiAccountLauncher shortcuts:";
             else
                 setFastlauncherLinkLabel.Text = "No shortcut configuration needed:";
 
@@ -99,7 +99,7 @@ namespace PriconneReTLInstaller
             }
             else if (selected == 2 && !helper.IsPriconneMultiLauncherInstalled())
             {
-                dmmfastlauncherLabel.Text = "PriconneMultiLauncher not installed! Falling back to DMMGamePlayer!";
+                dmmfastlauncherLabel.Text = "PriconneMultiAccountLauncher not installed! Falling back to DMMGamePlayer!";
                 dmmfastlauncherLabel.Visible = true;
                 shortcutAddButton.Enabled = false;
                 shortcutRemoveButton.Enabled = false;
