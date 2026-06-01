@@ -438,6 +438,16 @@ namespace InstallerFunctions
                         Log?.Invoke("Extracting: " + entry.FullName, "add", false);
                         DownloadProgress?.Invoke(counter, zip.Entries.Count);
 
+                        // Zip-slip guard: the resolved destination must stay inside the game
+                        // folder. A crafted entry (e.g. "..\..\evil") must not escape priconnePath.
+                        string gameRoot = Path.GetFullPath(priconnePath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                        string fullDest = Path.GetFullPath(Path.Combine(priconnePath, fileName));
+                        if (!fullDest.StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Log?.Invoke($"Skipped suspicious zip entry (path traversal): {fileName}", "error", false);
+                            continue;
+                        }
+
                         if (!ignoreFiles.Contains(fileName))
                         {
                             string destinationPath = Path.Combine(priconnePath, Path.GetDirectoryName(fileName));
@@ -738,21 +748,9 @@ namespace InstallerFunctions
 
                 if (launch && !cancelledByUser)
                 {
-                    bool result = false;
-                    switch (Settings.Default.selectedLauncher)
-                    {
-                            case 0:
-                                result = StartDMMGamePlayer();
-                                break;
-                            case 1:                
-                                result = StartDMMFastLauncher();
-                                break;
-                            case 2:
-                                result = StartPriconneMultiLauncher();
-                                break;
-                            default:
-                                break;
-                    }
+                    // Arch B: in-GUI "Launch Game" launches vanilla DMM directly (the universal
+                    // launcher). Per-launcher/account launching is via wrapped shortcuts.
+                    bool result = StartDMMGamePlayer();
 
                     if (result)
                     {

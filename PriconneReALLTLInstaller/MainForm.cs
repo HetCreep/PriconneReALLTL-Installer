@@ -193,9 +193,10 @@ namespace PriconneReALLTLInstaller
 
             helper.LogFastLauncherShortcut();
 
-            launchCheckBox.Checked = false;     // Arch B: in-GUI launch retired (patch-only); launching is via shortcuts
-            launchCheckBox.Visible = false;
-            operationsPanel.Height = 154;
+            launchCheckBox.Enabled = priconnePathValid;
+            launchCheckBox.Checked = Settings.Default.launchState;
+            launchCheckBox.Text = " Launch Game (DMM)";   // Arch B: GUI launch = vanilla DMM; per-account launch via wrapped shortcuts
+            operationsPanel.Height = launchCheckBox.Checked ? 184 : 154;
             showLogCheckBox.Checked = Settings.Default.showLogChecked;
 
             (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(patchgithubAPI);
@@ -603,9 +604,9 @@ namespace PriconneReALLTLInstaller
                 AutoSize = true,
                 BackColor = System.Drawing.Color.Transparent,
                 Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238))),
-                LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline,
-                LinkColor = System.Drawing.Color.Black,
-                VisitedLinkColor = System.Drawing.Color.Black,
+                LinkBehavior = System.Windows.Forms.LinkBehavior.AlwaysUnderline,
+                LinkColor = System.Drawing.Color.MediumVioletRed,
+                VisitedLinkColor = System.Drawing.Color.MediumVioletRed,
                 Location = new System.Drawing.Point(122, 1),
                 Name = "patchSourceLinkLabel",
                 TabStop = true
@@ -620,7 +621,7 @@ namespace PriconneReALLTLInstaller
         private void RefreshPatchSourceLabel()
         {
             if (patchSourceLinkLabel != null)
-                patchSourceLinkLabel.Text = "TL Source: " + Helper.GetCurrentPatchSource().ShortName + "  ▾";
+                patchSourceLinkLabel.Text = "TL Source: " + Helper.GetCurrentPatchSource().ShortName + "  ▼ change";
         }
 
         private void patchSourceLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
