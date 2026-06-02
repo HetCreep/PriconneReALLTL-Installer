@@ -28,6 +28,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      # SECURITY NOTE (distribution-security): the `uses:` actions below are pinned to floating
+      # major tags (@v4/@v2) for readability. Pinning each to a full commit SHA is a tracked
+      # follow-up to do before wide public trust — deferred for now (same posture as the reference
+      # PriconneMultiAccountLauncher workflow). All are first-party (actions/microsoft/nuget).
       - name: Checkout Code
         uses: actions/checkout@v4
 
