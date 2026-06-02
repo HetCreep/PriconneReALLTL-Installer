@@ -257,6 +257,16 @@ namespace PriconneReALLTLInstaller
             clearCacheMenuItem.Click += (s, e) => ClearDownloadCache();
             settingsMenuStrip.Items.Add(clearCacheMenuItem);
 
+            // A dedicated "Check for Updates Now" action. The toggle above only auto-checks on startup
+            // and stays silent when already up to date; this one always runs on demand, bypasses the
+            // 6h version cache for a live result, and reports the outcome either way.
+            var checkNowMenuItem = new ToolStripMenuItem("Check for Updates Now");
+            checkNowMenuItem.Font = checkForInstallerUpdatesToolStripMenuItem.Font;            // match the Designer items so it isn't greyed
+            checkNowMenuItem.ForeColor = checkForInstallerUpdatesToolStripMenuItem.ForeColor;
+            checkNowMenuItem.Click += checkForUpdatesNow_Click;
+            int toggleIdx = helpMenuStrip.Items.IndexOf(checkForInstallerUpdatesToolStripMenuItem);
+            helpMenuStrip.Items.Insert(toggleIdx + 1, checkNowMenuItem);                       // right under the startup toggle
+
             installer.LogCacheStatus();   // show what's in the zip cache this session
             await LoadLatestVersionInfoAsync(bypassCache: false);
         }
@@ -876,6 +886,43 @@ namespace PriconneReALLTLInstaller
                 {
                     logger.Error("Error checking for installer update: " + ex.Message);
                 }
+            }
+        }
+
+        // On-demand "Check for Updates Now" (separate from the startup-only auto-check toggle). Always
+        // runs, bypasses the 6h version cache for a live read, and reports the result either way —
+        // newer → the self-update dialog, up to date / unreachable → a MessageBox.
+        private async void checkForUpdatesNow_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                logger.Log("Checking for installer updates...", "info", true);
+                Helper.BypassVersionCache = true;   // force a live fetch, ignore the 6h cache
+                (string version, string body, string installerAssetlink, bool versionValid) =
+                    await Task.Run(() => installer.GetLatestInstallerRelease());
+                Helper.BypassVersionCache = false;
+
+                if (!versionValid)
+                {
+                    MessageBox.Show("Couldn't check for updates — GitHub is unreachable or rate-limited. Try again later.", "Check for Updates", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                int cmp = Helper.NormalizeVersion(Application.ProductVersion).CompareTo(Helper.NormalizeVersion(version));
+                if (cmp < 0)
+                {
+                    helper.CheckForInstallerUpdate(version, body, installerAssetlink, versionValid);   // shows the SelfUpdateForm
+                }
+                else
+                {
+                    MessageBox.Show($"You're on the latest version ({Helper.NormalizeVersion(Application.ProductVersion)}).", "Check for Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                Helper.BypassVersionCache = false;
+                logger.Error("Error checking for installer update: " + ex.Message);
+                MessageBox.Show("Error checking for updates: " + ex.Message, "Check for Updates", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
