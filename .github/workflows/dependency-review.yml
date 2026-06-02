@@ -1,0 +1,29 @@
+# Dependency Review — audits pull requests for vulnerable / disallowed
+# dependencies (NuGet + GitHub Actions) using GitHub's dependency graph.
+#
+# Why this action and not `dotnet list package --vulnerable`:
+# this project uses the legacy packages.config layout, which `dotnet list
+# package` does NOT support (it requires PackageReference). The dependency
+# graph DOES cover packages.config, so dependency-review-action is the correct
+# CI vulnerability gate here. It complements the repo's enabled Dependabot
+# alerts + weekly update PRs (.github/dependabot.yml).
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
