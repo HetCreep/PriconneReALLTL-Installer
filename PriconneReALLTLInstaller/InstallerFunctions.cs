@@ -404,6 +404,20 @@ namespace InstallerFunctions
         // reuse it until the release version changes (then the stale one is purged + replaced).
         private static string ZipCacheDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PriconneReALLTLInstaller", "zipcache");
 
+        // Logs the current zip-cache contents — called at startup so every session's log shows what's
+        // cached for reuse (the session log is truncated each launch, so a past hit line wouldn't persist).
+        public void LogCacheStatus()
+        {
+            try
+            {
+                var files = Directory.Exists(ZipCacheDir) ? Directory.GetFiles(ZipCacheDir, "*.zip") : new string[0];
+                if (files.Length == 0) { Log?.Invoke("Zip cache: empty — the next patch download will be cached for reuse.", "info", false); return; }
+                foreach (string f in files)
+                    Log?.Invoke($"Zip cache: {Path.GetFileName(f)} ({new FileInfo(f).Length / (1024 * 1024)} MB) ready for reuse.", "info", false);
+            }
+            catch { }
+        }
+
         private string GetCachedZipPath()
         {
             try
@@ -443,7 +457,7 @@ namespace InstallerFunctions
                 {
                     tempFile = cachePath;
                     downloadSuccess = true;
-                    Log?.Invoke("Using the cached download (same version) — skipping re-download.", "info", true);
+                    Log?.Invoke($"Using the cached download: {Path.GetFileName(cachePath)} ({new FileInfo(cachePath).Length / (1024 * 1024)} MB) — skipping re-download.", "info", true);
                     return;
                 }
                 if (cachePath != null) PurgeStaleCachedZips(cachePath);
@@ -714,15 +728,31 @@ namespace InstallerFunctions
                 {
                     removeProgress = true;
 
-                    string[] currentFiles = ProcessTree(priconnePath, localVersion).GetAwaiter().GetResult();
-
-                    if (currentFiles == null)
+                    // Ref-counted uninstall: when uninstalling AND a manifest covers this source, remove
+                    // only the files it solely owns — shared modloader/engine files stay for any other
+                    // installed source (uninstalling TH from EN+TH leaves EN working). Falls back to the
+                    // release-tree removal when there's no manifest (e.g. installed before manifests).
+                    string[] currentFiles = null;
+                    bool refCounted = false;
+                    if (uninstall)
                     {
-                        removeSuccess = false;
-                        throw new Exception("Failed to get list of files to remove! Cannot continue.");
+                        var plan = helper.ResolveManifestUninstall(priconnePath);
+                        if (plan != null) { currentFiles = plan.ToArray(); refCounted = true; }
+                    }
+                    if (!refCounted)
+                    {
+                        currentFiles = ProcessTree(priconnePath, localVersion).GetAwaiter().GetResult();
+                        if (currentFiles == null)
+                        {
+                            removeSuccess = false;
+                            throw new Exception("Failed to get list of files to remove! Cannot continue.");
+                        }
                     }
 
-                    Log?.Invoke(uninstall ? "Removing patch files..." : "Removing old patch files...", "remove", true);
+                    if (refCounted)
+                        Log?.Invoke($"Uninstalling {Helper.GetCurrentPatchSource().ShortName} (ref-counted): removing {currentFiles.Length} file(s) it solely owns; files shared with another installed source are kept.", "remove", true);
+                    else
+                        Log?.Invoke(uninstall ? "Removing patch files..." : "Removing old patch files...", "remove", true);
                     ProgressPictureChange?.Invoke(Resources.kyarun);
 
                     int counter = 0;

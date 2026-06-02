@@ -677,6 +677,66 @@ namespace HelperFunctions
             catch (Exception ex) { Log?.Invoke("Could not write install manifest: " + ex.Message, "info", false); }
         }
 
+        // Ref-counted uninstall plan for the CURRENT source. Returns the relative paths to delete
+        // (files no source owns anymore) and rewrites the manifest to drop this source — deleting the
+        // manifest entirely when no source remains. Files still owned by another source are KEPT (so
+        // uninstalling TH from an EN+TH install leaves EN + the shared modloader engine intact).
+        // Config/ignored files are left to the removeConfig/removeIgnored options, not ref-counted here.
+        // Returns null when there's no usable manifest for this source → caller falls back to the tree.
+        public System.Collections.Generic.List<string> ResolveManifestUninstall(string priconnePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(priconnePath)) return null;
+                string manifestPath = Path.Combine(priconnePath, "BepInEx", ".priconnerealltl-manifest.json");
+                if (!File.Exists(manifestPath)) return null;
+
+                InstallManifest m;
+                try { m = JsonConvert.DeserializeObject<InstallManifest>(File.ReadAllText(manifestPath)); }
+                catch { return null; }
+                if (m?.files == null || m.files.Count == 0) return null;
+
+                string owner = GetCurrentPatchSource().ShortName;
+                if (!m.files.Values.Any(o => o != null && o.Contains(owner))) return null;   // source not tracked → fall back
+
+                var skip = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (Settings.Default.configFiles != null) foreach (string c in Settings.Default.configFiles) skip.Add(c.Replace('\\', '/'));
+                if (Settings.Default.ignoreFiles != null) foreach (string i in Settings.Default.ignoreFiles) skip.Add(i.Replace('\\', '/'));
+
+                var toDelete = new System.Collections.Generic.List<string>();
+                var remaining = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>(StringComparer.OrdinalIgnoreCase);
+                foreach (var kv in m.files)
+                {
+                    string rel = kv.Key;
+                    var owners = kv.Value ?? new System.Collections.Generic.List<string>();
+                    if (skip.Contains(rel)) { remaining[rel] = owners; continue; }   // config/ignored: option-managed, untouched
+                    if (owners.Contains(owner))
+                    {
+                        owners.Remove(owner);
+                        if (owners.Count == 0) toDelete.Add(rel);     // no source left → delete
+                        else remaining[rel] = owners;                 // still shared → keep file + entry
+                    }
+                    else remaining[rel] = owners;                     // not this source's → keep
+                }
+
+                // Drop the manifest if nothing remains (last source removed); otherwise persist the rest.
+                try
+                {
+                    if (File.Exists(manifestPath)) File.SetAttributes(manifestPath, FileAttributes.Normal);
+                    if (remaining.Count == 0) File.Delete(manifestPath);
+                    else
+                    {
+                        File.WriteAllText(manifestPath, JsonConvert.SerializeObject(new InstallManifest { files = remaining }, Newtonsoft.Json.Formatting.Indented));
+                        try { File.SetAttributes(manifestPath, FileAttributes.Hidden); } catch { }
+                    }
+                }
+                catch { }
+
+                return toDelete;
+            }
+            catch { return null; }
+        }
+
         private sealed class InstallManifest
         {
             public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> files { get; set; }

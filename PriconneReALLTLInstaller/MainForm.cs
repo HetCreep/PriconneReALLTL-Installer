@@ -247,6 +247,7 @@ namespace PriconneReALLTLInstaller
                 checkBox.CheckedChanged += OperationCheckbox_CheckedChanged;
             }
 
+            installer.LogCacheStatus();   // show what's in the zip cache this session
             await LoadLatestVersionInfoAsync(bypassCache: false);
         }
 
