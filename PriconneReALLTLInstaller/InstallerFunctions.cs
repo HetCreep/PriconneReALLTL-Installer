@@ -580,6 +580,10 @@ namespace InstallerFunctions
 
                 // Record what this source installed (path -> owning sources) for smart uninstall.
                 helper.WriteInstallManifest(priconnePath, extractedFiles);
+
+                // Keep AutoTranslatorConfig.ini's Language=/DuplicateTextureNames= in sync with this
+                // source (the config is kept across installs, so a switch would leave stale values).
+                helper.ApplyConfigOverrides(priconnePath);
             }
             catch (Exception ex)
             {

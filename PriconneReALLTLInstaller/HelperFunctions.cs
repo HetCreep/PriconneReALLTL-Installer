@@ -420,6 +420,17 @@ namespace HelperFunctions
             // 8-digit date in en/Text/Version.txt; TH a semver in th/Text/Version.txt.
             public string VersionFileRelPath { get; }
             public string VersionRegex { get; }
+            // Target language code (en/th) derived from the version-file path's Translation\<lang>\
+            // segment — used to keep AutoTranslatorConfig.ini's Language= in sync with the source.
+            public string Lang
+            {
+                get
+                {
+                    string[] parts = (VersionFileRelPath ?? "").Replace('/', '\\').Split('\\');
+                    int i = System.Array.FindIndex(parts, p => string.Equals(p, "Translation", System.StringComparison.OrdinalIgnoreCase));
+                    return (i >= 0 && i + 1 < parts.Length) ? parts[i + 1] : "en";
+                }
+            }
             // Per-source plugin profile, applied in BepInEx/plugins via a ".bak" toggle:
             // EnablePlugins are restored (.dll.bak -> .dll), DisablePlugins are shelved
             // (.dll -> .dll.bak). Lets EN-only fixup DLLs (PriconneSkillTLFixup/PriconneTLFixup)
@@ -488,6 +499,51 @@ namespace HelperFunctions
             int idx = Settings.Default.selectedPatchSource;
             if (idx < 0 || idx >= PatchSources.Count) idx = 0;
             return PatchSources[idx];
+        }
+
+        // Game UI textures (event logos, story thumbnails, buttons, …) the TL replaces that appear more
+        // than once, so XUnity AutoTranslator must disambiguate them. Same for every source (these are
+        // the game's textures), so applied universally; Language= is the only per-source key.
+        private const string DuplicateTextureNamesValue = "event_logo;event_logo_00000;Btn_SubContents;Btn_EvQuest;Btn_EvGacha;Btn_EvStory;obj_texture;quest_boss_01;quest_boss_02;Rvl_EvQuest_BOSS;event_icon_storynumber_01;event_icon_storynumber_02;event_icon_storynumber_03;event_icon_storynumber_04;event_icon_storynumber_05;event_icon_storynumber_ed;event_icon_storynumber_ep;event_icon_storynumber_op;abyss_logo;clanbattle_logo;Invasion_logo_1001;Invasion_logo_1002;story_thumb_000;story_thumb_001;story_thumb_002;story_thumb_003;story_thumb_004;story_thumb_005;story_thumb_006;story_thumb_007;story_thumb_008;story_thumb_009;story_thumb_010;story_thumb_011;story_thumb_012;story_thumb_013;story_thumb_014;story_thumb_015;Btn_Mission;Btn_SubContents_lock;Btn_SubContents_lockBack;step_image_1;step_image_2;step_image_3;step_image_4";
+
+        // Keeps AutoTranslatorConfig.ini's source-specific keys in sync after install/update. The config
+        // is shared + kept, so a source switch would otherwise leave the previous source's Language= /
+        // DuplicateTextureNames=. Replaces only those VALUES (preserves every other line incl. the
+        // user's own settings); leaves the file untouched if a key isn't present or the file is absent.
+        public void ApplyConfigOverrides(string priconnePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(priconnePath)) return;
+                string cfg = Path.Combine(priconnePath, "BepInEx", "config", "AutoTranslatorConfig.ini");
+                if (!File.Exists(cfg)) return;
+
+                var overrides = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "Language", GetCurrentPatchSource().Lang },
+                    { "DuplicateTextureNames", DuplicateTextureNamesValue },
+                };
+
+                string[] lines = File.ReadAllLines(cfg);
+                bool changed = false;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    int eq = lines[i].IndexOf('=');
+                    if (eq <= 0) continue;
+                    string key = lines[i].Substring(0, eq).Trim();
+                    if (overrides.TryGetValue(key, out string val))
+                    {
+                        string newLine = lines[i].Substring(0, eq + 1) + val;   // keep the key text, replace the value
+                        if (lines[i] != newLine) { lines[i] = newLine; changed = true; }
+                    }
+                }
+                if (changed)
+                {
+                    File.WriteAllLines(cfg, lines);
+                    Log?.Invoke($"Synced AutoTranslatorConfig.ini to {GetCurrentPatchSource().ShortName} (Language={GetCurrentPatchSource().Lang}).", "info", false);
+                }
+            }
+            catch (Exception ex) { Log?.Invoke("Could not update AutoTranslatorConfig.ini: " + ex.Message, "error", false); }
         }
 
         // Master switch for the per-source plugin profile. OFF for now — the feature isn't ready for
