@@ -299,25 +299,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Humming.otf" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\check_checked_24x24.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\check_empty_24x24.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\check_checked_24x24_2.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\check_empty_24x24_2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\bg.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\loading.gif" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\new.png" />
@@ -329,20 +314,13 @@
     <None Include="Resources\door_open.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\empty_button_raw.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\NunitoBold.ttf" />
-    <None Include="Resources\start_hover.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\start_idle.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\start_working.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Item_Jewel_Art.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\jewel.ico" />
@@ -363,12 +341,6 @@
     <None Include="Resources\q_bubble.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\logo3.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\button2.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\start_complete.png" />
   </ItemGroup>
   <ItemGroup>
@@ -379,15 +351,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\back_arrow.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\install_button.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\uninstall_button.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\scroll_closed_res.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\scroll_open.png" />
@@ -408,16 +371,10 @@
     <None Include="Resources\crystal_lit.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\uninstall_button_disabled.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\crystal_disabled.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\scroll_disabled.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\install_button_disabled.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\add_button.png" />
@@ -427,9 +384,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\defaults_button.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\defaults_button_disabled.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\remove_button.png" />
@@ -442,12 +396,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\save_button_disabled.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\install_button_disabled2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\install_button2.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shortcutremove_button.png" />
@@ -483,12 +431,6 @@
     <None Include="Resources\save_button_lit.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\install_button2_lit.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\uninstall_button_lit.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\start_hover_lit.png" />
   </ItemGroup>
   <ItemGroup>
@@ -509,23 +451,15 @@
     <None Include="Resources\dlbutton_lit.png" />
     <None Include="Resources\bg_enlarged.png" />
     <None Include="Resources\exclamation_t.png" />
-    <None Include="Resources\cleartokenbutton.png" />
-    <None Include="Resources\cleartokenbutton_disabled.png" />
-    <None Include="Resources\cleartokenbutton_lit.png" />
     <None Include="Resources\validatetokenbutton.png" />
     <None Include="Resources\validatetokenbutton_disabled.png" />
     <None Include="Resources\validatetokenbutton_lit.png" />
     <None Include="Resources\savetokenbutton.png" />
     <None Include="Resources\savetokenbutton_disabled.png" />
     <None Include="Resources\savetokenbutton_lit.png" />
-    <None Include="Resources\kokodance.gif" />
     <None Include="Resources\kokorun.gif" />
     <None Include="Resources\kyarun.gif" />
     <None Include="Resources\pecorun.gif" />
-    <None Include="Resources\kokorunfast.gif" />
-    <None Include="Resources\kokkorowinnosquarenobg.gif" />
-    <None Include="Resources\pecowinnosquarenobg.gif" />
-    <None Include="Resources\kyaruwinnosquarenobg.gif" />
     <None Include="Resources\shortcutadd_button.png" />
     <None Include="Resources\shortcutadd_button_disabled.png" />
     <None Include="Resources\shortcutadd_button_lit.png" />

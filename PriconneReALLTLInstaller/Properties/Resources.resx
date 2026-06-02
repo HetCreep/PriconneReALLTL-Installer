@@ -124,17 +124,11 @@
   <data name="check_empty_24x24_2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\check_empty_24x24_2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Humming" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Humming.otf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="door_closed" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\door_closed.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="door_open" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\door_open.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="start_hover" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\start_hover.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="start_idle" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\start_idle.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -175,17 +169,11 @@
   <data name="back_arrow" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\back_arrow.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="install_button" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\install_button.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="scroll_closed_res2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\scroll_closed_res2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="scroll_open" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\scroll_open.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="uninstall_button" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\uninstall_button.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="back_arrow_lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\back_arrow_lit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -196,17 +184,11 @@
   <data name="crystal_normal_res" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\crystal_normal_res.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="uninstall_button_disabled" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\uninstall_button_disabled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="crystal_disabled" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\crystal_disabled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="scroll_disabled" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\scroll_disabled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="install_button_disabled" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\install_button_disabled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="add_button" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\add_button.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -216,9 +198,6 @@
   </data>
   <data name="defaults_button" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\defaults_button.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="defaults_button_disabled" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\defaults_button_disabled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="remove_button" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\remove_button.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -231,12 +210,6 @@
   </data>
   <data name="save_button_disabled" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\save_button_disabled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="install_button2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\install_button2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="install_button_disabled2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\install_button_disabled2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="shortcutadd_button" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\shortcutadd_button.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -268,9 +241,6 @@
   <data name="import_button_lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\import_button_lit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="install_button2_lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\install_button2_lit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="remove_button_lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\remove_button_lit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -286,35 +256,17 @@
   <data name="start_hover_lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\start_hover_lit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="uninstall_button_lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\uninstall_button_lit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="NunitoBold" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\NunitoBold.ttf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="kokodance" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\kokodance.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="kokorun" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\kokorun.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="kokorunfast" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\kokorunfast.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="kyarun" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\kyarun.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="pecorun" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pecorun.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="kokkorowinnosquarenobg" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\kokkorowinnosquarenobg.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="kyaruwinnosquarenobg" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\kyaruwinnosquarenobg.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="pecowinnosquarenobg" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\pecowinnosquarenobg.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="_lock" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\lock.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -336,15 +288,6 @@
   </data>
   <data name="exclamation_t" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\exclamation_t.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="cleartokenbutton" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\cleartokenbutton.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="cleartokenbutton_disabled" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\cleartokenbutton_disabled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="cleartokenbutton_lit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\cleartokenbutton_lit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="validatetokenbutton" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\validatetokenbutton.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
