@@ -190,7 +190,16 @@ namespace InstallerFunctions
                 string cachedPatch = Helper.GetCachedVersion(cacheKey);
                 if (cachedPatch != null)
                 {
-                    try { var cj = JObject.Parse(cachedPatch); return (latestVersion = (string)cj["v"], latestVersionValid = true, assetLink = (string)cj["a"]); }
+                    try
+                    {
+                        var cj = JObject.Parse(cachedPatch);
+                        string d = (string)cj["d"];
+                        if (!string.IsNullOrEmpty(d))   // only trust the cache when it carries the digest; else re-fetch to capture it
+                        {
+                            latestAssetDigest = d;
+                            return (latestVersion = (string)cj["v"], latestVersionValid = true, assetLink = (string)cj["a"]);
+                        }
+                    }
                     catch { }
                 }
 
@@ -230,7 +239,7 @@ namespace InstallerFunctions
                         }
                         assetLink = releaseJson.assets[0].browser_download_url;
                     }
-                    Helper.SetCachedVersion(cacheKey, new JObject { ["v"] = version, ["a"] = assetLink }.ToString(Newtonsoft.Json.Formatting.None));
+                    Helper.SetCachedVersion(cacheKey, new JObject { ["v"] = version, ["a"] = assetLink, ["d"] = latestAssetDigest ?? "" }.ToString(Newtonsoft.Json.Formatting.None));
                     return (latestVersion = version, latestVersionValid = true, assetLink);
                 }
             }
