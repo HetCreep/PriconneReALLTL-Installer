@@ -316,6 +316,7 @@ namespace PriconneReALLTLInstaller
         }
         private void gamePathLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
+             if (!priconnePathValid) return;   // don't open explorer on "Not found"/"ERROR!" (audit B15)
              ProcessStartInfo startInfo = new ProcessStartInfo("explorer.exe");
              startInfo.Arguments = priconnePath;
              Process.Start(startInfo);

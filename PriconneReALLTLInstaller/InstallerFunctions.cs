@@ -45,7 +45,7 @@ namespace InstallerFunctions
         private string _lastLoggedModVer;
         private DateTime? latestReleaseDate;   // selected source's release published_at — stamped onto installed files/dirs
         private string latestAssetDigest;      // GitHub asset SHA256 ("sha256:…") for verify-before-touch
-        private string tempFile = Path.GetTempFileName();
+        private string tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());   // no file created (GetTempFileName throws when %TEMP% is full) — audit B3
         private bool removeSuccess = true;
         private bool downloadSuccess = true;
         private bool extractSuccess = true;
@@ -801,32 +801,34 @@ namespace InstallerFunctions
 
                 string treeUrl = $"{Helper.GetCurrentPatchSource().ApiBase}/git/trees/{releaseTag}?recursive=1";
 
-                HttpResponseMessage response = await client.GetAsync(treeUrl);
-                if (response.IsSuccessStatusCode)
+                string responseBody = null;
+                System.Net.HttpStatusCode status;
+                using (HttpResponseMessage response = await client.GetAsync(treeUrl))   // dispose the response (audit B12)
                 {
-                    string responseBody = await response.Content.ReadAsStringAsync();
-                    dynamic treeJson = JObject.Parse(responseBody);
+                    status = response.StatusCode;
+                    if (response.IsSuccessStatusCode) responseBody = await response.Content.ReadAsStringAsync();
+                }
+                if (responseBody == null)
+                {
+                    Console.WriteLine($"Failed to fetch tree for tag '{releaseTag}'. Status code: {status}");
+                    ErrorLog?.Invoke($"Failed to fetch tree for tag '{releaseTag}'. Status code: {status}");
+                    return null;
+                }
 
-                    foreach (var item in treeJson.tree)
+                dynamic treeJson = JObject.Parse(responseBody);
+                foreach (var item in treeJson.tree)
+                {
+                    string fileType = item.type;
+                    string filePath = item.path;
+
+                    if (fileType == "blob" && filePath.StartsWith("src/"))
                     {
-                        string fileType = item.type;
-                        string filePath = item.path;
-
-                        if (fileType == "blob" && filePath.StartsWith("src/"))
+                        string trimmedPath = filePath.Substring("src/".Length);
+                        if (!Helper.IgnoreMatches(trimmedPath, ignoreFiles))
                         {
-                            string trimmedPath = filePath.Substring("src/".Length);
-                            if (!Helper.IgnoreMatches(trimmedPath, ignoreFiles))
-                            {
-                                filePathsList.Add(trimmedPath);
-                            }
+                            filePathsList.Add(trimmedPath);
                         }
                     }
-                }
-                else
-                {
-                    Console.WriteLine($"Failed to fetch tree for tag '{releaseTag}'. Status code: {response.StatusCode}");
-                    ErrorLog?.Invoke($"Failed to fetch tree for tag '{releaseTag}'. Status code: {response.StatusCode}");
-                    return null;
                 }
 
                 return filePathsList.ToArray();
@@ -922,15 +924,13 @@ namespace InstallerFunctions
         }
         private void DeleteEmptyDirectories(string directoryPath)
         {
-            if (!Directory.EnumerateFileSystemEntries(directoryPath).Any())
+            // Walk up removing empty parents — iterative (not recursive) so a very deep tree can't
+            // StackOverflow (audit B9).
+            string dir = directoryPath;
+            while (!string.IsNullOrEmpty(dir) && Directory.Exists(dir) && !Directory.EnumerateFileSystemEntries(dir).Any())
             {
-                Directory.Delete(directoryPath);
-
-                string parentDirectory = Path.GetDirectoryName(directoryPath);
-                if (!string.IsNullOrEmpty(parentDirectory))
-                {
-                    DeleteEmptyDirectories(parentDirectory);
-                }
+                Directory.Delete(dir);
+                dir = Path.GetDirectoryName(dir);
             }
         }
         // Expands an ignore entry to actual relative paths present under the game folder. A '*' matches
