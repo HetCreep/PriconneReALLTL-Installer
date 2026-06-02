@@ -12,9 +12,10 @@ A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx trans
 * **Shortcut-wrapped launching** — the GUI focuses on patching. To play, "wrap" an existing launcher shortcut (DMM, [DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), or a [PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher) account shortcut). Pressing the wrapped shortcut updates the patch, then launches that exact target — one click, *update + play*, per account. Reversible (un-wrap restores the original).
 * **PriconneMultiAccountLauncher integration** — auto-detected via its Inno Setup uninstall key (HKCU/HKLM) with an `%APPDATA%` fallback.
 * **Modloader pinned to ImaterialC** — the BepInEx IL2CPP interop baseline always comes from the canonical ImaterialC release, independent of the chosen TL source.
-* **Per-source plugin profiles** — each TL source declares which BepInEx fixup plugins it uses; installing or switching a source toggles the rest off via a `.bak` rename (English loads `PriconneSkillTLFixup`/`PriconneTLFixup`; other languages shelve those and load their own). Every fixup DLL stays on disk — only the active source's set loads. Plugins maintained in a standalone repo are fetched from that repo's own GitHub release on install.
-* **Rate-limit friendly** — GitHub version checks are cached (~6h), so a GitHub API token is *optional* for typical use. If set, the token is stored encrypted (Windows DPAPI), never logged.
-* **Clean cloud builds** — strong-name signed, GitHub Actions MSBuild release workflow; ClickOnce manifest signing disabled.
+* **Safe installs & clean uninstalls** — the downloaded patch `.zip` is **SHA-256 verified** against GitHub's published digest before any file is touched; extraction is **zip-slip guarded**; uninstall is **ref-counted** (with both EN and TH installed, removing one keeps the other and the shared modloader working) and **path-guarded** to the game folder.
+* **Per-source plugin architecture** — the modloader's fixup plugins ship with the patch; a per-source enable/disable mechanism (a `.dll` ⇄ `.bak` toggle) is built in for when a source needs a different fixup set. It is currently **inactive** (all shipped fixups load as-is) pending the Thai fixup plugin.
+* **Rate-limit friendly** — GitHub version checks are cached (~6 h; the installer self-update check ~7 days), so a GitHub API token is *optional*. If set, the token is stored encrypted (Windows DPAPI), masked on screen, and never logged.
+* **Verifiable cloud builds** — built **only** by GitHub Actions on a `v*` tag; each release attaches **`SHA256SUMS.txt`**. Strong-name signed (not yet Authenticode-signed — verify via SHA-256, see below).
 
 ---
 
@@ -30,6 +31,39 @@ Each release ships two options:
 | **`PriconneReALLTLInstaller-<version>-Setup.exe`** | Per-user installer (no admin). Adds a Start Menu shortcut and an uninstall entry that also clears the app's local cache/settings. Self-update still works (it installs under your user profile). |
 
 Either is fine — the portable exe if you just want to run it, the setup if you prefer a Start Menu entry and a clean uninstall.
+
+---
+
+## ✅ Verifying your download
+
+Every release attaches **`SHA256SUMS.txt`** and lists the SHA-256 inline in the release notes. Verify the file you downloaded:
+
+```powershell
+Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.0.exe
+```
+
+Compare the output against the hash in `SHA256SUMS.txt` / the release notes — they must match exactly.
+
+> The binaries are **strong-name signed but not Authenticode code-signed (yet)**, so Windows **SmartScreen** may show *"Windows protected your PC"* on first run. Choose **More info → Run anyway** only if the SHA-256 matches. Authenticode signing is a planned improvement.
+
+Only download from the **[official Releases page](https://github.com/HetCreep/PriconneReALLTL-Installer/releases)** — never a third-party mirror, Discord, or direct message.
+
+---
+
+## 🔐 Privacy & Security
+
+- **[PRIVACY.md](PRIVACY.md)** — zero telemetry; the complete, GitHub-only outbound allow-list.
+- **[SECURITY.md](SECURITY.md)** — security posture, the "Hard No's", and how to report a vulnerability privately.
+
+---
+
+## ⚠️ Disclaimer
+
+This is an **unofficial, fan-made** tool. It is **not affiliated with, endorsed by, or associated with** Cygames, Inc., DMM, or tynave. *Princess Connect! Re:Dive* and all related names and assets are trademarks / property of their respective owners, used here **nominatively** for identification only.
+
+This installer deploys **third-party translation mods** (via the BepInEx mod loader) into your game. **Modifying the game may violate its Terms of Service and could put your account at risk of suspension or ban.** You install and use these modifications **at your own risk**.
+
+The software is provided **"AS IS", without warranty of any kind**. The authors accept **no liability** for any account action, data loss, or damage arising from its use. See the [LICENSE](LICENSE.txt).
 
 ---
 

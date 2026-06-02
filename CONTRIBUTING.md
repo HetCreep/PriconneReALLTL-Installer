@@ -9,6 +9,19 @@ Thanks for your interest in improving the installer. This guide covers how to bu
 - **Output:** `PriconneReALLTLInstaller\bin\Release\PriconneReALLTLInstaller.exe`
 - **Strong-name signed** with `PriconneReALLTLInstaller.snk` (committed so CI can sign)
 
+## What we accept (and don't)
+
+**Welcome:** bug fixes (with repro steps), new translation sources, security/robustness hardening, documentation, and UI translations.
+
+**Not accepted** — these are out of scope by design (see [`.claude/rules/ecc/domain/`](.claude/rules/ecc/domain) and [SECURITY.md](SECURITY.md)):
+
+- Game **automation**, memory reading, or anything that touches the game's *own* binaries/servers (the installer only deploys published third-party translation files).
+- **Telemetry**, analytics, crash-reporting, or Discord integration of any kind.
+- Any **new outbound host** beyond the GitHub allow-list documented in [PRIVACY.md](PRIVACY.md).
+- Reintroducing the upstream **`tynave` / `PriconneReTL`** branding, GUIDs, or endpoints — this fork keeps its own identity.
+
+Open an issue first for anything beyond a one-line fix.
+
 ## Building locally
 
 ```bash
@@ -46,15 +59,34 @@ A clean build produces a small number of pre-existing warnings (`CS0108`, `CS041
 1. Add a `PatchSource` entry in `HelperFunctions.cs` (`PatchSources`): display/short name, owner/repo, the per-source `Version.txt` path + regex, and any plugin profile / external plugin downloads.
 2. Build and verify the new source appears in the **TL Source** dropdown and that install / update / version detection work.
 
-## Releases
+## Releases & distribution
 
-Releases are automated. Pushing a `v*` tag (e.g. `v2.4.0`) triggers `.github/workflows/release.yml`, which builds on `windows-latest`, signs, and publishes a GitHub Release with the built `.exe`. Use the `v` prefix — the workflow trigger and self-update both expect it.
+**All distributed builds come from CI — never upload a locally built exe.** Pushing a `v*` tag (e.g. `v3.0.0`) triggers `.github/workflows/release.yml`, which builds on `windows-latest`, compiles the per-user Inno Setup installer, attaches **`SHA256SUMS.txt`**, and publishes a GitHub Release (portable exe + `-Setup.exe`). Use the `v` prefix — the workflow trigger and self-update both expect it.
+
+Before tagging: bump the version in **`Properties/AssemblyInfo.cs`** *and* **`installer/PriconneReALLTLInstaller.iss`**, and update **`RELEASE_NOTES.md`** + **`CHANGELOG.md`**.
+
+## Forking this project
+
+If you fork this for your own distribution, you **must** establish a distinct identity so the two installers never collide (and so your self-update doesn't point here):
+
+1. Generate a **new Inno `AppId` GUID** in `installer/PriconneReALLTLInstaller.iss`.
+2. Generate **new assembly/project GUIDs** and a **new strong-name key** (`.snk`).
+3. Repoint the **self-update URL** and **patch-source repos** (`HelperFunctions.cs`: `PatchSource` registry, `ModloaderSource`, the self-update repo) to your own.
+4. Update the branding strings and this documentation.
+
+## Engineering standards
+
+This project follows the ECC domain rules under [`.claude/rules/ecc/domain/`](.claude/rules/ecc/domain) (distribution-security, release-verification, log-sanitization, legal-boundary, telemetry-policy, native-windows-api, credential-vault, upstream-merge). Changes to release, token-handling, networking, or native (registry/shortcut/process) code should be reviewed against the relevant rule file.
 
 ## Submitting a PR
 
-- Make sure the solution builds in `Release`.
+- Make sure the solution builds in `Release` (no new warnings).
+- Never print/log a secret — use the `Logger` (the token is redacted at the logging boundary; keep it that way).
+- No new NuGet dependency without a supply-chain + license justification in the PR.
 - Describe what changed and how you verified it (there is no automated test suite yet — manual verification notes are valuable).
-- Link any related issue.
+- Link any related issue. Security issues go through [SECURITY.md](SECURITY.md), **not** a public PR/issue.
+
+By contributing you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Credits
 
