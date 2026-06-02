@@ -809,6 +809,7 @@ namespace InstallerFunctions
                     ProgressPictureChange?.Invoke(Resources.kyarun);
 
                     int counter = 0;
+                    int removed = 0;
 
                     foreach (var file in currentFiles)
                     {
@@ -819,15 +820,14 @@ namespace InstallerFunctions
                         if (File.Exists(filePath))
                         {
                             File.Delete(filePath);
-                            Log?.Invoke($"Removed file: {file}", "remove", false);
-
+                            removed++;
                             DeleteEmptyDirectories(directory);
-
                         }
-                        double percentage = ((double)counter / currentFiles.Length) * 100;
                         DownloadProgress?.Invoke(counter, currentFiles.Length);
-
                     }
+                    // Summary instead of a per-file log line (6244 file-IO log writes were the slow part —
+                    // same fix as the extract path). The manifest records the exact files if detail is needed.
+                    Log?.Invoke($"Removed {removed} file(s).", "remove", false);
 
                     if (removeConfig) RemoveConfigOrIgnoredFiles("config", configList);
 
@@ -853,7 +853,6 @@ namespace InstallerFunctions
             if (!Directory.EnumerateFileSystemEntries(directoryPath).Any())
             {
                 Directory.Delete(directoryPath);
-                Log?.Invoke($"Removed directory: {directoryPath}", "remove", false);
 
                 string parentDirectory = Path.GetDirectoryName(directoryPath);
                 if (!string.IsNullOrEmpty(parentDirectory))
