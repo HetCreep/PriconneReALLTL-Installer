@@ -17,9 +17,6 @@
   &lt;string&gt;BepInEx/config/PriconneTLFixup.cfg&lt;/string&gt;
 &lt;/ArrayOfString&gt;</Value>
     </Setting>
-    <Setting Name="patchGithubApi" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">https://api.github.com/repos/ImaterialC/PriconneRe-TL</Value>
-    </Setting>
     <Setting Name="aboutText" Type="System.String" Scope="Application">
       <Value Profile="(Default)">
 Multi-Account · ALL-TL (EN/TH) edition — fork by HetCreep
@@ -81,12 +78,6 @@ See log for details.</Value>
     <Setting Name="launchState" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="auGithubApi" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">https://api.github.com/repos/HetCreep/PriconneReALLTL-AutoUpdater</Value>
-    </Setting>
-    <Setting Name="auAppGithubApi" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">https://api.github.com/repos/HetCreep/PriconneReALLTL-AutoUpdaterApp</Value>
-    </Setting>
     <Setting Name="fastLauncherLink" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -97,18 +88,6 @@ See log for details.</Value>
     <Setting Name="LastKnownVersion" Type="System.String" Scope="User">
       <Value Profile="(Default)">1.5.0.0</Value>
     </Setting>
-    <Setting Name="cannotStartDMMFastLauncherError" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">DMMGamePlayerFastLauncher shortcut not set or not valid!
-
-In order to be able to launch the game via the DMMGamePlayerFastLauncher, you need to set the shortcut of it in the installer. 
-
-If you have moved/removed/renamed the previously set shortcut, please re-set it. 
-
-You can set the shortcut in the Installer by clicking the "Settings" icon (scroll) and selecting the "Launcher Settings" option, or by clicking on the launcher's name below the "Launch Game" checkbox.</Value>
-    </Setting>
-    <Setting Name="selectedLauncher" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
     <Setting Name="selectedPatchSource" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
@@ -117,15 +96,6 @@ You can set the shortcut in the Installer by clicking the "Settings" icon (scrol
     </Setting>
     <Setting Name="showLogChecked" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="modLoaderOutdatedTooltip" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Your modloader version is outdated!
-Please try updating your TL patch installation!
-If it's still outdated after the update, please wait for a new modloader release!</Value>
-    </Setting>
-    <Setting Name="gameOutdatedTooltip" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Your game version is lower than the modloader version!
-Please update your game!</Value>
     </Setting>
     <Setting Name="DMMConfigPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />

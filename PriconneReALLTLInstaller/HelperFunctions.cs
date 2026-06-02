@@ -1206,7 +1206,6 @@ namespace HelperFunctions
                 var userSettings = new UserSettings
                 {
                     launchState = Settings.Default.launchState,
-                    selectedLauncher = Settings.Default.selectedLauncher,
                     ignoreFiles = Settings.Default.ignoreFiles,
                     fastLauncherLink = Settings.Default.fastLauncherLink,
                     fastLauncherLinks = Settings.Default.fastLauncherLinks,
@@ -1240,7 +1239,6 @@ namespace HelperFunctions
 
                     // Update application settings with imported settings
                     Settings.Default.launchState = importedSettings.launchState;
-                    Settings.Default.selectedLauncher = importedSettings.selectedLauncher;
                     Settings.Default.ignoreFiles = importedSettings.ignoreFiles;
                     Settings.Default.fastLauncherLink = importedSettings.fastLauncherLink;
                     if (importedSettings.fastLauncherLinks != null)
@@ -1266,7 +1264,6 @@ namespace HelperFunctions
 public class UserSettings
 {
     public bool launchState { get; set; }
-    public int selectedLauncher {  get; set; }
     public System.Collections.Specialized.StringCollection ignoreFiles { get; set; }
     public string fastLauncherLink { get; set; }   // legacy — kept for backward compat
     public System.Collections.Specialized.StringCollection fastLauncherLinks { get; set; }

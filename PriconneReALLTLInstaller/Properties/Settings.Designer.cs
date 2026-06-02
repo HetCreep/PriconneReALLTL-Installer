@@ -53,14 +53,6 @@ namespace PriconneReALLTLInstaller.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://api.github.com/repos/ImaterialC/PriconneRe-TL")]
-        public string patchGithubApi {
-            get {
-                return ((string)(this["patchGithubApi"]));
-            }
-        }
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -218,23 +210,7 @@ namespace PriconneReALLTLInstaller.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://api.github.com/repos/HetCreep/PriconneReALLTL-AutoUpdater")]
-        public string auGithubApi {
-            get {
-                return ((string)(this["auGithubApi"]));
-            }
-        }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://api.github.com/repos/HetCreep/PriconneReALLTL-AutoUpdaterApp")]
-        public string auAppGithubApi {
-            get {
-                return ((string)(this["auAppGithubApi"]));
-            }
-        }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -273,32 +249,7 @@ namespace PriconneReALLTLInstaller.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"DMMGamePlayerFastLauncher shortcut not set or not valid!
-
-In order to be able to launch the game via the DMMGamePlayerFastLauncher, you need to set the shortcut of it in the installer. 
-
-If you have moved/removed/renamed the previously set shortcut, please re-set it. 
-
-You can set the shortcut in the Installer by clicking the ""Settings"" icon (scroll) and selecting the ""Launcher Settings"" option, or by clicking on the launcher's name below the ""Launch Game"" checkbox.")]
-        public string cannotStartDMMFastLauncherError {
-            get {
-                return ((string)(this["cannotStartDMMFastLauncherError"]));
-            }
-        }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int selectedLauncher {
-            get {
-                return ((int)(this["selectedLauncher"]));
-            }
-            set {
-                this["selectedLauncher"] = value;
-            }
-        }
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -336,31 +287,7 @@ You can set the shortcut in the Installer by clicking the ""Settings"" icon (scr
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Your modloader version is outdated!\r\nPlease try updating your TL patch installati" +
-            "on!\r\nIf it\'s still outdated after the update, please wait for a new modloader re" +
-            "lease!")]
-        public string modLoaderOutdatedTooltip {
-            get {
-                return ((string)(this["modLoaderOutdatedTooltip"]));
-            }
-            set {
-                this["modLoaderOutdatedTooltip"] = value;
-            }
-        }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Your game version is lower than the modloader version!\r\nPlease update your game!")]
-        public string gameOutdatedTooltip {
-            get {
-                return ((string)(this["gameOutdatedTooltip"]));
-            }
-            set {
-                this["gameOutdatedTooltip"] = value;
-            }
-        }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
