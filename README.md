@@ -1,4 +1,10 @@
-# <img src="PriconneReALLTLInstaller/Resources/Item_Jewel_Art.ico"> PriconneReALLTL Installer
+# <img src="PriconneReALLTLInstaller/Resources/jewel.ico" width="28"> PriconneReALLTL Installer
+
+[![Latest release](https://img.shields.io/github/v/release/HetCreep/PriconneReALLTL-Installer?sort=semver&display_name=tag)](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest)
+[![Build](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml/badge.svg)](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml)
+[![Downloads](https://img.shields.io/github/downloads/HetCreep/PriconneReALLTL-Installer/total)](https://github.com/HetCreep/PriconneReALLTL-Installer/releases)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![.NET Framework 4.8](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4)
 
 A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx translation patches — supporting **multiple, user-selectable translation sources (English / ไทย)** and one-click *update + play* launch shortcuts.
 

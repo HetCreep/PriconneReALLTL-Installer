@@ -1,0 +1,28 @@
+# Dependabot config — keeps dependencies and CI actions current.
+# Pairs with the repo's enabled Dependabot security alerts + automated fixes.
+version: 2
+updates:
+  # NuGet packages (packages.config under the project folder).
+  - package-ecosystem: "nuget"
+    directory: "/PriconneReALLTLInstaller"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    labels:
+      - "dependencies"
+
+  # GitHub Actions used by the release workflow (addresses the SHA-pinning
+  # follow-up tracked in distribution-security: Dependabot will surface action
+  # updates so they can be reviewed/pinned).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci(deps)"
+    labels:
+      - "dependencies"
+      - "ci"
