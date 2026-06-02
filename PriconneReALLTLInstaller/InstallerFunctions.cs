@@ -496,6 +496,26 @@ namespace InstallerFunctions
             catch (Exception ex) { Log?.Invoke("Could not verify the download hash: " + ex.Message, "info", false); return true; }
         }
 
+        // Stamps the zip file's date to its SOURCE date — the release published_at if known (from the
+        // API), else the zip's own newest entry time (no API). Called right after download / cache reuse.
+        private void StampZipSourceDate(string zipPath)
+        {
+            try
+            {
+                DateTime? zd = latestReleaseDate;
+                if (!zd.HasValue)
+                {
+                    DateTime mx = DateTime.MinValue;
+                    using (var z = ZipFile.OpenRead(zipPath))
+                        foreach (var e in z.Entries)
+                            if (e.Name != "" && e.LastWriteTime.LocalDateTime > mx) mx = e.LastWriteTime.LocalDateTime;
+                    if (mx > DateTime.MinValue) zd = mx;
+                }
+                if (zd.HasValue) File.SetLastWriteTime(zipPath, zd.Value);
+            }
+            catch { }
+        }
+
         public async Task DownloadPatchFiles(string assetLink, string fileToSave = null)
         {
             string gitHubToken = Helper.DecryptString(Settings.Default.GithubAPIKey);
@@ -511,6 +531,7 @@ namespace InstallerFunctions
                     {
                         tempFile = cachePath;
                         downloadSuccess = true;
+                        StampZipSourceDate(cachePath);   // keep the cached zip's date = source date
                         Log?.Invoke($"Using the cached download: {Path.GetFileName(cachePath)} ({new FileInfo(cachePath).Length / (1024 * 1024)} MB) — skipping re-download.", "info", true);
                         return;
                     }
@@ -566,6 +587,7 @@ namespace InstallerFunctions
                 }
                 Log?.Invoke("Download completed + verified.", "info", true);
                 downloadSuccess = true;
+                StampZipSourceDate(target);   // stamp the just-downloaded zip with its source date
                 if (cachePath != null) tempFile = cachePath;   // extract from (and keep) the cached zip
             }
             catch (Exception ex)
@@ -586,7 +608,6 @@ namespace InstallerFunctions
                 var extractedFiles = new List<string>();   // install manifest (files this source owns)
                 string srcConfigText = null;                // the source's shipped AutoTranslatorConfig.ini (per-source key sync)
                 bool extractHadError = false;               // any per-file extract failure -> not a clean success (audit B10)
-                DateTime maxEntryDate = DateTime.MinValue;   // newest zip entry time -> source-date fallback when there's no API published_at
                 using (var zip = ZipFile.OpenRead(tempFile))
                 {
                     Log?.Invoke("Extracting files to game folder...", "add", true);
@@ -627,11 +648,7 @@ namespace InstallerFunctions
 
                             bool ok = await Task.Run(() => ExtractZipEntry(entry, Path.Combine(priconnePath, fileName)));
                             if (!ok) extractHadError = true;
-                            else if (entry.Name != "")
-                            {
-                                extractedFiles.Add(fileName.Replace('\\', '/'));
-                                if (entry.LastWriteTime.LocalDateTime > maxEntryDate) maxEntryDate = entry.LastWriteTime.LocalDateTime;
-                            }
+                            else if (entry.Name != "") extractedFiles.Add(fileName.Replace('\\', '/'));
                         }
                     }
                 }
@@ -653,12 +670,8 @@ namespace InstallerFunctions
                 helper.ApplyConfigOverrides(priconnePath, srcConfigText);
 
                 // Folders: each gets the newest date among its own files (source-accurate per folder).
-                // Files already keep their own zip-entry dates (ExtractToFile).
+                // Files keep their own zip-entry dates (ExtractToFile); the zip itself was stamped at download.
                 StampReleaseFolderTimes(priconnePath, extractedFiles);
-                // Cached zip: a single source date — the release published_at if we have it (needs the
-                // GitHub fetch), else the zip's own newest entry time (no API — works even rate-limited).
-                DateTime? zipDate = latestReleaseDate ?? (maxEntryDate > DateTime.MinValue ? maxEntryDate : (DateTime?)null);
-                if (zipDate.HasValue) { try { File.SetLastWriteTime(tempFile, zipDate.Value); } catch { } }
             }
             catch (Exception ex)
             {
