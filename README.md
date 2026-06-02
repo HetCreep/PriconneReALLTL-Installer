@@ -22,6 +22,15 @@ A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx trans
 
 **[Latest release →](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest)**
 
+Each release ships two options:
+
+| Asset | What it is |
+|---|---|
+| **`PriconneReALLTLInstaller-<version>.exe`** | Portable, single file — run it anywhere, nothing to install. This is also what the built-in self-update downloads. |
+| **`PriconneReALLTLInstaller-<version>-Setup.exe`** | Per-user installer (no admin). Adds a Start Menu shortcut and an uninstall entry that also clears the app's local cache/settings. Self-update still works (it installs under your user profile). |
+
+Either is fine — the portable exe if you just want to run it, the setup if you prefer a Start Menu entry and a clean uninstall.
+
 ---
 
 ## 🛠️ Credits & Attribution

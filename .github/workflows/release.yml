@@ -37,11 +37,23 @@ jobs:
           if ("${{ github.ref_type }}" -ne "tag") {
               $tag = "v1.0.0"
           }
+          $ver = $tag.TrimStart('v')   # numeric version for the Inno [Setup] AppVersion field
           # Create output directory
           New-Item -ItemType Directory -Path dist -Force
-          # Copy compiled binary with tag suffix
+          # Copy compiled binary with tag suffix (portable, single-file exe)
           Copy-Item PriconneReALLTLInstaller/bin/Release/PriconneReALLTLInstaller.exe dist/PriconneReALLTLInstaller-$tag.exe -Force
           echo "VERSION=$tag" >> $env:GITHUB_ENV
+          echo "NUMVER=$ver" >> $env:GITHUB_ENV
+
+      - name: Build Inno Setup Installer
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "${env:ProgramFiles}\Inno Setup 6\ISCC.exe" }
+          & $iscc /DAppVersion=$env:NUMVER /DTag=$env:VERSION installer\PriconneReALLTLInstaller.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+          Get-ChildItem dist
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
@@ -49,7 +61,10 @@ jobs:
           tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}
           name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }} Release
           generate_release_notes: true
+          # Portable exe is listed FIRST so it is assets[0] (the self-update reads the portable exe;
+          # it also matches by name to avoid grabbing the -Setup installer — belt and suspenders).
           files: |
             dist/PriconneReALLTLInstaller-${{ env.VERSION }}.exe
+            dist/PriconneReALLTLInstaller-${{ env.VERSION }}-Setup.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

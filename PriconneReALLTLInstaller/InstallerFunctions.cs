@@ -368,7 +368,20 @@ namespace InstallerFunctions
                         Log?.Invoke("No installer release asset found yet — skipping installer update.", "info", false);
                         return (null, null, null, false);
                     }
-                    assetLink = releaseJson.assets[0].browser_download_url;
+                    // Self-update swaps in the PORTABLE exe — prefer the raw .exe asset whose name has no
+                    // "Setup" (a release also ships a "...-Setup.exe" Inno installer for first-time installs;
+                    // self-update must not grab that). Fall back to the first asset if none matches.
+                    string chosenAsset = null;
+                    foreach (var a in releaseJson.assets)
+                    {
+                        string n = (string)a.name ?? "";
+                        if (n.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && n.IndexOf("setup", StringComparison.OrdinalIgnoreCase) < 0)
+                        {
+                            chosenAsset = (string)a.browser_download_url;
+                            break;
+                        }
+                    }
+                    assetLink = chosenAsset ?? (string)releaseJson.assets[0].browser_download_url;
                     Helper.SetCachedVersion("installer", new JObject { ["v"] = version, ["b"] = body, ["a"] = assetLink }.ToString(Newtonsoft.Json.Formatting.None));
                     return (version, body, assetLink, true);
                 }
