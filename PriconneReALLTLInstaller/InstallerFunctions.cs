@@ -616,9 +616,10 @@ namespace InstallerFunctions
             {
                 try
                 {
-                    string full = Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar));
-                    if (File.Exists(full)) File.SetLastWriteTime(full, when);
-                    string d = Path.GetDirectoryName(full);
+                    // Keep each FILE's own timestamp (ExtractToFile preserves the zip entry time = the
+                    // real build date, e.g. a DLL's 06-Jan + its version metadata). Only the FOLDERS get
+                    // the release date — they'd otherwise show the extraction moment.
+                    string d = Path.GetDirectoryName(Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar)));
                     while (!string.IsNullOrEmpty(d) && d.Length > rootFull.Length) { dirs.Add(d); d = Path.GetDirectoryName(d); }
                 }
                 catch { }
@@ -764,7 +765,7 @@ namespace InstallerFunctions
                 return filePathsList.ToArray();
             }
         }
-        public async Task RemovePatchFiles(bool uninstall, bool removeConfig, StringCollection configList, bool removeIgnored)
+        public async Task RemovePatchFiles(bool uninstall, bool removeConfig, StringCollection configList, bool removeIgnored, StringCollection ignoredList)
 
         {
             if (downloadSuccess == false) 
@@ -830,7 +831,7 @@ namespace InstallerFunctions
 
                     if (removeConfig) RemoveConfigOrIgnoredFiles("config", configList);
 
-                    if (removeIgnored) RemoveConfigOrIgnoredFiles("ignored", Settings.Default.ignoreFiles);
+                    if (removeIgnored) RemoveConfigOrIgnoredFiles("ignored", ignoredList);
 
                     // if (removeInterops) RemoveInterops();
 
@@ -930,6 +931,19 @@ namespace InstallerFunctions
                 else configFilesUnSelected.Add(s);
             }
 
+            // Ignored rows are user-selectable too — collect the checked ignored files (removeIgnored
+            // then removes exactly these, not the whole ignore list).
+            StringCollection ignoredFilesSelected = new StringCollection();
+            var ignoredSet = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string igf in Settings.Default.ignoreFiles) ignoredSet.Add(igf);
+            foreach (var it in configListBox.Items)
+            {
+                string s2 = it.ToString();
+                if (!ignoredSet.Contains(s2)) continue;
+                int idx2 = configListBox.Items.IndexOf(it);
+                if (configListBox.GetItemChecked(idx2)) ignoredFilesSelected.Add(s2);
+            }
+
             try
             {
 
@@ -951,7 +965,7 @@ namespace InstallerFunctions
                 {
                     processName = "Uninstall";
                     Log?.Invoke("Uninstalling translation patch...", "info", true);
-                    await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored);
+                    await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored, ignoredList: ignoredFilesSelected);
                     return;
                 }
 
@@ -960,7 +974,7 @@ namespace InstallerFunctions
                     processName = "Reinstall";
                     Log?.Invoke("Reinstalling translation patch...", "info", true);
                     await DownloadPatchFiles(assetLink);
-                    await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored);
+                    await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored, ignoredList: ignoredFilesSelected);
                     await ExtractPatchFiles();
                     return;
                 }
@@ -977,7 +991,7 @@ namespace InstallerFunctions
                         processName = "Update";
                         Log?.Invoke("Updating translation patch...", "info", true);
                         await DownloadPatchFiles(assetLink);
-                        await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored);
+                        await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored, ignoredList: ignoredFilesSelected);
                         await ExtractPatchFiles();
                         return;
                     }
@@ -1029,7 +1043,7 @@ namespace InstallerFunctions
                 ProcessStart?.Invoke();
 
                 await DownloadPatchFiles(assetLink);
-                if (!install) await RemovePatchFiles(uninstall: false, removeConfig: false, configList: Settings.Default.configFiles, removeIgnored: false);
+                if (!install) await RemovePatchFiles(uninstall: false, removeConfig: false, configList: Settings.Default.configFiles, removeIgnored: false, ignoredList: new StringCollection());
                 await ExtractPatchFiles();
                 return;
             }

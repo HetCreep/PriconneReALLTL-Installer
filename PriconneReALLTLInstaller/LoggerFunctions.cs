@@ -54,7 +54,9 @@ namespace LoggerFunctions
                 if (writeToToolStrip)
                 {
                     toolStripStatusLabel1.ForeColor = colors[level];
-                    toolStripStatusLabel1.Text = message;
+                    // Keep the status bar within its frame — long messages (e.g. the cache-hit line) get
+                    // an ellipsis; the full text is still in the log box + file.
+                    toolStripStatusLabel1.Text = message.Length > 64 ? message.Substring(0, 61) + "..." : message;
                 }
             }
             catch (Exception ex)

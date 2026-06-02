@@ -515,15 +515,7 @@ namespace PriconneReALLTLInstaller
         private void SetupIgnoredList()
         {
             configListBox.HorizontalScrollbar = true;   // long file paths exceed the box width — scroll, don't clip
-            // Config + ignored rows now share the SINGLE configListBox (one list = one scrollbar).
-            // Ignored rows are display-only ("Remove Ignored Patch Files" removes them all), so force
-            // them to stay checked; config rows remain user-toggleable.
-            configListBox.ItemCheck += (s, ev) =>
-            {
-                if (ev.Index < 0 || ev.Index >= configListBox.Items.Count) return;
-                if (IsIgnoredPath(configListBox.Items[ev.Index].ToString()) && ev.NewValue == System.Windows.Forms.CheckState.Unchecked)
-                    ev.NewValue = System.Windows.Forms.CheckState.Checked;
-            };
+            configListBox.CheckOnClick = true;          // single click toggles; config AND ignored rows are user-selectable
             removeIgnoredCheckBox.CheckedChanged += removeIgnoredCheckBox_CheckedChanged;
         }
 
@@ -542,14 +534,13 @@ namespace PriconneReALLTLInstaller
         {
             var keptUnchecked = new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < configListBox.Items.Count; i++)
-                if (!configListBox.GetItemChecked(i) && !IsIgnoredPath(configListBox.Items[i].ToString()))
-                    keptUnchecked.Add(configListBox.Items[i].ToString());
+                if (!configListBox.GetItemChecked(i)) keptUnchecked.Add(configListBox.Items[i].ToString());
 
             configListBox.Items.Clear();
             if (removeConfigCheckBox.Checked && Settings.Default.configFiles != null)
                 foreach (var c in Settings.Default.configFiles) configListBox.Items.Add(c, !keptUnchecked.Contains(c.ToString()));
             if (removeIgnoredCheckBox.Checked && Settings.Default.ignoreFiles != null)
-                foreach (var i in Settings.Default.ignoreFiles) configListBox.Items.Add(i, true);
+                foreach (var i in Settings.Default.ignoreFiles) configListBox.Items.Add(i, !keptUnchecked.Contains(i.ToString()));
         }
 
         // Populates + shows the SINGLE options list (config + ignored rows merged → one scrollbar).
