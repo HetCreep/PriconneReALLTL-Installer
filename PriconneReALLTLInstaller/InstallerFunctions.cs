@@ -652,15 +652,13 @@ namespace InstallerFunctions
                 // source — pulled from the source's own shipped config (read from the zip above).
                 helper.ApplyConfigOverrides(priconnePath, srcConfigText);
 
-                // Match the installed folders' + cached zip's timestamps to a SOURCE date instead of the
-                // extraction/download moment: the release published_at if we have it (needs the GitHub
-                // fetch), else the zip's own newest entry time (no API — works even when rate-limited).
-                DateTime? stamp = latestReleaseDate ?? (maxEntryDate > DateTime.MinValue ? maxEntryDate : (DateTime?)null);
-                if (stamp.HasValue)
-                {
-                    StampReleaseTime(priconnePath, extractedFiles, stamp.Value);
-                    try { File.SetLastWriteTime(tempFile, stamp.Value); } catch { }   // cached zip date = source date
-                }
+                // Folders: each gets the newest date among its own files (source-accurate per folder).
+                // Files already keep their own zip-entry dates (ExtractToFile).
+                StampReleaseFolderTimes(priconnePath, extractedFiles);
+                // Cached zip: a single source date — the release published_at if we have it (needs the
+                // GitHub fetch), else the zip's own newest entry time (no API — works even rate-limited).
+                DateTime? zipDate = latestReleaseDate ?? (maxEntryDate > DateTime.MinValue ? maxEntryDate : (DateTime?)null);
+                if (zipDate.HasValue) { try { File.SetLastWriteTime(tempFile, zipDate.Value); } catch { } }
             }
             catch (Exception ex)
             {
@@ -669,27 +667,33 @@ namespace InstallerFunctions
                 extractSuccess = false;
             }
         }
-        // Sets the extracted files + their folders to the release's published time so Explorer shows a
-        // uniform, GitHub-aligned timestamp instead of the extraction moment. Best-effort (per-item try).
-        private void StampReleaseTime(string root, List<string> relPaths, DateTime when)
+        // Sets each extracted FOLDER to the newest timestamp among the files it contains — a source-
+        // accurate per-folder date (not the extraction moment, and not one uniform date for everything).
+        // Files keep their own timestamps (ExtractToFile preserved the zip entry time = the real source
+        // date of each file, e.g. a DLL's build date), so this matches the source per file AND per folder.
+        private void StampReleaseFolderTimes(string root, List<string> relPaths)
         {
-            var dirs = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var dirMax = new System.Collections.Generic.Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
             string rootFull = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);
             foreach (string rel in relPaths)
             {
                 try
                 {
-                    // Keep each FILE's own timestamp (ExtractToFile preserves the zip entry time = the
-                    // real build date, e.g. a DLL's 06-Jan + its version metadata). Only the FOLDERS get
-                    // the release date — they'd otherwise show the extraction moment.
-                    string d = Path.GetDirectoryName(Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar)));
-                    while (!string.IsNullOrEmpty(d) && d.Length > rootFull.Length) { dirs.Add(d); d = Path.GetDirectoryName(d); }
+                    string full = Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar));
+                    if (!File.Exists(full)) continue;
+                    DateTime ft = File.GetLastWriteTime(full);                    // the file's own (zip entry) date
+                    string d = Path.GetDirectoryName(full);
+                    while (!string.IsNullOrEmpty(d) && d.Length > rootFull.Length) // propagate the max up every ancestor folder
+                    {
+                        if (!dirMax.TryGetValue(d, out DateTime cur) || ft > cur) dirMax[d] = ft;
+                        d = Path.GetDirectoryName(d);
+                    }
                 }
                 catch { }
             }
             int stamped = 0;
-            foreach (string d in dirs) { try { if (Directory.Exists(d)) { Directory.SetLastWriteTime(d, when); stamped++; } } catch { } }
-            Log?.Invoke($"Stamped {stamped} folder(s) to {when:dd-MMM-yyyy HH:mm} (source date).", "info", false);
+            foreach (var kv in dirMax) { try { if (Directory.Exists(kv.Key)) { Directory.SetLastWriteTime(kv.Key, kv.Value); stamped++; } } catch { } }
+            Log?.Invoke($"Stamped {stamped} folder(s) to match their contents' dates.", "info", false);
         }
 
         public bool ExtractZipEntry(ZipArchiveEntry entry, string destinationPath)
