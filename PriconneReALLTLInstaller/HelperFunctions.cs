@@ -506,11 +506,16 @@ namespace HelperFunctions
         // the game's textures), so applied universally; Language= is the only per-source key.
         private const string DuplicateTextureNamesValue = "event_logo;event_logo_00000;Btn_SubContents;Btn_EvQuest;Btn_EvGacha;Btn_EvStory;obj_texture;quest_boss_01;quest_boss_02;Rvl_EvQuest_BOSS;event_icon_storynumber_01;event_icon_storynumber_02;event_icon_storynumber_03;event_icon_storynumber_04;event_icon_storynumber_05;event_icon_storynumber_ed;event_icon_storynumber_ep;event_icon_storynumber_op;abyss_logo;clanbattle_logo;Invasion_logo_1001;Invasion_logo_1002;story_thumb_000;story_thumb_001;story_thumb_002;story_thumb_003;story_thumb_004;story_thumb_005;story_thumb_006;story_thumb_007;story_thumb_008;story_thumb_009;story_thumb_010;story_thumb_011;story_thumb_012;story_thumb_013;story_thumb_014;story_thumb_015;Btn_Mission;Btn_SubContents_lock;Btn_SubContents_lockBack;step_image_1;step_image_2;step_image_3;step_image_4";
 
+        // Keys synced into the local AutoTranslatorConfig.ini from the SOURCE's own shipped config.
+        private static readonly string[] SyncedConfigKeys = { "Language", "DuplicateTextureNames" };
+
         // Keeps AutoTranslatorConfig.ini's source-specific keys in sync after install/update. The config
-        // is shared + kept, so a source switch would otherwise leave the previous source's Language= /
-        // DuplicateTextureNames=. Replaces only those VALUES (preserves every other line incl. the
-        // user's own settings); leaves the file untouched if a key isn't present or the file is absent.
-        public void ApplyConfigOverrides(string priconnePath)
+        // is shared + kept, so a source switch would otherwise leave the previous source's values. Pulls
+        // the synced keys' VALUES from the SOURCE's own shipped config (sourceConfigText, read from the
+        // patch zip) — so e.g. EN editing DuplicateTextureNames is followed automatically, no hardcoding;
+        // falls back to the bundled list only if the source config omits it. Replaces ONLY those keys'
+        // values in the local file, preserving every other line incl. the user's per-machine settings.
+        public void ApplyConfigOverrides(string priconnePath, string sourceConfigText)
         {
             try
             {
@@ -518,11 +523,21 @@ namespace HelperFunctions
                 string cfg = Path.Combine(priconnePath, "BepInEx", "config", "AutoTranslatorConfig.ini");
                 if (!File.Exists(cfg)) return;
 
-                var overrides = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                var want = new System.Collections.Generic.HashSet<string>(SyncedConfigKeys, StringComparer.OrdinalIgnoreCase);
+                var values = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                if (!string.IsNullOrEmpty(sourceConfigText))
                 {
-                    { "Language", GetCurrentPatchSource().Lang },
-                    { "DuplicateTextureNames", DuplicateTextureNamesValue },
-                };
+                    foreach (string raw in sourceConfigText.Replace("\r\n", "\n").Split('\n'))
+                    {
+                        int e = raw.IndexOf('=');
+                        if (e <= 0) continue;
+                        string k = raw.Substring(0, e).Trim();
+                        if (want.Contains(k) && !values.ContainsKey(k)) values[k] = raw.Substring(e + 1).TrimEnd('\r');
+                    }
+                }
+                // Fall back to the bundled texture list only if the source's config didn't carry it.
+                if (!values.ContainsKey("DuplicateTextureNames")) values["DuplicateTextureNames"] = DuplicateTextureNamesValue;
+                if (values.Count == 0) return;
 
                 string[] lines = File.ReadAllLines(cfg);
                 bool changed = false;
@@ -531,7 +546,7 @@ namespace HelperFunctions
                     int eq = lines[i].IndexOf('=');
                     if (eq <= 0) continue;
                     string key = lines[i].Substring(0, eq).Trim();
-                    if (overrides.TryGetValue(key, out string val))
+                    if (values.TryGetValue(key, out string val))
                     {
                         string newLine = lines[i].Substring(0, eq + 1) + val;   // keep the key text, replace the value
                         if (lines[i] != newLine) { lines[i] = newLine; changed = true; }
@@ -540,7 +555,7 @@ namespace HelperFunctions
                 if (changed)
                 {
                     File.WriteAllLines(cfg, lines);
-                    Log?.Invoke($"Synced AutoTranslatorConfig.ini to {GetCurrentPatchSource().ShortName} (Language={GetCurrentPatchSource().Lang}).", "info", false);
+                    Log?.Invoke($"Synced AutoTranslatorConfig.ini to {GetCurrentPatchSource().ShortName} (from the source's shipped config).", "info", false);
                 }
             }
             catch (Exception ex) { Log?.Invoke("Could not update AutoTranslatorConfig.ini: " + ex.Message, "error", false); }

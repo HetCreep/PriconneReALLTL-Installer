@@ -533,6 +533,7 @@ namespace InstallerFunctions
             {
                 int counter = 0;
                 var extractedFiles = new List<string>();   // install manifest (files this source owns)
+                string srcConfigText = null;                // the source's shipped AutoTranslatorConfig.ini (per-source key sync)
                 using (var zip = ZipFile.OpenRead(tempFile))
                 {
                     Log?.Invoke("Extracting files to game folder...", "add", true);
@@ -545,6 +546,13 @@ namespace InstallerFunctions
                     {
                         counter++;
                         string fileName = entry.FullName;
+
+                        // Capture the source's shipped AutoTranslatorConfig.ini text (for per-source key
+                        // sync) even when it's a kept config we won't extract.
+                        if (entry.Name != "" && fileName.Replace('\\', '/').EndsWith("BepInEx/config/AutoTranslatorConfig.ini", StringComparison.OrdinalIgnoreCase))
+                        {
+                            try { using (var sr = new StreamReader(entry.Open())) srcConfigText = sr.ReadToEnd(); } catch { }
+                        }
 
                         DownloadProgress?.Invoke(counter, zip.Entries.Count);   // progress bar; per-entry logging removed (5844 file-IO log writes caused jitter)
 
@@ -582,8 +590,8 @@ namespace InstallerFunctions
                 helper.WriteInstallManifest(priconnePath, extractedFiles);
 
                 // Keep AutoTranslatorConfig.ini's Language=/DuplicateTextureNames= in sync with this
-                // source (the config is kept across installs, so a switch would leave stale values).
-                helper.ApplyConfigOverrides(priconnePath);
+                // source — pulled from the source's own shipped config (read from the zip above).
+                helper.ApplyConfigOverrides(priconnePath, srcConfigText);
             }
             catch (Exception ex)
             {
