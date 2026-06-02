@@ -40,7 +40,6 @@ namespace InstallerFunctions
         private string localVersion;
         private bool localVersionValid;
         private string latestVersion;
-        private bool latestVersionValid;
         private string _lastLoggedPatchVer;   // de-dupe "Found ... installed!" logs (read many times/op + Load+Shown)
         private string _lastLoggedModVer;
         private DateTime? latestReleaseDate;   // selected source's release published_at — stamped onto installed files/dirs
@@ -199,7 +198,7 @@ namespace InstallerFunctions
                         {
                             latestAssetDigest = d;
                             if (DateTime.TryParse(pStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime cpub)) latestReleaseDate = cpub;
-                            return (latestVersion = (string)cj["v"], latestVersionValid = true, assetLink = (string)cj["a"]);
+                            return (latestVersion = (string)cj["v"], true, assetLink = (string)cj["a"]);
                         }
                     }
                     catch { }
@@ -214,7 +213,7 @@ namespace InstallerFunctions
                     if (releaseJson == null)
                     {
                         Log?.Invoke("Empty response from GitHub — skipping patch version check.", "info", false);
-                        return (latestVersion = null, latestVersionValid = false, null);
+                        return (latestVersion = null, false, null);
                     }
                     string version = releaseJson.tag_name;
                     try { if (DateTime.TryParse((string)releaseJson.published_at, out DateTime pub)) latestReleaseDate = pub; } catch { }
@@ -237,12 +236,12 @@ namespace InstallerFunctions
                         if (releaseJson.assets == null || releaseJson.assets.Count == 0)
                         {
                             Log?.Invoke("Latest release has no downloadable asset yet — skipping.", "info", false);
-                            return (latestVersion = null, latestVersionValid = false, null);
+                            return (latestVersion = null, false, null);
                         }
                         assetLink = releaseJson.assets[0].browser_download_url;
                     }
                     Helper.SetCachedVersion(cacheKey, new JObject { ["v"] = version, ["a"] = assetLink, ["d"] = latestAssetDigest ?? "", ["p"] = latestReleaseDate.HasValue ? latestReleaseDate.Value.ToString("o") : "" }.ToString(Newtonsoft.Json.Formatting.None));
-                    return (latestVersion = version, latestVersionValid = true, assetLink);
+                    return (latestVersion = version, true, assetLink);
                 }
             }
             catch (WebException webEx)
@@ -253,18 +252,18 @@ namespace InstallerFunctions
                 string stale = Helper.GetCachedVersion("patch:" + githubAPI, allowStale: true);
                 if (stale != null)
                 {
-                    try { var cj = JObject.Parse(stale); Log?.Invoke("Using last known patch version (GitHub unavailable / rate-limited).", "info", false); return (latestVersion = (string)cj["v"], latestVersionValid = true, assetLink = (string)cj["a"]); }
+                    try { var cj = JObject.Parse(stale); Log?.Invoke("Using last known patch version (GitHub unavailable / rate-limited).", "info", false); return (latestVersion = (string)cj["v"], true, assetLink = (string)cj["a"]); }
                     catch { }
                 }
                 HttpWebResponse resp = webEx.Response as HttpWebResponse;
                 string detail = resp != null ? $"HTTP {(int)resp.StatusCode}" : webEx.Message;
                 Log?.Invoke($"Could not check latest patch version ({detail}). Set a GitHub token to avoid rate limits.", "info", false);
-                return (latestVersion = null, latestVersionValid = false, null);
+                return (latestVersion = null, false, null);
             }
             catch (Exception ex)
             {
                 Log?.Invoke("Could not check latest patch version: " + ex.Message, "info", false);
-                return (latestVersion = null, latestVersionValid = false, null);
+                return (latestVersion = null, false, null);
             }
         }
 
@@ -936,8 +935,6 @@ namespace InstallerFunctions
 
                     if (removeIgnored) RemoveConfigOrIgnoredFiles("ignored", ignoredList);
 
-                    // if (removeInterops) RemoveInterops();
-
                     removeSuccess = true;
                     removeProgress = false;
 
@@ -1013,25 +1010,6 @@ namespace InstallerFunctions
             }
 
         }
-        private void RemoveInterops() // obsolete, just kept code in case it'll ever be needed again
-        {
-            try
-            {
-                string interopPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BepInEx");
-                if (Directory.Exists(interopPath))
-                {
-                    Directory.Delete(interopPath, true);
-                    Log?.Invoke($"Removed interop assemblies from {interopPath}", "remove", false);
-                }
-            }
-            catch (Exception ex)
-            {
-                ErrorLog?.Invoke("Error removing interop assemblies: " + ex.Message);
-                removeSuccess = false;
-            }
-
-        }
-
         public async void ProcessOperation(string assetLink, bool install, bool uninstall, bool reinstall, bool launch, bool removeConfig, CheckedListBox configListBox, bool removeIgnored)
         {
             // Reset per-operation status flags. They persist across operations otherwise, so a
@@ -1220,70 +1198,6 @@ namespace InstallerFunctions
             }
         }
 
-        public bool StartDMMFastLauncher()
-        {
-            try
-            {
-                string dmmFastLauncherPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DMMGamePlayerFastLauncher");
-                string dmmFastLauncherExe = Path.Combine(dmmFastLauncherPath, "DMMGamePlayerFastLauncher.exe");
-
-                if (File.Exists(dmmFastLauncherExe))
-                {
-                    if (!helper.IsFastLauncherShortcutValid()) {
-                        Log?.Invoke("Cannot start game! DMMGamePlayerFastLauncher shortcut invalid!", "error", true);
-                        return false; 
-                    }
-
-                    // Use first valid shortcut from the list
-                    string fastLauncherLink = helper.GetFastLauncherLinks().FirstOrDefault(l => System.IO.File.Exists(l));
-
-                    Log?.Invoke("Starting game via DMMGamePlayerFastLauncher.", "info", true);
-                    ProcessStartInfo startInfo = new ProcessStartInfo
-                    {
-                        FileName = fastLauncherLink,
-                    };
-                    Process.Start(startInfo);
-                    return true;
-                }
-                Log?.Invoke("Cannot start game! DMMGamePlayerFastLauncher not found!", "error", true);
-                return false;
-            }
-            catch (Exception ex)
-            {
-                ErrorLog?.Invoke("Error starting DMMGamePlayerFastLauncher: " + ex.Message);
-                return false;
-            }
-        }
-        public bool StartPriconneMultiLauncher()
-        {
-            try
-            {
-                string priconneLauncherExe = helper.GetPriconneMultiLauncherExePath();
-
-                if (File.Exists(priconneLauncherExe))
-                {
-                    // Prefer the first valid custom shortcut from the list (e.g. with special arguments);
-                    // fall back to the raw exe if none are set.
-                    string firstValidLink = helper.GetFastLauncherLinks().FirstOrDefault(l => System.IO.File.Exists(l));
-                    string targetFile = !string.IsNullOrEmpty(firstValidLink) ? firstValidLink : priconneLauncherExe;
-
-                    Log?.Invoke("Starting game via PriconneMultiAccountLauncher.", "info", true);
-                    ProcessStartInfo startInfo = new ProcessStartInfo
-                    {
-                        FileName = targetFile,
-                    };
-                    Process.Start(startInfo);
-                    return true;
-                }
-                Log?.Invoke("Cannot start game! PriconneMultiAccountLauncher not found!", "error", true);
-                return false;
-            }
-            catch (Exception ex)
-            {
-                ErrorLog?.Invoke("Error starting PriconneMultiAccountLauncher: " + ex.Message);
-                return false;
-            }
-        }
         public bool StartDMMGamePlayer()
         {
             try

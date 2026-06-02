@@ -276,21 +276,6 @@ namespace HelperFunctions
         {
             QueryLimitedInformation = 0x1000
         }
-        public bool IsFastLauncherInstalled()
-        {
-            try
-            {
-                string dmmFastLauncherPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DMMGamePlayerFastLauncher");
-                string dmmFastLauncherExe = Path.Combine(dmmFastLauncherPath, "DMMGamePlayerFastLauncher.exe");
-
-                if (File.Exists(dmmFastLauncherExe)) return true; else return false;
-            }
-            catch (Exception ex)
-            {
-                ErrorLog?.Invoke("Error checking DMMGamePlayerFastlauncher: " + ex.Message);
-                return false;
-            }
-        }
         // ─── PriconneMultiAccountLauncher integration ─────────────────────────────
         // Product name + exe of the launcher this installer integrates with.
         // Source of truth: HetCreep/PriconneMultiAccountLauncher setup.iss.
@@ -360,30 +345,6 @@ namespace HelperFunctions
             return null;
         }
 
-        public bool IsPriconneMultiLauncherInstalled()
-        {
-            try
-            {
-                return File.Exists(GetPriconneMultiLauncherExePath());
-            }
-            catch (Exception ex)
-            {
-                ErrorLog?.Invoke("Error checking PriconneMultiAccountLauncher: " + ex.Message);
-                return false;
-            }
-        }
-        public bool IsFastLauncherShortcutValid()
-        {
-            var links = GetFastLauncherLinks();
-            // Consider valid if at least one stored link actually exists on disk
-            bool anyValid = links.Any(l => File.Exists(l));
-            if (!anyValid)
-            {
-                MessageBox.Show(Settings.Default.cannotStartDMMFastLauncherError, "Cannot Start Game", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
-            }
-            return true;
-        }
         public void LogFastLauncherShortcut()
         {
             var links = GetFastLauncherLinks();
@@ -736,29 +697,6 @@ namespace HelperFunctions
             catch { }
         }
 
-        public void PopulatePatchSourceComboBox(ComboBox comboBox)
-        {
-            comboBox.Items.Clear();
-            foreach (var source in PatchSources) comboBox.Items.Add(source.DisplayName);
-        }
-
-        public void PopulateLauncherComboBox(ComboBox comboBox)
-        {
-            comboBox.Items.Clear();
-            comboBox.Items.Add("DMMGamePlayer");
-            comboBox.Items.Add("DMMGamePlayerFastLauncher");
-            comboBox.Items.Add("PriconneMultiAccountLauncher");
-
-            if (IsFastLauncherInstalled())
-            {
-                Log?.Invoke("Found DMMGamePlayerFastLauncher!", "info", false);
-            } else Log?.Invoke("DMMGamePlayerFastLauncher not installed!", "info", false);
-
-            if (IsPriconneMultiLauncherInstalled())
-            {
-                Log?.Invoke("Found PriconneMultiAccountLauncher!", "info", false);
-            } else Log?.Invoke("PriconneMultiAccountLauncher not installed!", "info", false);
-        }
         // Smart-uninstall foundation: record which source(s) own each installed patch file
         // (path -> owner list) in BepInEx\.priconnerealltl-manifest.json. Written after each successful
         // extract; merged across sources so a shared file (e.g. the modloader engine) ends up owned by
@@ -870,29 +808,6 @@ namespace HelperFunctions
             public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> files { get; set; }
         }
 
-        public void PopulateConfigChecklistbox(CheckedListBox checkedListBox)
-        {
-            checkedListBox.Items.Clear();
-            checkedListBox.Items.AddRange(Settings.Default.configFiles.Cast<object>().ToArray());
-
-            for (int i = 0; i < checkedListBox.Items.Count; i++)
-            {
-                checkedListBox.SetItemChecked(i, true);
-            }
-        }
-        // Fills the "Remove Ignored Patch Files" detail list with the user's ignored paths
-        // (mirrors PopulateConfigChecklistbox). All checked = all will be removed.
-        public void PopulateIgnoredChecklistbox(CheckedListBox checkedListBox)
-        {
-            checkedListBox.Items.Clear();
-            if (Settings.Default.ignoreFiles != null)
-                checkedListBox.Items.AddRange(Settings.Default.ignoreFiles.Cast<object>().ToArray());
-
-            for (int i = 0; i < checkedListBox.Items.Count; i++)
-            {
-                checkedListBox.SetItemChecked(i, true);
-            }
-        }
         // ─── Launch-shortcut wrapping (Arch B) ────────────────────────────────────
         // Pressing a wrapped shortcut runs an AutoUpdate (patch update) then launches the
         // shortcut's ORIGINAL target. The original target/args/workdir are base64-encoded

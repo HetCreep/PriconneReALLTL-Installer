@@ -21,7 +21,7 @@ namespace PriconneReALLTLInstaller
 {
     public partial class AutoUpdateForm: BaseForm
     {
-        private AutoUpdateLogger logger;
+        private new AutoUpdateLogger logger;   // intentionally shadows BaseForm.logger (different logger type for the AU window)
         private string priconnePath;
         private bool priconnePathValid;
         private string gameVersion;
@@ -118,7 +118,6 @@ namespace PriconneReALLTLInstaller
 
             if (localVersionValid && localModLoaderVersionValid)
             {
-                //(modLoaderOutdated, modLoaderTooltip) = helper.CompareGameandModloaderVersions(gameVersion, localModLoaderVersion, latestModLoaderVersion);
                 if (latestModLoaderVersion != null) (modLoaderOutdated, modLoaderTooltip) = helper.CompareGameandModloaderVersions(gameVersion, localModLoaderVersion, latestModLoaderVersion);
                 modExPicture.Visible = modLoaderOutdated;
                 toolTip.SetToolTip(modExPicture, modLoaderTooltip);

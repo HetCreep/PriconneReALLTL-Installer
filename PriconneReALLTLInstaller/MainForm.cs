@@ -42,7 +42,6 @@ namespace PriconneReALLTLInstaller
         private CheckBox[] optionCheckboxes;
         private Button[] menuButtons;
         private System.Windows.Forms.LinkLabel patchSourceLinkLabel;
-        private System.Windows.Forms.CheckedListBox ignoredListBox;   // code-created detail list for "Remove Ignored Patch Files"
 
         public MainForm()
         {
@@ -200,8 +199,6 @@ namespace PriconneReALLTLInstaller
 
         private async void InitializeUI()
         {
-            string fastLauncherLink = Settings.Default.fastLauncherLink;
-
             Icon = Resources.jewel;
             this.StartPosition = FormStartPosition.CenterScreen;
             optionsPanel.Height = 87;
@@ -553,14 +550,6 @@ namespace PriconneReALLTLInstaller
             return norm.Substring(0, first) + "/…/" + norm.Substring(last + 1);
         }
 
-        private bool IsIgnoredPath(string item)
-        {
-            if (Settings.Default.ignoreFiles != null)
-                foreach (string f in Settings.Default.ignoreFiles)
-                    if (string.Equals(f, item, StringComparison.OrdinalIgnoreCase)) return true;
-            return false;
-        }
-
         // Fills the single options list with config rows (toggleable) and/or ignored rows (display-only),
         // per which Remove option is checked. Preserves the user's config check states across the
         // re-populations triggered by toggling the other option.
@@ -583,7 +572,6 @@ namespace PriconneReALLTLInstaller
             PopulateOptionsList();
             bool show = removeConfigCheckBox.Checked || removeIgnoredCheckBox.Checked;
             configListBox.Visible = show;
-            if (ignoredListBox != null) ignoredListBox.Visible = false;   // merged into configListBox now
             if (show)
             {
                 int ih = configListBox.ItemHeight > 0 ? configListBox.ItemHeight : 16;
