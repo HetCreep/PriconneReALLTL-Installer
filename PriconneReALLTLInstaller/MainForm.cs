@@ -514,6 +514,7 @@ namespace PriconneReALLTLInstaller
 
         private void SetupIgnoredList()
         {
+            configListBox.HorizontalScrollbar = true;   // long file paths exceed the box width — scroll, don't clip
             // Config + ignored rows now share the SINGLE configListBox (one list = one scrollbar).
             // Ignored rows are display-only ("Remove Ignored Patch Files" removes them all), so force
             // them to stay checked; config rows remain user-toggleable.
@@ -832,6 +833,10 @@ namespace PriconneReALLTLInstaller
             Settings.Default.selectedPatchSource = index;
             Settings.Default.Save();
             RefreshPatchSourceLabel();
+            // Switching source changes the context — clear any pending operation/option selection so the
+            // user re-picks fresh (avoids a stale checked operation carrying over + the options confusion).
+            foreach (CheckBox cb in operationCheckboxes) cb.Checked = false;
+            foreach (CheckBox cb in optionCheckboxes) cb.Checked = false;
             // Source switch: re-fetch latest off the UI thread (bypass the cache for a live read).
             await LoadLatestVersionInfoAsync(bypassCache: true);
             // Toggle plugin DLLs (.dll <-> .dll.bak) to match the newly selected source right
