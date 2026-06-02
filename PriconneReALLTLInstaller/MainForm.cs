@@ -247,6 +247,11 @@ namespace PriconneReALLTLInstaller
                 checkBox.CheckedChanged += OperationCheckbox_CheckedChanged;
             }
 
+            settingsMenuStrip.Items.Add(new ToolStripSeparator());
+            var clearCacheMenuItem = new ToolStripMenuItem("Clear download cache");
+            clearCacheMenuItem.Click += (s, e) => ClearDownloadCache();
+            settingsMenuStrip.Items.Add(clearCacheMenuItem);
+
             installer.LogCacheStatus();   // show what's in the zip cache this session
             await LoadLatestVersionInfoAsync(bypassCache: false);
         }
@@ -676,6 +681,16 @@ namespace PriconneReALLTLInstaller
         private void settingsButton_Click(object sender, EventArgs e)
         {
             settingsMenuStrip.Show(settingsButton, new System.Drawing.Point(0, settingsButton.Height));
+        }
+
+        // Clears the cached patch downloads (zipcache, ~330 MB/zip). Frees disk; they re-download on the
+        // next install/update. Settings + the installed patch are untouched. Wired into the Settings menu.
+        private void ClearDownloadCache()
+        {
+            var r = MessageBox.Show("Delete cached patch downloads?\n\nThey'll be re-downloaded the next time you install or update. Your settings and the installed patch are not affected.", "Clear download cache", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (r != DialogResult.Yes) return;
+            long freed = installer.ClearZipCache();
+            logger.Log($"Cleared download cache — freed {freed / (1024 * 1024)} MB.", "success", true);
         }
 
         private void editIgnoredFilesToolStripMenuItem_Click(object sender, EventArgs e)

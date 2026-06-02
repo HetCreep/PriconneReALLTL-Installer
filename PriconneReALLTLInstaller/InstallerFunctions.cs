@@ -418,6 +418,20 @@ namespace InstallerFunctions
             catch { }
         }
 
+        // Delete all cached patch zips (the user-facing "Clear download cache"); returns bytes freed.
+        public long ClearZipCache()
+        {
+            long freed = 0;
+            try
+            {
+                if (!Directory.Exists(ZipCacheDir)) return 0;
+                foreach (string f in Directory.GetFiles(ZipCacheDir, "*.zip"))
+                    try { long len = new FileInfo(f).Length; File.Delete(f); freed += len; } catch { }
+            }
+            catch { }
+            return freed;
+        }
+
         private string GetCachedZipPath()
         {
             try
