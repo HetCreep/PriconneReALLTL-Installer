@@ -56,7 +56,7 @@ A clean build produces a small number of pre-existing warnings (`CS0108`, `CS041
 
 ## Adding a translation source
 
-1. Add a `PatchSource` entry in `HelperFunctions.cs` (`PatchSources`): display/short name, owner/repo, the per-source `Version.txt` path + regex, and any plugin profile / external plugin downloads.
+1. Add a `PatchSource` entry in `HelperFunctions.cs` (`PatchSources`): display/short name, owner/repo, and the per-source `Version.txt` path + regex.
 2. Build and verify the new source appears in the **TL Source** dropdown and that install / update / version detection work.
 
 ## Releases & distribution
