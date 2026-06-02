@@ -693,22 +693,28 @@ namespace HelperFunctions
         // for VersionCacheTtlHours so repeated app launches don't re-hit the GitHub API.
         // Switching TL source / manual refresh sets BypassVersionCache to force a fresh fetch.
         private const double VersionCacheTtlHours = 6.0;
+        // The installer self-update check is far less time-sensitive than the patch/modloader checks:
+        // the app is mature, so releases are rare bug-fixes, not a steady stream. Cache its result for
+        // a week → a launch hits GitHub for it at most ~once/7 days instead of every 6h. The manual
+        // "Check for Updates Now" still bypasses this for a live read. Tune here if needed.
+        public const double InstallerCheckTtlHours = 24.0 * 7;
         public static bool BypassVersionCache = false;
 
         private sealed class CacheEntry { public string Val { get; set; } public DateTime Ts { get; set; } }
 
-        /// <summary>Cached JSON value for key if fresh (&lt; TTL) and not bypassed; else null.</summary>
-        public static string GetCachedVersion(string key, bool allowStale = false)
+        /// <summary>Cached JSON value for key if fresh (&lt; TTL) and not bypassed; else null. ttlHours overrides the default TTL for that key.</summary>
+        public static string GetCachedVersion(string key, bool allowStale = false, double? ttlHours = null)
         {
             // allowStale: ignore the TTL AND the bypass flag — used as a fallback when a live fetch
             // fails (e.g. HTTP 403 rate-limit) so the app keeps showing the last known value tokenless
             // instead of "N/A", even during a source-switch (which sets BypassVersionCache).
             if (BypassVersionCache && !allowStale) return null;
+            double ttl = ttlHours ?? VersionCacheTtlHours;
             try
             {
                 var dict = JsonConvert.DeserializeObject<Dictionary<string, CacheEntry>>(Settings.Default.versionCacheJson ?? "");
                 if (dict != null && dict.TryGetValue(key, out var e) && e != null
-                    && (allowStale || (DateTime.UtcNow - e.Ts).TotalHours < VersionCacheTtlHours))
+                    && (allowStale || (DateTime.UtcNow - e.Ts).TotalHours < ttl))
                     return e.Val;
             }
             catch { }

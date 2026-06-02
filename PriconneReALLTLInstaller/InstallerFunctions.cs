@@ -343,7 +343,7 @@ namespace InstallerFunctions
             {
                 string releaseUrl = "https://api.github.com/repos/HetCreep/PriconneReALLTL-Installer/releases/latest";
 
-                string cachedInst = Helper.GetCachedVersion("installer");
+                string cachedInst = Helper.GetCachedVersion("installer", ttlHours: Helper.InstallerCheckTtlHours);   // 7-day TTL — mature app, rare releases
                 if (cachedInst != null)
                 {
                     try { var cj = JObject.Parse(cachedInst); return ((string)cj["v"], (string)cj["b"], (string)cj["a"], true); }
