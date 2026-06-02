@@ -582,6 +582,7 @@ namespace InstallerFunctions
         // softly, so the wiring can land before the first release is published.
         private async Task DownloadSourcePlugins()
         {
+            if (!Helper.PluginProfileEnabled) return;   // per-source plugin profile temporarily off
             Helper.PatchSource src = Helper.GetCurrentPatchSource();
             if (src.PluginDownloads.Count == 0) return;
 

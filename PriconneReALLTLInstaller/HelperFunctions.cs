@@ -490,6 +490,12 @@ namespace HelperFunctions
             return PatchSources[idx];
         }
 
+        // Master switch for the per-source plugin profile. OFF for now — the feature isn't ready for
+        // real use until the TH PriconneALLTLFixup plugin ships. When false, ApplyPluginProfile and
+        // DownloadSourcePlugins are no-ops (and any plugin a prior run shelved is restored, so nothing
+        // is left disabled). Flip to true to turn the feature back on — all the code stays in place.
+        public static readonly bool PluginProfileEnabled = false;
+
         /// <summary>
         /// Applies the currently selected source's plugin profile in BepInEx/plugins by toggling
         /// the ".bak" suffix: DisablePlugins are shelved (.dll -> .dll.bak), EnablePlugins are
@@ -505,6 +511,14 @@ namespace HelperFunctions
                 if (!Directory.Exists(pluginsDir)) return;
 
                 PatchSource src = GetCurrentPatchSource();
+                if (!PluginProfileEnabled)
+                {
+                    // Feature off: don't shelve anything; restore any plugin a prior run shelved
+                    // (.dll.bak -> .dll) so none is left disabled. The patch's plugins load as shipped.
+                    foreach (string dll in src.EnablePlugins) RestorePluginDll(pluginsDir, dll);
+                    foreach (string dll in src.DisablePlugins) RestorePluginDll(pluginsDir, dll);
+                    return;
+                }
                 foreach (string dll in src.DisablePlugins) ShelvePluginDll(pluginsDir, dll);
                 foreach (string dll in src.EnablePlugins) RestorePluginDll(pluginsDir, dll);
             }
@@ -639,7 +653,8 @@ namespace HelperFunctions
                 }
 
                 var owned = new System.Collections.Generic.List<string>(extractedRelPaths ?? new System.Collections.Generic.List<string>());
-                foreach (PluginDownload pd in GetCurrentPatchSource().PluginDownloads) owned.Add("BepInEx/plugins/" + pd.DllName);
+                if (PluginProfileEnabled)
+                    foreach (PluginDownload pd in GetCurrentPatchSource().PluginDownloads) owned.Add("BepInEx/plugins/" + pd.DllName);
 
                 foreach (string rel in owned)
                 {
@@ -650,7 +665,11 @@ namespace HelperFunctions
                 }
 
                 Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
+                if (File.Exists(manifestPath)) File.SetAttributes(manifestPath, FileAttributes.Normal);   // clear Hidden so the overwrite succeeds
                 File.WriteAllText(manifestPath, JsonConvert.SerializeObject(new InstallManifest { files = files }, Newtonsoft.Json.Formatting.Indented));
+                // Hide it so users don't stumble on (or delete) it in Explorer. If deleted anyway, it's
+                // never fatal — smart-clean falls back to a full clean and rewrites it on the next op.
+                try { File.SetAttributes(manifestPath, FileAttributes.Hidden); } catch { }
             }
             catch (Exception ex) { Log?.Invoke("Could not write install manifest: " + ex.Message, "info", false); }
         }
