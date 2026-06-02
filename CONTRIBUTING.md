@@ -13,7 +13,7 @@ Thanks for your interest in improving the installer. This guide covers how to bu
 
 **Welcome:** bug fixes (with repro steps), new translation sources, security/robustness hardening, documentation, and UI translations.
 
-**Not accepted** — these are out of scope by design (see [`.claude/rules/ecc/domain/`](.claude/rules/ecc/domain) and [SECURITY.md](SECURITY.md)):
+**Not accepted** — these are out of scope by design (see [SECURITY.md](SECURITY.md)):
 
 - Game **automation**, memory reading, or anything that touches the game's *own* binaries/servers (the installer only deploys published third-party translation files).
 - **Telemetry**, analytics, crash-reporting, or Discord integration of any kind.
