@@ -4,8 +4,31 @@ using System.IO;
 using System.Windows.Forms;
 using System;
 
-namespace LoggerFunctions 
+namespace LoggerFunctions
 {
+    // Fail-closed redaction applied to EVERY log line (file + UI) before it is written, so a GitHub
+    // token (or any Authorization header value) can never leak into a log even if a future code path
+    // accidentally passes one through. See .claude/rules/ecc/domain/log-sanitization.md.
+    public static class LogRedactor
+    {
+        private static readonly System.Text.RegularExpressions.Regex GithubToken =
+            new System.Text.RegularExpressions.Regex(@"gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}", System.Text.RegularExpressions.RegexOptions.Compiled);
+        private static readonly System.Text.RegularExpressions.Regex AuthHeader =
+            new System.Text.RegularExpressions.Regex(@"(?i)\b(bearer|token)\s+[A-Za-z0-9_\-\.]{8,}", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        public static string Scrub(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return message;
+            try
+            {
+                string s = GithubToken.Replace(message, "[REDACTED_TOKEN]");
+                s = AuthHeader.Replace(s, m => m.Groups[1].Value + " [REDACTED]");
+                return s;
+            }
+            catch { return "[REDACTED]"; }   // if redaction itself throws, drop the content rather than risk a leak
+        }
+    }
+
     public class Logger
     {
         private string logFilePath;
@@ -45,6 +68,7 @@ namespace LoggerFunctions
 
         public void Log(string message, string level, bool writeToToolStrip = false)
         {
+            message = LogRedactor.Scrub(message);
             try
             {
                 using (StreamWriter writer = new StreamWriter(logFilePath, true)) writer.WriteLine($"[{DateTime.Now}] - {message}");
@@ -67,6 +91,7 @@ namespace LoggerFunctions
 
         public void Error(string message)
         {
+            message = LogRedactor.Scrub(message);
             try
             {
                 using (StreamWriter writer = new StreamWriter(logFilePath, true)) writer.WriteLine($"[{DateTime.Now}] - ERROR: {message}");
@@ -122,6 +147,7 @@ namespace LoggerFunctions
 
         public void Log(string message, string level, bool writeToStatus = false)
         {
+            message = LogRedactor.Scrub(message);
             try
             {
                 using (StreamWriter writer = new StreamWriter(logFilePath, true)) writer.WriteLine($"[{DateTime.Now}] - {message}");
@@ -140,6 +166,7 @@ namespace LoggerFunctions
 
         public void Error(string message)
         {
+            message = LogRedactor.Scrub(message);
             try
             {
                 using (StreamWriter writer = new StreamWriter(logFilePath, true)) writer.WriteLine($"[{DateTime.Now}] - ERROR: {message}");

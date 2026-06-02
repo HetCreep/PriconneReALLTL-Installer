@@ -31,6 +31,7 @@ namespace PriconneReALLTLInstaller
 
         private void InitializeUI()
         {
+            apiKeyTextbox.UseSystemPasswordChar = true;   // a GitHub token is a credential — mask it on screen (DPAPI-encrypted at rest)
             apiKeyTextbox.Text = Helper.DecryptString(Settings.Default.GithubAPIKey);
             if (apiKeyTextbox.Text == "") validateButton.Enabled = false;
             saveButton.Enabled = false;

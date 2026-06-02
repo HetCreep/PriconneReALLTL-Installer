@@ -52,7 +52,7 @@ DirExistsWarning=no
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 ; Show the MIT license (tynave + HetCreep fork notice) during install.
-LicenseFile=..\LICENSE
+LicenseFile=..\LICENSE.txt
 ; The thing being installed is itself the installer app — if it's running, close it so the
 ; copy doesn't fail; we relaunch via [Run], so don't let the Restart Manager double-launch it.
 CloseApplications=force
