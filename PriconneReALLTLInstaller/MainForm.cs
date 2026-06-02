@@ -248,7 +248,7 @@ namespace PriconneReALLTLInstaller
                 checkBox.CheckedChanged += OperationCheckbox_CheckedChanged;
             }
 
-            var clearCacheMenuItem = new ToolStripMenuItem("Clear download cache");
+            var clearCacheMenuItem = new ToolStripMenuItem("Clear Download Cache");
             if (settingsMenuStrip.Items.Count > 0)   // match the Designer items' font/colour so it doesn't look greyed/different
             {
                 clearCacheMenuItem.Font = settingsMenuStrip.Items[0].Font;
@@ -516,30 +516,31 @@ namespace PriconneReALLTLInstaller
         private void SetupIgnoredList()
         {
             configListBox.CheckOnClick = true;          // single click toggles; config AND ignored rows are user-selectable
-            configListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;   // custom draw → path-ellipsis instead of clipping long paths
-            configListBox.DrawItem += ConfigListBox_DrawItem;
+            configListBox.DisplayMember = "Display";    // show the (middle-ellipsised) Display; ToString() keeps the full path for ops
             removeIgnoredCheckBox.CheckedChanged += removeIgnoredCheckBox_CheckedChanged;
         }
 
-        // Owner-draws an options row: a checkbox glyph + the path with a Windows-style middle ellipsis
-        // (BepInEx\…\_Postprocessors.txt) so long paths don't clip or need a horizontal scrollbar.
-        private void ConfigListBox_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
+        // An options row: stores the full Path but DISPLAYS a middle-ellipsised form (CheckedListBox
+        // can't owner-draw, so we pre-shorten the text). ToString() returns the full Path so the
+        // install/remove ops still get the real path.
+        private sealed class OptionRow
         {
-            if (e.Index < 0) return;
-            e.DrawBackground();
-            var glyphState = configListBox.GetItemChecked(e.Index)
-                ? System.Windows.Forms.VisualStyles.CheckBoxState.CheckedNormal
-                : System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedNormal;
-            System.Drawing.Size glyph = System.Windows.Forms.CheckBoxRenderer.GetGlyphSize(e.Graphics, glyphState);
-            int gy = e.Bounds.Top + (e.Bounds.Height - glyph.Height) / 2;
-            System.Windows.Forms.CheckBoxRenderer.DrawCheckBox(e.Graphics, new System.Drawing.Point(e.Bounds.Left + 1, gy), glyphState);
+            public string Path { get; }
+            public string Display { get; }
+            public OptionRow(string path, string display) { Path = path; Display = display; }
+            public override string ToString() => Path;
+        }
 
-            var textRect = new System.Drawing.Rectangle(e.Bounds.Left + glyph.Width + 4, e.Bounds.Top, e.Bounds.Width - glyph.Width - 6, e.Bounds.Height);
-            bool selected = (e.State & System.Windows.Forms.DrawItemState.Selected) == System.Windows.Forms.DrawItemState.Selected;
-            System.Drawing.Color fg = selected ? System.Drawing.SystemColors.HighlightText : configListBox.ForeColor;
-            System.Windows.Forms.TextRenderer.DrawText(e.Graphics, configListBox.Items[e.Index].ToString(), e.Font, textRect, fg,
-                System.Windows.Forms.TextFormatFlags.PathEllipsis | System.Windows.Forms.TextFormatFlags.VerticalCenter | System.Windows.Forms.TextFormatFlags.Left);
-            e.DrawFocusRectangle();
+        // Middle path-ellipsis (BepInEx/…/_Postprocessors.txt) so long paths fit the options box.
+        private string MiddleEllipsis(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return path;
+            int avail = configListBox.Width - 26;   // minus checkbox + padding
+            if (avail < 40 || System.Windows.Forms.TextRenderer.MeasureText(path, configListBox.Font).Width <= avail) return path;
+            string norm = path.Replace('\\', '/');
+            int first = norm.IndexOf('/'), last = norm.LastIndexOf('/');
+            if (first < 0 || last <= first) return path;
+            return norm.Substring(0, first) + "/…/" + norm.Substring(last + 1);
         }
 
         private bool IsIgnoredPath(string item)
@@ -561,9 +562,9 @@ namespace PriconneReALLTLInstaller
 
             configListBox.Items.Clear();
             if (removeConfigCheckBox.Checked && Settings.Default.configFiles != null)
-                foreach (var c in Settings.Default.configFiles) configListBox.Items.Add(c, !keptUnchecked.Contains(c.ToString()));
+                foreach (var c in Settings.Default.configFiles) { string p = c.ToString(); configListBox.Items.Add(new OptionRow(p, MiddleEllipsis(p)), !keptUnchecked.Contains(p)); }
             if (removeIgnoredCheckBox.Checked)
-                foreach (var i in Helper.CurrentSourceIgnoreFiles()) configListBox.Items.Add(i, !keptUnchecked.Contains(i));
+                foreach (string i in Helper.CurrentSourceIgnoreFiles()) configListBox.Items.Add(new OptionRow(i, MiddleEllipsis(i)), !keptUnchecked.Contains(i));
         }
 
         // Populates + shows the SINGLE options list (config + ignored rows merged → one scrollbar).
