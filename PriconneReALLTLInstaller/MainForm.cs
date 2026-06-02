@@ -859,22 +859,41 @@ namespace PriconneReALLTLInstaller
             helper.ApplyPluginProfile(priconnePath);
         }
 
-        private void checkForInstallerUpdatesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        private async void checkForInstallerUpdatesToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
         {
             Settings.Default.checkForInstallerUpdates = checkForInstallerUpdatesToolStripMenuItem.Checked;
             Settings.Default.Save();
             if (checkForInstallerUpdatesToolStripMenuItem.Checked)
             {
-                (string version, string body, string installerAssetlink, bool versionValid) = installer.GetLatestInstallerRelease();
-                helper.CheckForInstallerUpdate(version, body, installerAssetlink, versionValid);
+                try
+                {
+                    // Off the UI thread so toggling this never freezes the window on a slow/403 GitHub response.
+                    (string version, string body, string installerAssetlink, bool versionValid) =
+                        await Task.Run(() => installer.GetLatestInstallerRelease());
+                    helper.CheckForInstallerUpdate(version, body, installerAssetlink, versionValid);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error("Error checking for installer update: " + ex.Message);
+                }
             }
         }
 
-        private void githubAPIRateLimitInfoToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void githubAPIRateLimitInfoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            (int remaining, DateTime resetTime, TimeSpan timeUntilReset, string username) = Helper.CheckGithubRateLimit();
-            string auth = username == null ? "No" : $"Yes (Username: {username})";
-            MessageBox.Show($"GitHub API rate limit info:\n\nAuthenticated: {auth}\nRemaining API calls: {remaining}\nResets at: {resetTime}, in: {timeUntilReset:mm\\:ss}", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            try
+            {
+                // CheckGithubRateLimit hits the network — run it off the UI thread so the menu click
+                // never freezes the window on a slow/rate-limited response.
+                (int remaining, DateTime resetTime, TimeSpan timeUntilReset, string username) =
+                    await Task.Run(() => Helper.CheckGithubRateLimit());
+                string auth = username == null ? "No" : $"Yes (Username: {username})";
+                MessageBox.Show($"GitHub API rate limit info:\n\nAuthenticated: {auth}\nRemaining API calls: {remaining}\nResets at: {resetTime}, in: {timeUntilReset:mm\\:ss}", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Error checking GitHub rate limit: " + ex.Message);
+            }
         }
 
         private void gitHubAPISettingsToolStripMenuItem_Click(object sender, EventArgs e)
