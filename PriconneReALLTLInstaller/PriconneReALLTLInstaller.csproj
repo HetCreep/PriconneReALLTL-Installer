@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -503,7 +503,6 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\wiki\validtoken.png" />
     <None Include="Resources\cancel.png" />
     <None Include="Resources\cancel_lit.png" />
     <None Include="Resources\dlbutton.png" />
@@ -519,13 +518,6 @@
     <None Include="Resources\savetokenbutton.png" />
     <None Include="Resources\savetokenbutton_disabled.png" />
     <None Include="Resources\savetokenbutton_lit.png" />
-    <Content Include="Resources\wiki\apilimitauthenticated.png" />
-    <Content Include="Resources\wiki\apilimitunautheinticated.png" />
-    <Content Include="Resources\wiki\autoupdatermenu.png" />
-    <Content Include="Resources\wiki\githubapisettingswindow.png" />
-    <Content Include="Resources\wiki\importexportui.png" />
-    <Content Include="Resources\wiki\invalidtoken.png" />
-    <Content Include="Resources\wiki\updatericon.png" />
     <None Include="Resources\kokodance.gif" />
     <None Include="Resources\kokorun.gif" />
     <None Include="Resources\kyarun.gif" />
@@ -537,33 +529,6 @@
     <None Include="Resources\shortcutadd_button.png" />
     <None Include="Resources\shortcutadd_button_disabled.png" />
     <None Include="Resources\shortcutadd_button_lit.png" />
-    <Content Include="Resources\wiki\14reinstall.png" />
-    <Content Include="Resources\wiki\appwindow.png" />
-    <Content Include="Resources\wiki\autoupdatererror.png" />
-    <Content Include="Resources\wiki\autoupdaterinstall.png" />
-    <Content Include="Resources\wiki\autoupdaternofastlauncher.png" />
-    <Content Include="Resources\wiki\autoupdaternotification1.png" />
-    <Content Include="Resources\wiki\autoupdaternotification2.png" />
-    <Content Include="Resources\wiki\autoupdaterstartgame.png" />
-    <Content Include="Resources\wiki\autoupdaterui.png" />
-    <Content Include="Resources\wiki\autoupdaterupdate.png" />
-    <Content Include="Resources\wiki\autoupdateruptodate.png" />
-    <Content Include="Resources\wiki\currentoperation.png" />
-    <Content Include="Resources\wiki\currentoperationtooltip.png" />
-    <Content Include="Resources\wiki\helpmenu.png" />
-    <Content Include="Resources\wiki\ignoreui.png" />
-    <Content Include="Resources\wiki\install.png" />
-    <Content Include="Resources\wiki\launch.png" />
-    <Content Include="Resources\wiki\launchersettingsui.png" />
-    <Content Include="Resources\wiki\nofastlaunchershortcut.png" />
-    <Content Include="Resources\wiki\noupdate.png" />
-    <Content Include="Resources\wiki\optionsdisabled2.png" />
-    <Content Include="Resources\wiki\optionsenabled.png" />
-    <Content Include="Resources\wiki\overview.png" />
-    <Content Include="Resources\wiki\progress.png" />
-    <Content Include="Resources\wiki\removeconfig.png" />
-    <Content Include="Resources\wiki\updatedisabled.png" />
-    <Content Include="Resources\wiki\updateenabled.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
