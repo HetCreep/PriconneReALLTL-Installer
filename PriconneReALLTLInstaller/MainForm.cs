@@ -247,7 +247,6 @@ namespace PriconneReALLTLInstaller
                 checkBox.CheckedChanged += OperationCheckbox_CheckedChanged;
             }
 
-            settingsMenuStrip.Items.Add(new ToolStripSeparator());
             var clearCacheMenuItem = new ToolStripMenuItem("Clear download cache");
             clearCacheMenuItem.Click += (s, e) => ClearDownloadCache();
             settingsMenuStrip.Items.Add(clearCacheMenuItem);
@@ -540,10 +539,14 @@ namespace PriconneReALLTLInstaller
 
             if (showConfig && showIgnored && ignoredListBox != null)
             {
-                // Stay within the proven box height (154) so neither list spills outside the panel;
-                // stack the two borderless lists contiguously so they read as one cohesive list.
-                configListBox.SetBounds(15, 85, 290, 33);
-                ignoredListBox.SetBounds(15, 118, 290, 33);
+                // Stack the two borderless lists contiguously so they read as ONE list. Size the config
+                // list to its exact item count (no empty rows leaving a visible gap before the ignored
+                // list); the ignored list fills the rest. Stays within the proven 154-px panel.
+                int ih = configListBox.ItemHeight > 0 ? configListBox.ItemHeight : 16;
+                int area = 66;                                                       // list area inside the panel (y85..151)
+                int cH = Math.Min(ih * Math.Max(1, configListBox.Items.Count), area - ih);
+                configListBox.SetBounds(15, 85, 290, cH);
+                ignoredListBox.SetBounds(15, 85 + cH, 290, area - cH);
                 optionsPanel.Height = 154;
             }
             else if (showConfig)
