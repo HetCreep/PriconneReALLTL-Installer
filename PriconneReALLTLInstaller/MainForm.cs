@@ -248,6 +248,11 @@ namespace PriconneReALLTLInstaller
             }
 
             var clearCacheMenuItem = new ToolStripMenuItem("Clear download cache");
+            if (settingsMenuStrip.Items.Count > 0)   // match the Designer items' font/colour so it doesn't look greyed/different
+            {
+                clearCacheMenuItem.Font = settingsMenuStrip.Items[0].Font;
+                clearCacheMenuItem.ForeColor = settingsMenuStrip.Items[0].ForeColor;
+            }
             clearCacheMenuItem.Click += (s, e) => ClearDownloadCache();
             settingsMenuStrip.Items.Add(clearCacheMenuItem);
 
@@ -355,8 +360,12 @@ namespace PriconneReALLTLInstaller
             helper.PopulateConfigChecklistbox(configListBox);
             if (ignoredListBox != null) helper.PopulateIgnoredChecklistbox(ignoredListBox);
 
-            removeConfigCheckBox.Enabled = false;
-            removeIgnoredCheckBox.Enabled = false;
+            // Re-enable the Remove options when an option-supporting operation (Reinstall/Uninstall) is
+            // still checked — otherwise switching source while one was checked left them stuck disabled
+            // until the user re-toggled the operation.
+            bool optionsOp = reinstallCheckBox.Checked || uninstallCheckBox.Checked;
+            removeConfigCheckBox.Enabled = optionsOp;
+            removeIgnoredCheckBox.Enabled = optionsOp;
 
             if (!latestVersionValid)
             {
@@ -364,6 +373,8 @@ namespace PriconneReALLTLInstaller
                 {
                     checkBox.Enabled = false;
                 }
+                removeConfigCheckBox.Enabled = false;
+                removeIgnoredCheckBox.Enabled = false;
                 startButton.Enabled = false;
                 return;
             }
