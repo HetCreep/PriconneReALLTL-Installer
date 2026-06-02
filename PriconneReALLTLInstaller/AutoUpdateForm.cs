@@ -79,6 +79,13 @@ namespace PriconneReALLTLInstaller
             gamePathLinkLabel.Text = "Game Path: " + priconnePath;
             gameVersionLabel.Text = "Game Version: " + gameVersion;
 
+            // Installed = local reads (instant) → show them now; no "Checking" (that's only for the
+            // network-fetched Latest values below). Avoids a blank flash before UpdateUI runs.
+            (localVersion, localVersionValid) = installer.GetInstalledPatchVersion();
+            localVersionLabel.Text = Helper.NormalizeVersion(localVersion);
+            (localModLoaderVersion, localModLoaderVersionValid) = installer.GetInstalledModloaderVersion();
+            localModloaderVersionLabel.Text = localModLoaderVersion;
+
             // Fetch the latest versions OFF the UI thread so this window never freezes on a slow or
             // rate-limited (HTTP 403) GitHub response — the old synchronous calls froze it.
             latestVersionLinkLabel.Text = "Checking…";
