@@ -264,10 +264,10 @@ namespace PriconneReALLTLInstaller
             // Only the LATEST values come from GitHub → show "Checking…" for those while fetching.
             latestVersionLinkLabel.Text = "Checking…";
             latestModloaderVersionLabel.Text = "Checking…";
-            // Installed TL/modloader are LOCAL reads (instant) — read + show right away so a source
-            // switch updates Installed at once (the TL one is per-source). No "Checking" (not network).
-            (localVersion, localVersionValid) = installer.GetInstalledPatchVersion();
-            localVersionLabel.Text = Helper.NormalizeVersion(localVersion);
+            // TL Installed is per-source → flash "Checking…" during the switch as a visible transition;
+            // UpdateUI() resolves it to the freshly-read local version once the latest fetch returns.
+            localVersionLabel.Text = "Checking…";
+            // Modloader Installed is shared (same across sources) — show it now; it won't change on switch.
             (localModLoaderVersion, localModLoaderVersionValid) = installer.GetInstalledModloaderVersion();
             localModloaderVersionLabel.Text = localModLoaderVersion;
             patchgithubAPI = Helper.GetCurrentPatchSource().ApiBase;
