@@ -357,8 +357,7 @@ namespace PriconneReALLTLInstaller
             SetUninstallandReinstallCheckBox(localVersionValid);
             UpdateModeDescription();
 
-            helper.PopulateConfigChecklistbox(configListBox);
-            if (ignoredListBox != null) helper.PopulateIgnoredChecklistbox(ignoredListBox);
+            LayoutOptionLists();   // populate + size the single (merged) options list per the current Remove options
 
             // Re-enable the Remove options when an option-supporting operation (Reinstall/Uninstall) is
             // still checked — otherwise switching source while one was checked left them stuck disabled
@@ -515,65 +514,58 @@ namespace PriconneReALLTLInstaller
 
         private void SetupIgnoredList()
         {
-            if (ignoredListBox != null) return;
-            ignoredListBox = new System.Windows.Forms.CheckedListBox
+            // Config + ignored rows now share the SINGLE configListBox (one list = one scrollbar).
+            // Ignored rows are display-only ("Remove Ignored Patch Files" removes them all), so force
+            // them to stay checked; config rows remain user-toggleable.
+            configListBox.ItemCheck += (s, ev) =>
             {
-                BackColor = configListBox.BackColor,
-                ForeColor = configListBox.ForeColor,
-                BorderStyle = configListBox.BorderStyle,
-                Font = configListBox.Font,
-                CheckOnClick = false,
-                Location = configListBox.Location,
-                Size = configListBox.Size,
-                Visible = false,
-                Name = "ignoredListBox"
-            };
-            // Display-only: "Remove Ignored Patch Files" removes every ignored entry, so this list
-            // just shows WHAT will be removed (items stay checked / can't be toggled off).
-            ignoredListBox.ItemCheck += (s, ev) =>
-            {
-                if (ev.NewValue == System.Windows.Forms.CheckState.Unchecked)
+                if (ev.Index < 0 || ev.Index >= configListBox.Items.Count) return;
+                if (IsIgnoredPath(configListBox.Items[ev.Index].ToString()) && ev.NewValue == System.Windows.Forms.CheckState.Unchecked)
                     ev.NewValue = System.Windows.Forms.CheckState.Checked;
             };
-            optionsPanel.Controls.Add(ignoredListBox);
             removeIgnoredCheckBox.CheckedChanged += removeIgnoredCheckBox_CheckedChanged;
         }
 
-        // Shows the config and/or ignored detail lists in the Options panel, stacking both when
-        // both are selected so neither overflows the panel.
+        private bool IsIgnoredPath(string item)
+        {
+            if (Settings.Default.ignoreFiles != null)
+                foreach (string f in Settings.Default.ignoreFiles)
+                    if (string.Equals(f, item, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
+        // Fills the single options list with config rows (toggleable) and/or ignored rows (display-only),
+        // per which Remove option is checked. Preserves the user's config check states across the
+        // re-populations triggered by toggling the other option.
+        private void PopulateOptionsList()
+        {
+            var keptUnchecked = new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < configListBox.Items.Count; i++)
+                if (!configListBox.GetItemChecked(i) && !IsIgnoredPath(configListBox.Items[i].ToString()))
+                    keptUnchecked.Add(configListBox.Items[i].ToString());
+
+            configListBox.Items.Clear();
+            if (removeConfigCheckBox.Checked && Settings.Default.configFiles != null)
+                foreach (var c in Settings.Default.configFiles) configListBox.Items.Add(c, !keptUnchecked.Contains(c.ToString()));
+            if (removeIgnoredCheckBox.Checked && Settings.Default.ignoreFiles != null)
+                foreach (var i in Settings.Default.ignoreFiles) configListBox.Items.Add(i, true);
+        }
+
+        // Populates + shows the SINGLE options list (config + ignored rows merged → one scrollbar).
         private void LayoutOptionLists()
         {
-            bool showConfig = removeConfigCheckBox.Checked;
-            bool showIgnored = removeIgnoredCheckBox.Checked;
-            configListBox.Visible = showConfig;
-            if (ignoredListBox != null) ignoredListBox.Visible = showIgnored;
-
-            if (showConfig && showIgnored && ignoredListBox != null)
+            PopulateOptionsList();
+            bool show = removeConfigCheckBox.Checked || removeIgnoredCheckBox.Checked;
+            configListBox.Visible = show;
+            if (ignoredListBox != null) ignoredListBox.Visible = false;   // merged into configListBox now
+            if (show)
             {
-                // Stack the two borderless lists contiguously so they read as ONE list. Size the config
-                // list to its exact item count (no empty rows leaving a visible gap before the ignored
-                // list); the ignored list fills the rest. Stays within the proven 154-px panel.
                 int ih = configListBox.ItemHeight > 0 ? configListBox.ItemHeight : 16;
-                int area = 66;                                                       // list area inside the panel (y85..151)
-                int cH = Math.Min(ih * Math.Max(1, configListBox.Items.Count), area - ih);
-                configListBox.SetBounds(15, 85, 290, cH);
-                ignoredListBox.SetBounds(15, 85 + cH, 290, area - cH);
+                int h = Math.Min(ih * Math.Max(1, configListBox.Items.Count) + 4, 66);   // fit content; one scrollbar if it overflows
+                configListBox.SetBounds(15, 85, 290, h);
                 optionsPanel.Height = 154;
             }
-            else if (showConfig)
-            {
-                configListBox.SetBounds(15, 85, 290, 68);
-                optionsPanel.Height = 154;
-            }
-            else if (showIgnored && ignoredListBox != null)
-            {
-                ignoredListBox.SetBounds(15, 85, 290, 68);
-                optionsPanel.Height = 154;
-            }
-            else
-            {
-                optionsPanel.Height = 87;
-            }
+            else optionsPanel.Height = 87;
         }
 
         private void removeConfigCheckBox_CheckedChanged(object sender, EventArgs e)

@@ -891,11 +891,17 @@ namespace InstallerFunctions
             StringCollection configFilesSelected = new StringCollection();
             StringCollection configFilesUnSelected = new StringCollection();
 
+            // The list also holds ignored-file rows now (merged UI); the config SELECTION must count
+            // only real config files — ignored files are governed by the removeIgnored flag.
+            var configSet = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string cf in Settings.Default.configFiles) configSet.Add(cf);
             foreach (var item in configListBox.Items)
             {
+                string s = item.ToString();
+                if (!configSet.Contains(s)) continue;   // ignored-file row → not part of the config selection
                 int index = configListBox.Items.IndexOf(item);
-                if (configListBox.GetItemChecked(index)) configFilesSelected.Add(item.ToString());
-                else configFilesUnSelected.Add(item.ToString());
+                if (configListBox.GetItemChecked(index)) configFilesSelected.Add(s);
+                else configFilesUnSelected.Add(s);
             }
 
             try
