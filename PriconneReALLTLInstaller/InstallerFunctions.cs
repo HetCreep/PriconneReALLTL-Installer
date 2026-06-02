@@ -197,6 +197,7 @@ namespace InstallerFunctions
                         if (!string.IsNullOrEmpty(d))   // only trust the cache when it carries the digest; else re-fetch to capture it
                         {
                             latestAssetDigest = d;
+                            if (DateTime.TryParse((string)cj["p"], null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime cpub)) latestReleaseDate = cpub;
                             return (latestVersion = (string)cj["v"], latestVersionValid = true, assetLink = (string)cj["a"]);
                         }
                     }
@@ -239,7 +240,7 @@ namespace InstallerFunctions
                         }
                         assetLink = releaseJson.assets[0].browser_download_url;
                     }
-                    Helper.SetCachedVersion(cacheKey, new JObject { ["v"] = version, ["a"] = assetLink, ["d"] = latestAssetDigest ?? "" }.ToString(Newtonsoft.Json.Formatting.None));
+                    Helper.SetCachedVersion(cacheKey, new JObject { ["v"] = version, ["a"] = assetLink, ["d"] = latestAssetDigest ?? "", ["p"] = latestReleaseDate.HasValue ? latestReleaseDate.Value.ToString("o") : "" }.ToString(Newtonsoft.Json.Formatting.None));
                     return (latestVersion = version, latestVersionValid = true, assetLink);
                 }
             }
@@ -564,6 +565,8 @@ namespace InstallerFunctions
                 }
                 Log?.Invoke("Download completed + verified.", "info", true);
                 downloadSuccess = true;
+                // Stamp the cached zip with the release date (from GitHub) instead of the download moment.
+                try { if (latestReleaseDate.HasValue) File.SetLastWriteTime(target, latestReleaseDate.Value); } catch { }
                 if (cachePath != null) tempFile = cachePath;   // extract from (and keep) the cached zip
             }
             catch (Exception ex)
