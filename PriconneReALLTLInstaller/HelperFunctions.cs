@@ -513,10 +513,12 @@ namespace HelperFunctions
                 PatchSource src = GetCurrentPatchSource();
                 if (!PluginProfileEnabled)
                 {
-                    // Feature off: don't shelve anything; restore any plugin a prior run shelved
+                    // Feature off: don't shelve anything; SILENTLY restore any plugin a prior run shelved
                     // (.dll.bak -> .dll) so none is left disabled. The patch's plugins load as shipped.
-                    foreach (string dll in src.EnablePlugins) RestorePluginDll(pluginsDir, dll);
-                    foreach (string dll in src.DisablePlugins) RestorePluginDll(pluginsDir, dll);
+                    // Silent because, with the profile off, this is a one-time cleanup — not the profile
+                    // doing per-source work (a logged "Enabled plugin for this TL source" would mislead).
+                    foreach (string dll in src.EnablePlugins) RestorePluginDll(pluginsDir, dll, silent: true);
+                    foreach (string dll in src.DisablePlugins) RestorePluginDll(pluginsDir, dll, silent: true);
                     return;
                 }
                 foreach (string dll in src.DisablePlugins) ShelvePluginDll(pluginsDir, dll);
@@ -539,15 +541,16 @@ namespace HelperFunctions
             Log?.Invoke($"Disabled plugin (not used by this TL source): {dll}", "info", false);
         }
 
-        // Enable a plugin: restore "<dll>.bak" -> "<dll>" so BepInEx loads it again.
-        private void RestorePluginDll(string pluginsDir, string dll)
+        // Enable a plugin: restore "<dll>.bak" -> "<dll>" so BepInEx loads it again. silent=true skips
+        // the log (used by the feature-off cleanup, which shouldn't look like the profile is active).
+        private void RestorePluginDll(string pluginsDir, string dll, bool silent = false)
         {
             string dllPath = Path.Combine(pluginsDir, dll);
             if (File.Exists(dllPath)) return;                  // already enabled
             string bakPath = dllPath + ".bak";
             if (!File.Exists(bakPath)) return;                 // nothing to restore
             File.Move(bakPath, dllPath);
-            Log?.Invoke($"Enabled plugin for this TL source: {dll}", "info", false);
+            if (!silent) Log?.Invoke($"Enabled plugin for this TL source: {dll}", "info", false);
         }
 
         /// <summary>Canonicalizes a version/tag for comparison: trims and strips a leading
