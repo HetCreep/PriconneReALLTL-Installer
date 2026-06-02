@@ -20,7 +20,7 @@
 ; Overridable on the ISCC command line. AppVersion must be numeric (Inno [Setup]);
 ; Tag is the release tag used only in the output filename (defaults to "v"+AppVersion).
 #ifndef AppVersion
-  #define AppVersion "2.4.0"
+  #define AppVersion "3.0.0"
 #endif
 #ifndef Tag
   #define Tag "v" + AppVersion
@@ -36,15 +36,30 @@ AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}/issues
 AppUpdatesURL={#AppURL}/releases
+; Apps & Features: show just the product name (version lives in its own column) + embed
+; version metadata into the setup exe so AV/SmartScreen and the file properties read clean.
+UninstallDisplayName={#AppName}
+UninstallDisplayIcon={app}\{#AppExeName}
+VersionInfoVersion={#AppVersion}
+VersionInfoProductName={#AppName}
+VersionInfoProductVersion={#AppVersion}
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 DefaultDirName={autopf}\PriconneReALLTLInstaller
+; Let power users change the install location; suppress the re-install "folder exists" warning.
+DisableDirPage=auto
+DirExistsWarning=no
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
+; Show the MIT license (tynave + HetCreep fork notice) during install.
+LicenseFile=..\LICENSE
+; The thing being installed is itself the installer app — if it's running, close it so the
+; copy doesn't fail; we relaunch via [Run], so don't let the Restart Manager double-launch it.
+CloseApplications=force
+RestartApplications=no
 OutputDir=..\dist
 OutputBaseFilename=PriconneReALLTLInstaller-{#Tag}-Setup
 SetupIconFile={#SrcDir}\..\..\Resources\jewel.ico
-UninstallDisplayIcon={app}\{#AppExeName}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
