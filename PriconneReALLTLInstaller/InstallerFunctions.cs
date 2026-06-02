@@ -884,13 +884,18 @@ namespace InstallerFunctions
                     // release-tree removal when there's no manifest (e.g. installed before manifests).
                     string[] currentFiles = null;
                     bool refCounted = false;
-                    if (uninstall)
-                    {
-                        var plan = helper.ResolveManifestUninstall(priconnePath);
-                        if (plan != null) { currentFiles = plan.ToArray(); refCounted = true; }
-                    }
+                    // Smart-clean: the install manifest is the source of truth for BOTH uninstall AND
+                    // update/reinstall — it records exactly what THIS source put on disk. Driving the
+                    // remove step from it (not the GitHub git-tree) means an update makes NO network call
+                    // here, so it can't fail on a 403/rate-limit or a Version.txt that doesn't match a git
+                    // tag; and files renamed/moved/deleted in the new version are still dropped (old
+                    // footprint removed via the manifest, new footprint written by the extract that follows).
+                    var plan = helper.ResolveManifestUninstall(priconnePath);
+                    if (plan != null) { currentFiles = plan.ToArray(); refCounted = true; }
                     if (!refCounted)
                     {
+                        // No manifest (installed before manifests existed / source not tracked) → fall back
+                        // to the source's git tree at the INSTALLED version's tag.
                         currentFiles = ProcessTree(priconnePath, localVersion).GetAwaiter().GetResult();
                         if (currentFiles == null)
                         {
@@ -900,7 +905,7 @@ namespace InstallerFunctions
                     }
 
                     if (refCounted)
-                        Log?.Invoke($"Uninstalling {Helper.GetCurrentPatchSource().ShortName} (ref-counted): removing {currentFiles.Length} file(s) it solely owns; files shared with another installed source are kept.", "remove", true);
+                        Log?.Invoke($"{(uninstall ? "Uninstalling" : "Refreshing")} {Helper.GetCurrentPatchSource().ShortName} (manifest, ref-counted): removing {currentFiles.Length} file(s) it solely owns; files shared with another installed source are kept{(uninstall ? "" : " (the extract re-applies this source's new version)")}.", "remove", true);
                     else
                         Log?.Invoke(uninstall ? "Removing patch files..." : "Removing old patch files...", "remove", true);
                     ProgressPictureChange?.Invoke(Resources.kyarun);
