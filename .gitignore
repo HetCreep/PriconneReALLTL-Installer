@@ -7,9 +7,8 @@
 /CLAUDE.md
 /AGENTS.md
 /MEMORY.md
-# AI tooling: track the shared engineering rules (.claude/rules/**), but keep machine-local settings out
-.claude/settings.local.json
-.claude/settings.json
+# AI tooling (.claude/) — local-only engineering rules + settings, not shared/published
+.claude/
 # Bundled build tool — not source
 /nuget.exe
 

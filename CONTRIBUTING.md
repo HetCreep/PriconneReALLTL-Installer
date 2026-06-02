@@ -76,7 +76,7 @@ If you fork this for your own distribution, you **must** establish a distinct id
 
 ## Engineering standards
 
-This project follows the ECC domain rules under [`.claude/rules/ecc/domain/`](.claude/rules/ecc/domain) (distribution-security, release-verification, install-safety, log-sanitization, legal-boundary, telemetry-policy, native-windows-api, credential-vault). Changes to release, install/update/uninstall, token-handling, networking, or native (registry/shortcut/process) code should be reviewed against the relevant rule file.
+Changes to release/build, install/update/uninstall, token handling, networking, or native (registry/shortcut/process) code must uphold the project's security & privacy posture — see [SECURITY.md](SECURITY.md) and [PRIVACY.md](PRIVACY.md). In short: GitHub-only network egress, the GitHub token stays DPAPI-encrypted and is never logged, downloads are SHA-256-verified before they touch an install, removals are path-guarded to the game folder, and there is zero telemetry.
 
 ## Submitting a PR
 
