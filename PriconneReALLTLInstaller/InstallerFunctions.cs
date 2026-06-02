@@ -43,6 +43,7 @@ namespace InstallerFunctions
         private bool latestVersionValid;
         private string _lastLoggedPatchVer;   // de-dupe "Found ... installed!" logs (read many times/op + Load+Shown)
         private string _lastLoggedModVer;
+        private DateTime? latestReleaseDate;   // selected source's release published_at — stamped onto installed files/dirs
         private string tempFile = Path.GetTempFileName();
         private bool removeSuccess = true;
         private bool downloadSuccess = true;
@@ -204,6 +205,7 @@ namespace InstallerFunctions
                         return (latestVersion = null, latestVersionValid = false, null);
                     }
                     string version = releaseJson.tag_name;
+                    try { if (DateTime.TryParse((string)releaseJson.published_at, out DateTime pub)) latestReleaseDate = pub; } catch { }
                     // Pick the .zip patch asset (some sources also ship an .exe installer
                     // in the same release); fall back to the first asset if none match.
                     assetLink = null;
@@ -592,6 +594,10 @@ namespace InstallerFunctions
                 // Keep AutoTranslatorConfig.ini's Language=/DuplicateTextureNames= in sync with this
                 // source — pulled from the source's own shipped config (read from the zip above).
                 helper.ApplyConfigOverrides(priconnePath, srcConfigText);
+
+                // Match installed files' + folders' timestamps to the source release (uniform, GitHub-
+                // aligned) instead of the extraction moment.
+                if (latestReleaseDate.HasValue) StampReleaseTime(priconnePath, extractedFiles, latestReleaseDate.Value);
             }
             catch (Exception ex)
             {
@@ -600,6 +606,26 @@ namespace InstallerFunctions
                 extractSuccess = false;
             }
         }
+        // Sets the extracted files + their folders to the release's published time so Explorer shows a
+        // uniform, GitHub-aligned timestamp instead of the extraction moment. Best-effort (per-item try).
+        private void StampReleaseTime(string root, List<string> relPaths, DateTime when)
+        {
+            var dirs = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string rootFull = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);
+            foreach (string rel in relPaths)
+            {
+                try
+                {
+                    string full = Path.Combine(root, rel.Replace('/', Path.DirectorySeparatorChar));
+                    if (File.Exists(full)) File.SetLastWriteTime(full, when);
+                    string d = Path.GetDirectoryName(full);
+                    while (!string.IsNullOrEmpty(d) && d.Length > rootFull.Length) { dirs.Add(d); d = Path.GetDirectoryName(d); }
+                }
+                catch { }
+            }
+            foreach (string d in dirs) { try { if (Directory.Exists(d)) Directory.SetLastWriteTime(d, when); } catch { } }
+        }
+
         public void ExtractZipEntry(ZipArchiveEntry entry, string destinationPath)
         {
             try
