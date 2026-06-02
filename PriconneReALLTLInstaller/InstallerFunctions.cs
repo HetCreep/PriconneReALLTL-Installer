@@ -194,10 +194,11 @@ namespace InstallerFunctions
                     {
                         var cj = JObject.Parse(cachedPatch);
                         string d = (string)cj["d"];
-                        if (!string.IsNullOrEmpty(d))   // only trust the cache when it carries the digest; else re-fetch to capture it
+                        string pStr = (string)cj["p"];
+                        if (!string.IsNullOrEmpty(d) && !string.IsNullOrEmpty(pStr))   // trust the cache only when it carries BOTH the digest + published date; else re-fetch to capture them
                         {
                             latestAssetDigest = d;
-                            if (DateTime.TryParse((string)cj["p"], null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime cpub)) latestReleaseDate = cpub;
+                            if (DateTime.TryParse(pStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime cpub)) latestReleaseDate = cpub;
                             return (latestVersion = (string)cj["v"], latestVersionValid = true, assetLink = (string)cj["a"]);
                         }
                     }
@@ -510,6 +511,7 @@ namespace InstallerFunctions
                     {
                         tempFile = cachePath;
                         downloadSuccess = true;
+                        try { if (latestReleaseDate.HasValue) File.SetLastWriteTime(cachePath, latestReleaseDate.Value); } catch { }   // keep the cached zip's date = release date, even on reuse
                         Log?.Invoke($"Using the cached download: {Path.GetFileName(cachePath)} ({new FileInfo(cachePath).Length / (1024 * 1024)} MB) — skipping re-download.", "info", true);
                         return;
                     }
@@ -586,6 +588,7 @@ namespace InstallerFunctions
                 int counter = 0;
                 var extractedFiles = new List<string>();   // install manifest (files this source owns)
                 string srcConfigText = null;                // the source's shipped AutoTranslatorConfig.ini (per-source key sync)
+                bool extractHadError = false;               // any per-file extract failure -> not a clean success (audit B10)
                 using (var zip = ZipFile.OpenRead(tempFile))
                 {
                     Log?.Invoke("Extracting files to game folder...", "add", true);
@@ -624,12 +627,14 @@ namespace InstallerFunctions
                             if (!Directory.Exists(destinationPath))
                                 Directory.CreateDirectory(destinationPath);
 
-                            await Task.Run(() => ExtractZipEntry(entry, Path.Combine(priconnePath, fileName)));
-                            if (entry.Name != "") extractedFiles.Add(fileName.Replace('\\', '/'));
+                            bool ok = await Task.Run(() => ExtractZipEntry(entry, Path.Combine(priconnePath, fileName)));
+                            if (!ok) extractHadError = true;
+                            else if (entry.Name != "") extractedFiles.Add(fileName.Replace('\\', '/'));
                         }
                     }
                 }
-                extractSuccess = true;
+                extractSuccess = !extractHadError;
+                if (extractHadError) ErrorLog?.Invoke("Some files failed to extract — the install may be incomplete. Please run Reinstall.");
                 Log?.Invoke($"Extracted {extractedFiles.Count} file(s).", "add", false);
 
                 // Pull any external plugin DLLs this source needs from their own repos (e.g. TH's
@@ -677,7 +682,7 @@ namespace InstallerFunctions
             foreach (string d in dirs) { try { if (Directory.Exists(d)) Directory.SetLastWriteTime(d, when); } catch { } }
         }
 
-        public void ExtractZipEntry(ZipArchiveEntry entry, string destinationPath)
+        public bool ExtractZipEntry(ZipArchiveEntry entry, string destinationPath)
         {
             try
             {
@@ -688,10 +693,12 @@ namespace InstallerFunctions
 
                     entry.ExtractToFile(destinationPath, true);
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 ErrorLog?.Invoke("Error extracting file: " + ex.Message);
+                return false;   // surfaced so the op reports failure instead of a silent partial install (audit B10)
             }
         }
 
