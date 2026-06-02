@@ -41,6 +41,8 @@ namespace InstallerFunctions
         private bool localVersionValid;
         private string latestVersion;
         private bool latestVersionValid;
+        private string _lastLoggedPatchVer;   // de-dupe "Found ... installed!" logs (read many times/op + Load+Shown)
+        private string _lastLoggedModVer;
         private string tempFile = Path.GetTempFileName();
         private bool removeSuccess = true;
         private bool downloadSuccess = true;
@@ -126,7 +128,7 @@ namespace InstallerFunctions
                     return (localVersion = "Invalid", localVersionValid = false);
                 }
                 localVersion = match.Value;
-                Log?.Invoke($"Found TL patch version {localVersion} installed!", "info", false);
+                if (_lastLoggedPatchVer != localVersion) { Log?.Invoke($"Found TL patch version {localVersion} installed!", "info", false); _lastLoggedPatchVer = localVersion; }
                 return (localVersion, localVersionValid = true);
 
             }
@@ -162,7 +164,7 @@ namespace InstallerFunctions
                     return ("Invalid", false);
                 }
 
-                Log?.Invoke($"Found modloader version {match.Value} installed!", "info", false);
+                if (_lastLoggedModVer != match.Value) { Log?.Invoke($"Found modloader version {match.Value} installed!", "info", false); _lastLoggedModVer = match.Value; }
                 return (match.Value, true);
 
             }
