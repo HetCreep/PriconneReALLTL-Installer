@@ -77,5 +77,5 @@ Rules for how the installer is built, signed, and delivered. A user must be able
 - [release-verification.md](release-verification.md) — user-facing verification flow
 - [telemetry-policy.md](telemetry-policy.md) — update mechanism + egress constraints
 - [legal-boundary.md](legal-boundary.md) — license / trademark
-- [upstream-merge.md](upstream-merge.md) — CI/build merge protocol
+- [install-safety.md](install-safety.md) — what the built artifact does on the user's machine
 - [../csharp/security.md](../csharp/security.md)

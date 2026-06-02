@@ -73,7 +73,7 @@ Each release publishes a build-environment manifest in its notes (the .NET SDK /
 - <issue> — workaround: <...>
 ```
 
-There is **no "Upstream Sync" section** — routine upstream pulling is suspended (see upstream-merge.md).
+There is **no "Upstream Sync" section** — this is a detached fork; routine pulling from upstream `tynave/PriconneReTL-Installer` is suspended (it's a reference only, never used for self-update). Keep the `PriconneReALLTL` rebrand on any change.
 
 ## In-App Update Check
 
@@ -103,4 +103,4 @@ If a release introduces a regression:
 
 - [distribution-security.md](distribution-security.md) — build/signing chain, asset stripping
 - [telemetry-policy.md](telemetry-policy.md) — update-mechanism rules
-- [upstream-merge.md](upstream-merge.md) — why there is no Upstream-Sync note
+- [install-safety.md](install-safety.md) — how a downloaded patch is verified + applied

@@ -40,12 +40,9 @@ Rules:
 - Validate any path before launching `explorer.exe` against it (exists, inside an expected root).
 - Do not pass the GitHub token (or any secret) as a process argument.
 
-## File Install / Uninstall — Path-Guarded + Ref-Counted Manifest
+## File Install / Uninstall
 
-- All extract/remove operations are **path-guarded to the game folder**. Before writing/deleting, resolve the full path and confirm it stays inside the game directory; reject `..\`, absolute, or escaping paths (the **zip-slip guard** in extraction, and the same guard on removal so a tampered manifest can't delete outside).
-- Uninstall is driven by the **ref-counted manifest** `BepInEx\.priconnerealltl-manifest.json` (path → owning sources). A file is deleted only when its owner-set empties; shared engine files stay while another source needs them. Corrupt/missing manifest → fall back to the ProcessTree removal, then rewrite a fresh manifest (self-heal).
-- **Mark the manifest `Hidden`** (clear the attribute before each overwrite, re-apply after) so users don't stumble on or delete it. Its loss is never fatal — it is advisory metadata.
-- Verify the patch zip's **SHA-256 against GitHub's published asset digest** before touching the install; mismatch → delete + don't extract (post-download) or re-download (cached). No digest → don't block (structural corruption still throws in `ZipFile.OpenRead`).
+The install/update/uninstall mechanics — verify-before-touch, the game-folder path guard (zip-slip + removal), the ref-counted Hidden manifest, partial-failure handling, cache reuse — live in their own rule: **[install-safety.md](install-safety.md)**. The one native-API note: file deletes/writes go through managed `System.IO` with explicit paths (never a shell `del`/`rmdir`).
 
 ## DLL Hijacking Defense
 

@@ -76,7 +76,7 @@ If you fork this for your own distribution, you **must** establish a distinct id
 
 ## Engineering standards
 
-This project follows the ECC domain rules under [`.claude/rules/ecc/domain/`](.claude/rules/ecc/domain) (distribution-security, release-verification, log-sanitization, legal-boundary, telemetry-policy, native-windows-api, credential-vault, upstream-merge). Changes to release, token-handling, networking, or native (registry/shortcut/process) code should be reviewed against the relevant rule file.
+This project follows the ECC domain rules under [`.claude/rules/ecc/domain/`](.claude/rules/ecc/domain) (distribution-security, release-verification, install-safety, log-sanitization, legal-boundary, telemetry-policy, native-windows-api, credential-vault). Changes to release, install/update/uninstall, token-handling, networking, or native (registry/shortcut/process) code should be reviewed against the relevant rule file.
 
 ## Submitting a PR
 
