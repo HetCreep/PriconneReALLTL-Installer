@@ -21,7 +21,11 @@ namespace LoggerFunctions
             if (string.IsNullOrEmpty(message)) return message;
             try
             {
-                string s = GithubToken.Replace(message, "[REDACTED_TOKEN]");
+                // Log-injection prevention (OWASP A09): neutralize CR/LF/tab FIRST so
+                // attacker-controlled data (GitHub API messages, file paths, version
+                // strings) can't forge fake log lines. Done before token redaction.
+                string s = message.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
+                s = GithubToken.Replace(s, "[REDACTED_TOKEN]");
                 s = AuthHeader.Replace(s, m => m.Groups[1].Value + " [REDACTED]");
                 return s;
             }

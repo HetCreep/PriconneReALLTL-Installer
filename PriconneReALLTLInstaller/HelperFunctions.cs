@@ -1177,8 +1177,16 @@ namespace HelperFunctions
                 return plainText;
 
             byte[] bytes = Encoding.UTF8.GetBytes(plainText);
-            byte[] protectedBytes = ProtectedData.Protect(bytes, null, DataProtectionScope.CurrentUser);
-            return Convert.ToBase64String(protectedBytes);
+            try
+            {
+                byte[] protectedBytes = ProtectedData.Protect(bytes, null, DataProtectionScope.CurrentUser);
+                return Convert.ToBase64String(protectedBytes);
+            }
+            finally
+            {
+                // Zero the plaintext secret buffer after use (credential-vault.md DPAPI rule).
+                Array.Clear(bytes, 0, bytes.Length);
+            }
         }
 
         public static string DecryptString(string encryptedText)
@@ -1190,7 +1198,15 @@ namespace HelperFunctions
             {
                 byte[] bytes = Convert.FromBase64String(encryptedText);
                 byte[] unprotectedBytes = ProtectedData.Unprotect(bytes, null, DataProtectionScope.CurrentUser);
-                return Encoding.UTF8.GetString(unprotectedBytes);
+                try
+                {
+                    return Encoding.UTF8.GetString(unprotectedBytes);
+                }
+                finally
+                {
+                    // Zero the decrypted secret buffer after use (credential-vault.md DPAPI rule).
+                    Array.Clear(unprotectedBytes, 0, unprotectedBytes.Length);
+                }
             }
             catch
             {
