@@ -691,9 +691,8 @@ namespace InstallerFunctions
                 }
                 catch { }
             }
-            int stamped = 0;
-            foreach (var kv in dirMax) { try { if (Directory.Exists(kv.Key)) { Directory.SetLastWriteTime(kv.Key, kv.Value); stamped++; } } catch { } }
-            Log?.Invoke($"Stamped {stamped} folder(s) to match their contents' dates.", "info", false);
+            // Silent: stamping folder timestamps is an internal cosmetic touch, not a user-facing step.
+            foreach (var kv in dirMax) { try { if (Directory.Exists(kv.Key)) Directory.SetLastWriteTime(kv.Key, kv.Value); } catch { } }
         }
 
         public bool ExtractZipEntry(ZipArchiveEntry entry, string destinationPath)
