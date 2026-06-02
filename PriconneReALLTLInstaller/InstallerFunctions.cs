@@ -934,7 +934,7 @@ namespace InstallerFunctions
             // then removes exactly these, not the whole ignore list).
             StringCollection ignoredFilesSelected = new StringCollection();
             var ignoredSet = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (string igf in Settings.Default.ignoreFiles) ignoredSet.Add(igf);
+            foreach (string igf in Helper.CurrentSourceIgnoreFiles()) ignoredSet.Add(igf);
             foreach (var it in configListBox.Items)
             {
                 string s2 = it.ToString();

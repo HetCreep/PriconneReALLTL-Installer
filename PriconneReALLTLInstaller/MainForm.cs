@@ -514,9 +514,31 @@ namespace PriconneReALLTLInstaller
 
         private void SetupIgnoredList()
         {
-            configListBox.HorizontalScrollbar = true;   // long file paths exceed the box width — scroll, don't clip
             configListBox.CheckOnClick = true;          // single click toggles; config AND ignored rows are user-selectable
+            configListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;   // custom draw → path-ellipsis instead of clipping long paths
+            configListBox.DrawItem += ConfigListBox_DrawItem;
             removeIgnoredCheckBox.CheckedChanged += removeIgnoredCheckBox_CheckedChanged;
+        }
+
+        // Owner-draws an options row: a checkbox glyph + the path with a Windows-style middle ellipsis
+        // (BepInEx\…\_Postprocessors.txt) so long paths don't clip or need a horizontal scrollbar.
+        private void ConfigListBox_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+            e.DrawBackground();
+            var glyphState = configListBox.GetItemChecked(e.Index)
+                ? System.Windows.Forms.VisualStyles.CheckBoxState.CheckedNormal
+                : System.Windows.Forms.VisualStyles.CheckBoxState.UncheckedNormal;
+            System.Drawing.Size glyph = System.Windows.Forms.CheckBoxRenderer.GetGlyphSize(e.Graphics, glyphState);
+            int gy = e.Bounds.Top + (e.Bounds.Height - glyph.Height) / 2;
+            System.Windows.Forms.CheckBoxRenderer.DrawCheckBox(e.Graphics, new System.Drawing.Point(e.Bounds.Left + 1, gy), glyphState);
+
+            var textRect = new System.Drawing.Rectangle(e.Bounds.Left + glyph.Width + 4, e.Bounds.Top, e.Bounds.Width - glyph.Width - 6, e.Bounds.Height);
+            bool selected = (e.State & System.Windows.Forms.DrawItemState.Selected) == System.Windows.Forms.DrawItemState.Selected;
+            System.Drawing.Color fg = selected ? System.Drawing.SystemColors.HighlightText : configListBox.ForeColor;
+            System.Windows.Forms.TextRenderer.DrawText(e.Graphics, configListBox.Items[e.Index].ToString(), e.Font, textRect, fg,
+                System.Windows.Forms.TextFormatFlags.PathEllipsis | System.Windows.Forms.TextFormatFlags.VerticalCenter | System.Windows.Forms.TextFormatFlags.Left);
+            e.DrawFocusRectangle();
         }
 
         private bool IsIgnoredPath(string item)
@@ -539,8 +561,8 @@ namespace PriconneReALLTLInstaller
             configListBox.Items.Clear();
             if (removeConfigCheckBox.Checked && Settings.Default.configFiles != null)
                 foreach (var c in Settings.Default.configFiles) configListBox.Items.Add(c, !keptUnchecked.Contains(c.ToString()));
-            if (removeIgnoredCheckBox.Checked && Settings.Default.ignoreFiles != null)
-                foreach (var i in Settings.Default.ignoreFiles) configListBox.Items.Add(i, !keptUnchecked.Contains(i.ToString()));
+            if (removeIgnoredCheckBox.Checked)
+                foreach (var i in Helper.CurrentSourceIgnoreFiles()) configListBox.Items.Add(i, !keptUnchecked.Contains(i));
         }
 
         // Populates + shows the SINGLE options list (config + ignored rows merged → one scrollbar).

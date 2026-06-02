@@ -125,8 +125,7 @@ namespace HelperFunctions
         }
         public string[] SetIgnoreFiles(string priconnePath, bool addconfig)
         {
-            string[] ignoreFiles = new string[Settings.Default.ignoreFiles.Count];
-            Settings.Default.ignoreFiles.CopyTo(ignoreFiles, 0);
+            string[] ignoreFiles = CurrentSourceIgnoreFiles().ToArray();   // resolved to the current source's lang (en/th)
 
             if (addconfig)
             {
@@ -501,6 +500,31 @@ namespace HelperFunctions
             return PatchSources[idx];
         }
 
+        // The ignore list resolved to the CURRENT source's language. Stored paths use en/ as the
+        // template, but on TH the kept rule files live under th/. Swaps the Translation/<lang>/ segment
+        // so display, skip-on-extract, selection, and removal all use the right per-source paths.
+        public static System.Collections.Generic.List<string> CurrentSourceIgnoreFiles()
+        {
+            var result = new System.Collections.Generic.List<string>();
+            if (Settings.Default.ignoreFiles == null) return result;
+            string lang = GetCurrentPatchSource().Lang;
+            foreach (string raw in Settings.Default.ignoreFiles) result.Add(SwapTranslationLang(raw, lang));
+            return result;
+        }
+
+        private static string SwapTranslationLang(string path, string lang)
+        {
+            if (string.IsNullOrEmpty(path)) return path;
+            string norm = path.Replace('\\', '/');
+            const string marker = "Translation/";
+            int ti = norm.IndexOf(marker, System.StringComparison.OrdinalIgnoreCase);
+            if (ti < 0) return path;                       // not a Translation path → leave as-is
+            int langStart = ti + marker.Length;
+            int langEnd = norm.IndexOf('/', langStart);
+            if (langEnd < 0) return path;
+            return norm.Substring(0, langStart) + lang + norm.Substring(langEnd);
+        }
+
         // Game UI textures (event logos, story thumbnails, buttons, …) the TL replaces that appear more
         // than once, so XUnity AutoTranslator must disambiguate them. Same for every source (these are
         // the game's textures), so applied universally; Language= is the only per-source key.
@@ -772,7 +796,7 @@ namespace HelperFunctions
 
                 var skip = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 if (Settings.Default.configFiles != null) foreach (string c in Settings.Default.configFiles) skip.Add(c.Replace('\\', '/'));
-                if (Settings.Default.ignoreFiles != null) foreach (string i in Settings.Default.ignoreFiles) skip.Add(i.Replace('\\', '/'));
+                foreach (string i in CurrentSourceIgnoreFiles()) skip.Add(i.Replace('\\', '/'));
 
                 var toDelete = new System.Collections.Generic.List<string>();
                 var remaining = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>(StringComparer.OrdinalIgnoreCase);
