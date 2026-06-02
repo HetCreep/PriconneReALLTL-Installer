@@ -690,8 +690,14 @@ namespace PriconneReALLTLInstaller
 
         private void aboutMenuItem_Click(object sender, EventArgs e)
         {
+            // Required unofficial / no-affiliation / ToS-ban / AS-IS notice (see .claude/rules/ecc/domain/legal-boundary.md).
+            string disclaimer =
+                "\n\nUNOFFICIAL — not affiliated with, endorsed by, or associated with Cygames, DMM, or tynave.\n"
+                + "\"Princess Connect! Re:Dive\" and related names/assets belong to their respective owners (used for identification only).\n"
+                + "Installing translation mods (via the BepInEx mod loader) may violate the game's Terms of Service and could put your account at risk of suspension/ban.\n"
+                + "Use at your own risk. Provided AS-IS, without warranty or liability.";
             MessageBox.Show($"[PriconneReALLTL Installer version: {String.Format(Application.ProductVersion)}]\n"
-            + Settings.Default.aboutText, "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            + Settings.Default.aboutText + disclaimer, "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void startButton_EnabledChanged(object sender, EventArgs e)
