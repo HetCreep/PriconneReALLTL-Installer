@@ -8,7 +8,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 _Nothing yet._
 
-## [3.0.0] — first public release
+## [3.0.0] — 2026-06-03 (first public release)
 
 PriconneReALLTL-Installer is a rebranded, fully detached fork of
 [tynave/PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer)
@@ -44,6 +44,8 @@ installers never collide. This is the first version published as a GitHub Releas
 - All GitHub calls run off the UI thread — a slow or rate-limited response no longer freezes the window.
 - Installed files keep their real source-build timestamps; folders take their newest contained file's date.
 - Window fits and centers to the screen working area; "TL Source" selector made prominent and on its own line.
+- **Target framework upgraded to .NET Framework 4.8** (from 4.7.2) — preinstalled on Windows 10 1903+/Windows 11, so users need no extra runtime; still serviced by Microsoft.
+- **Own neutral installer logo** — replaced the borrowed ImaterialC English-mod artwork ("PRINCESS CONNECT! Re:Dive" / "Unofficial En patch") with a language-neutral "Priconne Re:ALLTL" wordmark, so no single language is baked into the branding.
 
 ### Fixed
 - Operations (Update / Reinstall / Uninstall / Launch) and the auto-update shortcut flow are **no longer disabled**
@@ -52,6 +54,14 @@ installers never collide. This is the first version published as a GitHub Releas
 - Versions are normalized (leading `v`/`V` stripped) before comparison and display.
 - Fresh installs decide update-vs-install correctly (no more spurious 404 on a clean target).
 - Archive extraction hardened with a zip-slip (path-traversal) guard; removal is path-guarded to the game folder.
+
+### Removed
+- Housekeeping: 7 dead settings and ~5.6 MB of orphan image/font/resource assets pruned (zero functional change; build stays zero-warning).
+
+### Security
+- **DPAPI secret-buffer zeroing** — the GitHub token's plaintext and decrypted byte buffers are cleared (`Array.Clear`) immediately after use.
+- **Log-injection prevention** — CR/LF/tab in any logged string are neutralized before the line is written (OWASP A09), on top of the existing fail-closed token redaction.
+- **Dependabot** alerts + automated security fixes enabled, with a weekly NuGet / GitHub-Actions update config.
 
 ### Attribution
 - MIT-licensed fork of tynave/PriconneReTL-Installer; original inspiration touanu/PriconeTL_Updater. Translation patches by ImaterialC (EN) and PeterkleCG (TH).

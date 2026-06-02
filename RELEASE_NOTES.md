@@ -10,6 +10,12 @@
 - **Shortcut-wrapped launching**: wrap an existing launcher/account shortcut so launching it updates the patch first, then starts your game.
 - **Weekly update check**: the installer self-update check now caches its result for 7 days (it's a mature tool, not a browser). Patch/modloader checks stay frequent. A new **Check for Updates Now** menu action runs an on-demand live check any time.
 - **Quieter, more responsive UI**: every GitHub call runs off the UI thread, so a slow or rate-limited response never freezes the window. Installed files keep their real source-build dates.
+- **Runs on .NET Framework 4.8** (up from 4.7.2) — preinstalled on Windows 10 1903+/11, so there's nothing extra to install.
+- **Own neutral branding** — the installer now ships its own language-neutral "Priconne Re:ALLTL" logo instead of borrowing one translation source's artwork, so it stays fair to every supported language.
+
+## Security & hardening
+
+- GitHub token byte buffers are zeroed (`Array.Clear`) right after use (DPAPI, `CurrentUser` scope); logs neutralize CR/LF/tab to prevent log forging (OWASP A09) on top of fail-closed token redaction; **Dependabot** alerts + weekly dependency / GitHub-Actions update PRs are enabled.
 
 ## Build & Distribution
 
