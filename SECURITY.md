@@ -8,7 +8,7 @@
 | Older releases | ❌ No — please update first |
 | Pre-releases (`-rc` / `-beta`) | ⚠️ Testing only |
 
-PriconneReALLTL-Installer targets **Windows** running **.NET Framework 4.7.2**. Please reproduce on the latest release before reporting.
+PriconneReALLTL-Installer targets **Windows** running **.NET Framework 4.8**. Please reproduce on the latest release before reporting.
 
 ## Reporting a vulnerability
 

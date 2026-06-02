@@ -4,7 +4,7 @@ Thanks for your interest in improving the installer. This guide covers how to bu
 
 ## Project at a glance
 
-- **Language / framework:** C# · WinForms · **.NET Framework 4.7.2** (no .NET Core / 5+)
+- **Language / framework:** C# · WinForms · **.NET Framework 4.8** (no .NET Core / 5+)
 - **Build system:** MSBuild (Visual Studio 2022) + NuGet
 - **Output:** `PriconneReALLTLInstaller\bin\Release\PriconneReALLTLInstaller.exe`
 - **Strong-name signed** with `PriconneReALLTLInstaller.snk` (committed so CI can sign)
