@@ -687,7 +687,9 @@ namespace InstallerFunctions
                 }
                 catch { }
             }
-            foreach (string d in dirs) { try { if (Directory.Exists(d)) Directory.SetLastWriteTime(d, when); } catch { } }
+            int stamped = 0;
+            foreach (string d in dirs) { try { if (Directory.Exists(d)) { Directory.SetLastWriteTime(d, when); stamped++; } } catch { } }
+            Log?.Invoke($"Stamped {stamped} folder(s) to {when:dd-MMM-yyyy HH:mm} (source date).", "info", false);
         }
 
         public bool ExtractZipEntry(ZipArchiveEntry entry, string destinationPath)
