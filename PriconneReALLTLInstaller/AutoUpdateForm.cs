@@ -71,7 +71,7 @@ namespace PriconneReALLTLInstaller
             this.launchDir = launchDir;
         }
         // Functions
-        private void InitializeUI()
+        private async Task InitializeUI()
         {
             Icon = Resources.jewel;
 
@@ -79,13 +79,24 @@ namespace PriconneReALLTLInstaller
             gamePathLinkLabel.Text = "Game Path: " + priconnePath;
             gameVersionLabel.Text = "Game Version: " + gameVersion;
 
-            (latestVersion, latestVersionValid, assetLink) = installer.GetLatestPatchRelease(Helper.GetCurrentPatchSource().ApiBase);
-            latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
-
-            (latestModLoaderVersion, _) = installer.GetLatestModloaderRelease();
-            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "N/A";
-
+            // Fetch the latest versions OFF the UI thread so this window never freezes on a slow or
+            // rate-limited (HTTP 403) GitHub response — the old synchronous calls froze it.
+            latestVersionLinkLabel.Text = "Checking…";
+            latestModloaderVersionLabel.Text = "Checking…";
             progressLabel.Text = "";
+
+            string api = Helper.GetCurrentPatchSource().ApiBase;
+            var result = await Task.Run(() =>
+            {
+                var p = installer.GetLatestPatchRelease(api);
+                var m = installer.GetLatestModloaderRelease();
+                return (patch: p, ml: m);
+            });
+
+            (latestVersion, latestVersionValid, assetLink) = result.patch;
+            latestVersionLinkLabel.Text = latestVersionValid ? Helper.NormalizeVersion(latestVersion) : "ERROR!";
+            (latestModLoaderVersion, _) = result.ml;
+            latestModloaderVersionLabel.Text = latestModLoaderVersion != null ? latestModLoaderVersion : "N/A";
 
             UpdateUI();
         }
@@ -250,7 +261,7 @@ namespace PriconneReALLTLInstaller
         private async void MainForm_Load(object sender, EventArgs e)
         {
             this.Activate();
-            InitializeUI();
+            await InitializeUI();
 
             if (Helper.IsGameRunning(priconnePath))
             {
