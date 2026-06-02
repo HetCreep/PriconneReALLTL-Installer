@@ -857,20 +857,25 @@ namespace InstallerFunctions
 
                     int counter = 0;
                     int removed = 0;
+                    string gameRoot = Path.GetFullPath(priconnePath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 
                     foreach (var file in currentFiles)
                     {
                         counter++;
-                        string filePath = Path.Combine(priconnePath, file);
-                        string directory = Path.GetDirectoryName(filePath);
-
-                        if (File.Exists(filePath))
-                        {
-                            File.Delete(filePath);
-                            removed++;
-                            DeleteEmptyDirectories(directory);
-                        }
                         DownloadProgress?.Invoke(counter, currentFiles.Length);
+                        string filePath = Path.Combine(priconnePath, file);
+                        // Safety: only ever delete files INSIDE the game folder. Guards a tampered/edited
+                        // manifest (or a bogus tree path) with "..\" or an absolute path from deleting
+                        // anything outside the install.
+                        string full;
+                        try { full = Path.GetFullPath(filePath); } catch { continue; }
+                        if (!full.StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (File.Exists(full))
+                        {
+                            File.Delete(full);
+                            removed++;
+                            DeleteEmptyDirectories(Path.GetDirectoryName(full));
+                        }
                     }
                     // Summary instead of a per-file log line (6244 file-IO log writes were the slow part —
                     // same fix as the extract path). The manifest records the exact files if detail is needed.
