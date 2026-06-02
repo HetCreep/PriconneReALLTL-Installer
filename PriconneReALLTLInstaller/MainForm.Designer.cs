@@ -650,7 +650,7 @@
             // pictureBox1
             // 
             this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
-            this.pictureBox1.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.ReTLlogo;
+            this.pictureBox1.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.ALLTLlogo;
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.pictureBox1.Location = new System.Drawing.Point(15, 7);
             this.pictureBox1.Name = "pictureBox1";

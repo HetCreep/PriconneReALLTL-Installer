@@ -326,7 +326,7 @@
     <None Include="Resources\jewel.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\ReTLlogo.png" />
+    <None Include="Resources\ALLTLlogo.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\arrow_blue.png" />

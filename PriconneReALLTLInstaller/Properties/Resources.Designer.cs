@@ -453,9 +453,9 @@ namespace PriconneReALLTLInstaller.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ReTLlogo {
+        internal static System.Drawing.Bitmap ALLTLlogo {
             get {
-                object obj = ResourceManager.GetObject("ReTLlogo", resourceCulture);
+                object obj = ResourceManager.GetObject("ALLTLlogo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
