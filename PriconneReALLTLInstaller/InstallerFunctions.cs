@@ -44,6 +44,7 @@ namespace InstallerFunctions
         private string _lastLoggedPatchVer;   // de-dupe "Found ... installed!" logs (read many times/op + Load+Shown)
         private string _lastLoggedModVer;
         private DateTime? latestReleaseDate;   // selected source's release published_at — stamped onto installed files/dirs
+        private string latestAssetDigest;      // GitHub asset SHA256 ("sha256:…") for verify-before-touch
         private string tempFile = Path.GetTempFileName();
         private bool removeSuccess = true;
         private bool downloadSuccess = true;
@@ -209,12 +210,14 @@ namespace InstallerFunctions
                     // Pick the .zip patch asset (some sources also ship an .exe installer
                     // in the same release); fall back to the first asset if none match.
                     assetLink = null;
+                    latestAssetDigest = null;
                     foreach (var asset in releaseJson.assets)
                     {
                         string assetName = (string)asset.name;
                         if (!string.IsNullOrEmpty(assetName) && assetName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
                         {
                             assetLink = (string)asset.browser_download_url;
+                            try { latestAssetDigest = (string)asset.digest; } catch { }   // "sha256:…" (newer GitHub); null on older releases
                             break;
                         }
                     }
@@ -460,6 +463,28 @@ namespace InstallerFunctions
             catch { }
         }
 
+        // Verifies a downloaded/cached zip against GitHub's asset SHA256 digest ("sha256:…") so a
+        // truncated/corrupt/tampered file is never extracted over the install. Returns true when the
+        // digest is unavailable (older releases) or the check errors — can't verify, so don't block;
+        // a real MISMATCH returns false. Structurally-corrupt zips still fail at ZipFile.OpenRead.
+        private bool VerifyZipDigest(string path)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(latestAssetDigest)) return true;
+                int c = latestAssetDigest.IndexOf(':');
+                string expected = (c >= 0 ? latestAssetDigest.Substring(c + 1) : latestAssetDigest).Trim();
+                if (expected.Length == 0) return true;
+                using (var sha = System.Security.Cryptography.SHA256.Create())
+                using (var fs = File.OpenRead(path))
+                {
+                    string actual = BitConverter.ToString(sha.ComputeHash(fs)).Replace("-", "");
+                    return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            catch (Exception ex) { Log?.Invoke("Could not verify the download hash: " + ex.Message, "info", false); return true; }
+        }
+
         public async Task DownloadPatchFiles(string assetLink, string fileToSave = null)
         {
             string gitHubToken = Helper.DecryptString(Settings.Default.GithubAPIKey);
@@ -471,10 +496,15 @@ namespace InstallerFunctions
                 string cachePath = (fileToSave == null) ? GetCachedZipPath() : null;
                 if (cachePath != null && File.Exists(cachePath))
                 {
-                    tempFile = cachePath;
-                    downloadSuccess = true;
-                    Log?.Invoke($"Using the cached download: {Path.GetFileName(cachePath)} ({new FileInfo(cachePath).Length / (1024 * 1024)} MB) — skipping re-download.", "info", true);
-                    return;
+                    if (VerifyZipDigest(cachePath))
+                    {
+                        tempFile = cachePath;
+                        downloadSuccess = true;
+                        Log?.Invoke($"Using the cached download: {Path.GetFileName(cachePath)} ({new FileInfo(cachePath).Length / (1024 * 1024)} MB) — skipping re-download.", "info", true);
+                        return;
+                    }
+                    Log?.Invoke("Cached download failed the integrity check — re-downloading.", "info", true);
+                    try { File.Delete(cachePath); } catch { }
                 }
                 if (cachePath != null) PurgeStaleCachedZips(cachePath);
                 string target = cachePath ?? (fileToSave ?? tempFile);
@@ -515,7 +545,15 @@ namespace InstallerFunctions
                     }
                 }
 
-                Log?.Invoke("Download completed.", "info", true);
+                if (!VerifyZipDigest(target))
+                {
+                    ErrorLog?.Invoke("Downloaded file failed the SHA256 integrity check — aborting before touching the install. Please try again.");
+                    try { File.Delete(target); } catch { }
+                    downloadSuccess = false;
+                    ProgressPictureChange?.Invoke(null);
+                    return;
+                }
+                Log?.Invoke("Download completed + verified.", "info", true);
                 downloadSuccess = true;
                 if (cachePath != null) tempFile = cachePath;   // extract from (and keep) the cached zip
             }
