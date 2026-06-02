@@ -500,29 +500,56 @@ namespace HelperFunctions
             return PatchSources[idx];
         }
 
-        // The ignore list resolved to the CURRENT source's language. Stored paths use en/ as the
-        // template, but on TH the kept rule files live under th/. Swaps the Translation/<lang>/ segment
-        // so display, skip-on-extract, selection, and removal all use the right per-source paths.
+        // The ignore patterns (lang-agnostic). Stored as globs like BepInEx/Translation/*/Text/
+        // _Postprocessors.txt so the rule files are protected under ANY language folder (en/th/…).
         public static System.Collections.Generic.List<string> CurrentSourceIgnoreFiles()
         {
             var result = new System.Collections.Generic.List<string>();
-            if (Settings.Default.ignoreFiles == null) return result;
-            string lang = GetCurrentPatchSource().Lang;
-            foreach (string raw in Settings.Default.ignoreFiles) result.Add(SwapTranslationLang(raw, lang));
+            if (Settings.Default.ignoreFiles != null) foreach (string p in Settings.Default.ignoreFiles) result.Add(p);
             return result;
         }
 
-        private static string SwapTranslationLang(string path, string lang)
+        // True if relPath matches any ignore pattern. A pattern may use '*' = exactly one path segment
+        // (BepInEx/Translation/*/Text/_Postprocessors.txt → matches en, th, …). Patterns without '*'
+        // match exactly (e.g. the config files). Case-insensitive; '/'-normalised.
+        public static bool IgnoreMatches(string relPath, System.Collections.Generic.IEnumerable<string> patterns)
         {
-            if (string.IsNullOrEmpty(path)) return path;
-            string norm = path.Replace('\\', '/');
-            const string marker = "Translation/";
-            int ti = norm.IndexOf(marker, System.StringComparison.OrdinalIgnoreCase);
-            if (ti < 0) return path;                       // not a Translation path → leave as-is
-            int langStart = ti + marker.Length;
-            int langEnd = norm.IndexOf('/', langStart);
-            if (langEnd < 0) return path;
-            return norm.Substring(0, langStart) + lang + norm.Substring(langEnd);
+            if (string.IsNullOrEmpty(relPath) || patterns == null) return false;
+            string p = relPath.Replace('\\', '/');
+            foreach (string pat in patterns)
+            {
+                if (string.IsNullOrEmpty(pat)) continue;
+                string g = pat.Replace('\\', '/');
+                if (g.IndexOf('*') < 0)
+                {
+                    if (string.Equals(g, p, System.StringComparison.OrdinalIgnoreCase)) return true;
+                }
+                else
+                {
+                    string rx = "^" + System.Text.RegularExpressions.Regex.Escape(g).Replace("\\*", "[^/]+") + "$";
+                    if (System.Text.RegularExpressions.Regex.IsMatch(p, rx, System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return true;
+                }
+            }
+            return false;
+        }
+
+        // One-time migration: the ignore defaults used to hardcode en/. Rewrite the three bundled
+        // rule-file entries to the lang-agnostic */ glob so they protect any language. Leaves custom
+        // entries (and already-migrated * entries) untouched.
+        public static void MigrateIgnoreDefaults()
+        {
+            var ig = Settings.Default.ignoreFiles;
+            if (ig == null) return;
+            string[] names = { "_Postprocessors.txt", "_Preprocessors.txt", "_Substitutions.txt" };
+            bool changed = false;
+            for (int i = 0; i < ig.Count; i++)
+            {
+                string v = (ig[i] ?? "").Replace('\\', '/');
+                foreach (string n in names)
+                    if (v.Equals("BepInEx/Translation/en/Text/" + n, System.StringComparison.OrdinalIgnoreCase))
+                    { ig[i] = "BepInEx/Translation/*/Text/" + n; changed = true; }
+            }
+            if (changed) Settings.Default.Save();
         }
 
         // Game UI textures (event logos, story thumbnails, buttons, …) the TL replaces that appear more
@@ -796,7 +823,7 @@ namespace HelperFunctions
 
                 var skip = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 if (Settings.Default.configFiles != null) foreach (string c in Settings.Default.configFiles) skip.Add(c.Replace('\\', '/'));
-                foreach (string i in CurrentSourceIgnoreFiles()) skip.Add(i.Replace('\\', '/'));
+                // (ignored files are skipped on extract → never in the manifest, so no need to add them)
 
                 var toDelete = new System.Collections.Generic.List<string>();
                 var remaining = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>(StringComparer.OrdinalIgnoreCase);

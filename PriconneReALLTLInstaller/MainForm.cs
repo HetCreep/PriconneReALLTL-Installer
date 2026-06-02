@@ -66,6 +66,7 @@ namespace PriconneReALLTLInstaller
 
             Helper.SetDefaultDMMConfigPath();
             Helper.EnsureDMMConfigPathValid();
+            Helper.MigrateIgnoreDefaults();   // one-time: en/ ignore defaults -> lang-agnostic */ glob
 
             InitializeComponent();
 

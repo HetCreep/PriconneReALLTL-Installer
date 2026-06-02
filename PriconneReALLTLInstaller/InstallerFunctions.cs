@@ -568,7 +568,7 @@ namespace InstallerFunctions
                             continue;
                         }
 
-                        if (!ignoreFiles.Contains(fileName))
+                        if (!Helper.IgnoreMatches(fileName, ignoreFiles))
                         {
                             string destinationPath = Path.Combine(priconnePath, Path.GetDirectoryName(fileName));
                             if (!Directory.Exists(destinationPath))
@@ -748,7 +748,7 @@ namespace InstallerFunctions
                         if (fileType == "blob" && filePath.StartsWith("src/"))
                         {
                             string trimmedPath = filePath.Substring("src/".Length);
-                            if (!ignoreFiles.Contains(trimmedPath))
+                            if (!Helper.IgnoreMatches(trimmedPath, ignoreFiles))
                             {
                                 filePathsList.Add(trimmedPath);
                             }
@@ -861,20 +861,46 @@ namespace InstallerFunctions
                 }
             }
         }
+        // Expands an ignore entry to actual relative paths present under the game folder. A '*' matches
+        // exactly one folder segment (BepInEx/Translation/*/Text/_Postprocessors.txt -> the file under
+        // each language folder). A non-glob entry returns itself.
+        private System.Collections.Generic.List<string> ExpandIgnoreGlob(string pattern)
+        {
+            var result = new System.Collections.Generic.List<string>();
+            if (string.IsNullOrEmpty(pattern)) return result;
+            string norm = pattern.Replace('\\', '/');
+            int star = norm.IndexOf('*');
+            if (star < 0) { result.Add(norm); return result; }                       // exact (config files etc.)
+
+            string prefix = norm.Substring(0, star).TrimEnd('/');                    // BepInEx/Translation
+            int slashAfter = norm.IndexOf('/', star);
+            string suffix = slashAfter >= 0 ? norm.Substring(slashAfter + 1) : "";   // Text/_Postprocessors.txt
+            string prefixDir = Path.Combine(priconnePath, prefix.Replace('/', Path.DirectorySeparatorChar));
+            if (!Directory.Exists(prefixDir)) return result;
+            string root = Path.GetFullPath(priconnePath).TrimEnd(Path.DirectorySeparatorChar);
+            foreach (string sub in Directory.GetDirectories(prefixDir))              // each language folder
+            {
+                string candidate = Path.Combine(sub, suffix.Replace('/', Path.DirectorySeparatorChar));
+                if (File.Exists(candidate)) result.Add(candidate.Substring(root.Length + 1).Replace('\\', '/'));
+            }
+            return result;
+        }
+
         private void RemoveConfigOrIgnoredFiles(string type, StringCollection collection)
         {
             try
             {
                 Log?.Invoke($"Removing {type} files...", "remove", false);
-                foreach (var file in collection)
+                foreach (var entry in collection)
                 {
-                    string fullPath = Path.Combine(priconnePath, file);
-                    string directory = Path.GetDirectoryName(fullPath);
-                    if (File.Exists(fullPath))
+                    foreach (string rel in ExpandIgnoreGlob(entry == null ? "" : entry.ToString()))   // glob (e.g. */) -> actual files
                     {
-                        File.Delete(fullPath);
-                        Log?.Invoke($"Removed {type} file: {file}", "remove", false);
-                        DeleteEmptyDirectories(directory);
+                        string fullPath = Path.Combine(priconnePath, rel.Replace('/', Path.DirectorySeparatorChar));
+                        if (File.Exists(fullPath))
+                        {
+                            File.Delete(fullPath);
+                            DeleteEmptyDirectories(Path.GetDirectoryName(fullPath));
+                        }
                     }
                 }
 
