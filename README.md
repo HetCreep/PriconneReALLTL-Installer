@@ -2,8 +2,11 @@
 
 [![Latest release](https://img.shields.io/github/v/release/HetCreep/PriconneReALLTL-Installer?sort=semver&display_name=tag)](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest)
 [![Build](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml/badge.svg)](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml)
+[![CodeQL](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/codeql.yml/badge.svg)](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/codeql.yml)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![.NET Framework 4.8](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4)
+
+**📖 Read this in:** English · [ไทย](README.th.md)
 
 A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx translation patches — supporting **multiple, user-selectable translation sources (English / ไทย)** and one-click *update + play* launch shortcuts.
 
@@ -53,6 +56,12 @@ Compare the output against the hash in `SHA256SUMS.txt` / the release notes — 
 Only download from the **[official Releases page](https://github.com/HetCreep/PriconneReALLTL-Installer/releases)** — never a third-party mirror, Discord, or direct message.
 
 ---
+
+## ⚙️ Good to know
+
+- **Launching the game.** The main **Launch Game** button starts the game through **DMM** (a plain launch). For *per-account* play or one-click **update + play**, **wrap** an existing launcher shortcut (DMM / DMMGamePlayerFastLauncher / a PriconneMultiAccountLauncher account) or create an **AutoUpdater shortcut** from the toolbar — pressing it updates the patch, then launches that target.
+- **Settings menu.** Besides the startup-update toggle, it holds: **Clear Download Cache**, **Edit Ignored Files** (protect files from being overwritten/removed on update), **Import / Export Settings**, **GitHub API Settings** (the optional token), and **Rate-Limit Info**.
+- **Uninstalling.** Removing the app (Windows / Setup uninstall) clears *its own* data — settings, token, cache, logs — but **does not remove the patch from your game**. Run the app's **Uninstall** operation first to remove the translation, *then* uninstall the app.
 
 ## 🔐 Privacy & Security
 

@@ -121,19 +121,20 @@ The app stores a small amount of data **locally only**:
 - **Settings** (including the DPAPI-encrypted token, your selected TL source, and toggles) in the
   per-user `user.config` under `%LOCALAPPDATA%\PriconneReALLTLInstaller\`.
 - **A download (zip) cache** to avoid re-downloading large patch archives.
-- **Log files** (e.g. `ReALLTLInstaller.log`) next to the executable / in the install folder.
+- **Log files** (e.g. `ReALLTLInstaller.log`) in the data folder
+  `%LOCALAPPDATA%\PriconneReALLTLInstaller\` — *not* the install folder, so an uninstall removes them.
 - An install **manifest** inside the game's `BepInEx` folder (used for safe, ref-counted
   uninstalls).
 
 To remove everything:
 
-- The bundled (Inno Setup) uninstaller, by default, **preserves** your settings/cache so a
-  reinstall keeps your configuration. To wipe it manually, delete:
-  - `%LOCALAPPDATA%\PriconneReALLTLInstaller\` (settings + token + version cache), and
-  - the download (zip) cache — clearable in-app via **Settings → Clear Download Cache**, or by
-    deleting the cache folder it reports.
-- To remove the patch from the game itself, use the app's **Uninstall** operation (it follows the
-  install manifest), then delete the items above.
+- The bundled (Inno Setup) uninstaller **removes** `%LOCALAPPDATA%\PriconneReALLTLInstaller\` — your
+  settings, the DPAPI-encrypted token, the version cache, the download (zip) cache, and the logs all
+  go with it. (The portable exe leaves that folder behind; delete it manually to wipe the same data.)
+  The download cache can also be cleared anytime in-app via **Settings → Clear Download Cache**.
+- The uninstaller deliberately does **not** touch the game's `BepInEx` folder. Remove the patch
+  itself first via the app's **Uninstall** operation (it follows the install manifest), *before*
+  uninstalling the app.
 
 Because no data ever leaves your machine, deleting these local files is a complete erasure — there
 is no server-side copy of anything.

@@ -69,7 +69,7 @@ The installer's purpose is to deploy **BepInEx** — a third-party mod loader th
 
 - **CI-only builds.** Every distributed artifact is built by **GitHub Actions** on a `v*` tag — never on a maintainer's machine. Local builds are for development only and are never published.
 - **Checksums.** Each release attaches **`SHA256SUMS.txt`** and lists the SHA-256 inline in the release notes so you can verify your download (see [PRIVACY.md](PRIVACY.md) / README "Verifying your download").
-- **Strong-name signed**, **not Authenticode-signed (yet).** The exe carries a strong name (committed `.snk`) for assembly identity, but is **not** Authenticode code-signed, so Windows SmartScreen may warn on first run. Until a signing certificate is obtained, **verify via SHA-256**. (Authenticode signing and an SBOM are planned follow-ups.)
+- **Strong-name signed**, **not Authenticode-signed (yet).** The exe carries a strong name (committed `.snk`) for assembly identity, but is **not** Authenticode code-signed, so Windows SmartScreen may warn on first run. Until a signing certificate is obtained, **verify via SHA-256**. (Authenticode signing is a planned follow-up.)
 - **Unique installer identity.** The Inno Setup installer uses a **unique AppId GUID** distinct from upstream `tynave/PriconneReTL-Installer`, so the two never collide; the installer does not clobber an upstream install.
 - **Supply chain.** NuGet dependencies are pinned via `packages.config`; the only runtime dependency (`Newtonsoft.Json`) is embedded in the exe. No remote one-shot tooling is fetched at runtime. New dependencies require a supply-chain + license justification in the PR.
 
