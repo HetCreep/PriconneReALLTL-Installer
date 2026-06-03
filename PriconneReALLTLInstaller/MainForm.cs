@@ -824,7 +824,7 @@ namespace PriconneReALLTLInstaller
         private void RefreshPatchSourceLabel()
         {
             if (patchSourceLinkLabel != null)
-                patchSourceLinkLabel.Text = "TL Source: " + Helper.GetCurrentPatchSource().ShortName + "  ▼ change";
+                patchSourceLinkLabel.Text = "TL Source: " + Helper.GetCurrentPatchSource().ShortCode + "  ▼ change";
         }
 
         private void patchSourceLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

@@ -940,7 +940,7 @@ namespace InstallerFunctions
                     removeProgress = true;
 
                     if (refCounted)
-                        Log?.Invoke($"{(uninstall ? "Uninstalling" : "Refreshing")} {Helper.GetCurrentPatchSource().ShortName} (manifest, ref-counted): removing {currentFiles.Length} file(s) it solely owns; files shared with another installed source are kept{(uninstall ? "" : " (the extract re-applies this source's new version)")}.", "remove", true);
+                        Log?.Invoke($"{(uninstall ? "Uninstalling" : "Refreshing")} {Helper.GetCurrentPatchSource().ShortCode} (manifest, ref-counted): removing {currentFiles.Length} file(s) it solely owns; files shared with another installed source are kept{(uninstall ? "" : " (the extract re-applies this source's new version)")}.", "remove", true);
                     else
                         Log?.Invoke(uninstall ? "Removing patch files..." : "Removing old patch files...", "remove", true);
                     ProgressPictureChange?.Invoke(Resources.kyarun);

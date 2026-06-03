@@ -8,6 +8,16 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 _Nothing yet._
 
+## [3.0.4] — 2026-06-03
+
+Security + a small UI polish. No behavioral change to a healthy install.
+
+### Security
+- **Zip extraction writes to the path it just validated** — the zip-slip guard already confined every entry to the game folder; extraction now writes to that same guard-checked path instead of re-deriving it from the (untrusted) entry name. Resolves the CodeQL `cs/zipslip` alert and removes a "check-one-path, write-another" pattern.
+
+### Changed
+- **Language labels finalized** — the compact "TL Source" label shows the ISO code (**EN** / **TH**); the source picker shows each language's native full name (**English** / **ไทย**). Internal manifest keys are unchanged, so existing installs are unaffected.
+
 ## [3.0.3] — 2026-06-03
 
 Security + robustness hardening. No behavioral change to a healthy install.
@@ -116,7 +126,8 @@ installers never collide. This is the first version published as a GitHub Releas
 ### Attribution
 - MIT-licensed fork of tynave/PriconneReTL-Installer; original inspiration touanu/PriconeTL_Updater. Translation patches by ImaterialC (English) and PeterkleCG (ไทย).
 
-[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.3...HEAD
+[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.4...HEAD
+[3.0.4]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.4
 [3.0.3]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.3
 [3.0.2]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.2
 [3.0.1]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.1

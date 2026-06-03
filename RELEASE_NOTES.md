@@ -1,20 +1,17 @@
-**PriconneReALLTL Installer v3.0.3** — a small security + robustness release. Everything from v3.0.0–v3.0.2 still applies; a healthy install behaves the same.
-
-## Fixes
-
-- **Shortcut wrapping is no longer silent + handles protected folders** — "Set / Modify launch shortcut" now always tells you the result, and if a shortcut is in a write-protected folder (e.g. the All-Users Start Menu under `C:\ProgramData\…`) it wraps a copy on your Desktop ("… (TL update)") instead of doing nothing.
-- **Self-update can't crash the app** — the installer self-update flow is guarded against unhandled exceptions.
+**PriconneReALLTL Installer v3.0.4** — a small security + UI-polish release. Everything from v3.0.0–v3.0.3 still applies; a healthy install behaves the same.
 
 ## Security
 
-- The validated GitHub token is cached by **SHA-256 hash**, never held as plaintext in a long-lived field.
-- Diagnostic logging no longer uses `Console.WriteLine` (it bypassed the log redactor); debug traces are compiled out of release builds.
-- **CodeQL code scanning** is now enabled (C# static analysis on every push / PR), alongside Dependabot.
+- **Zip extraction now writes to the path it just validated.** The zip-slip (path-traversal) guard already confined every entry to the game folder — the extraction step now writes to that same guard-checked path instead of re-deriving it from the (untrusted) entry name. Resolves the CodeQL `cs/zipslip` alert; no behavioral change for a healthy patch.
+
+## Changed
+
+- **Language labels finalized** — the compact "TL Source" label shows the ISO code (**EN** / **TH**); the source picker shows each language's native full name (**English** / **ไทย**). Internal manifest keys are unchanged, so existing installs are unaffected.
 
 ## Verification
 
 - Verify your download against **`SHA256SUMS.txt`**:
-  `Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.3.exe`
+  `Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.4.exe`
 - Authenticode: not signed this release (verify via SHA-256 above).
 
 ## Compatibility

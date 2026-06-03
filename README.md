@@ -43,7 +43,7 @@ Either is fine — the portable exe if you just want to run it, the setup if you
 Every release attaches **`SHA256SUMS.txt`** and lists the SHA-256 inline in the release notes. Verify the file you downloaded:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.3.exe
+Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.4.exe
 ```
 
 Compare the output against the hash in `SHA256SUMS.txt` / the release notes — they must match exactly.

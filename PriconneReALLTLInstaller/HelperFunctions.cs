@@ -372,7 +372,8 @@ namespace HelperFunctions
         public sealed class PatchSource
         {
             public string DisplayName { get; }
-            public string ShortName { get; }
+            public string ShortName { get; }   // internal KEY (manifest owner / logic match) — stays "English"/"Thai", never display it
+            public string ShortCode { get; }   // user-facing SHORT label (ISO 639-1 code) — "EN"/"TH"
             public string Owner { get; }
             public string Repo { get; }
             // Installed-version detection per source: where the version file lives (relative
@@ -403,11 +404,12 @@ namespace HelperFunctions
             // EN declares none — its fixups (PriconneSkillTLFixup/PriconneTLFixup) ship inside the
             // ImaterialC patch. A repo with no release yet is skipped softly (wired ahead of release).
             public System.Collections.Generic.IReadOnlyList<PluginDownload> PluginDownloads { get; }
-            public PatchSource(string displayName, string shortName, string owner, string repo, string versionFileRelPath, string versionRegex,
+            public PatchSource(string displayName, string shortName, string shortCode, string owner, string repo, string versionFileRelPath, string versionRegex,
                 string[] enablePlugins = null, string[] disablePlugins = null, PluginDownload[] pluginDownloads = null)
             {
                 DisplayName = displayName;
                 ShortName = shortName;
+                ShortCode = shortCode;
                 Owner = owner;
                 Repo = repo;
                 VersionFileRelPath = versionFileRelPath;
@@ -442,11 +444,11 @@ namespace HelperFunctions
         public static readonly System.Collections.Generic.IReadOnlyList<PatchSource> PatchSources =
             new System.Collections.Generic.List<PatchSource>
             {
-                new PatchSource("English  (ImaterialC / PriconneRe-TL)", "English", "ImaterialC", "PriconneRe-TL",
+                new PatchSource("English  (ImaterialC / PriconneRe-TL)", "English", "EN", "ImaterialC", "PriconneRe-TL",
                     @"BepInEx\Translation\en\Text\Version.txt", @"\d{8}[a-z]?",
                     enablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll" },
                     disablePlugins: new[] { "PriconneALLTLFixup.dll" }),
-                new PatchSource("Thai  (PeterkleCG / PriconneTH)", "Thai", "PeterkleCG", "PriconneTH",
+                new PatchSource("ไทย  (PeterkleCG / PriconneTH)", "Thai", "TH", "PeterkleCG", "PriconneTH",
                     @"BepInEx\Translation\th\Text\Version.txt", @"v?\d+\.\d+(?:\.\d+)?",
                     enablePlugins: new[] { "PriconneALLTLFixup.dll" },
                     disablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll" },
@@ -567,7 +569,7 @@ namespace HelperFunctions
                 if (changed)
                 {
                     File.WriteAllLines(cfg, lines);
-                    Log?.Invoke($"Synced AutoTranslatorConfig.ini to {GetCurrentPatchSource().ShortName} (from the source's shipped config).", "info", false);
+                    Log?.Invoke($"Synced AutoTranslatorConfig.ini to {GetCurrentPatchSource().ShortCode} (from the source's shipped config).", "info", false);
                 }
             }
             catch (Exception ex) { Log?.Invoke("Could not update AutoTranslatorConfig.ini: " + ex.Message, "error", false); }
