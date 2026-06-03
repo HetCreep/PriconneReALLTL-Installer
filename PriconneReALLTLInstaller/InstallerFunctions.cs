@@ -686,11 +686,15 @@ namespace InstallerFunctions
 
                         if (!Helper.IgnoreMatches(fileName, ignoreFiles))
                         {
-                            string destinationPath = Path.Combine(priconnePath, Path.GetDirectoryName(fileName));
-                            if (!Directory.Exists(destinationPath))
+                            // #37: extract to the guard-validated `fullDest` (computed above) — never
+                            // re-derive the destination from the untrusted entry name, so the zip-slip
+                            // check and the write act on the SAME resolved value (also resolves the
+                            // CodeQL cs/zipslip alert: the sink now uses the sanitized path).
+                            string destinationPath = Path.GetDirectoryName(fullDest);
+                            if (!string.IsNullOrEmpty(destinationPath) && !Directory.Exists(destinationPath))
                                 Directory.CreateDirectory(destinationPath);
 
-                            bool ok = await Task.Run(() => ExtractZipEntry(entry, Path.Combine(priconnePath, fileName)));
+                            bool ok = await Task.Run(() => ExtractZipEntry(entry, fullDest));
                             if (!ok) extractHadError = true;
                             else if (entry.Name != "") extractedFiles.Add(fileName.Replace('\\', '/'));
                         }
