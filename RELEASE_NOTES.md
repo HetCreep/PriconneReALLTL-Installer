@@ -1,33 +1,30 @@
-**PriconneReALLTL Installer v3.0.0** — the first public release of the rebranded, multi-source successor to PriconneReTL-Installer. "ALL TL" because it now installs **any** supported translation patch, not just one. This is a new product line with its own identity (name, signing key, self-update), forked with thanks from [tynave/PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) under MIT.
+**PriconneReALLTL Installer v3.0.1** — a bug-fix release hardening install integrity, version detection, and crash-safety. Everything from v3.0.0 still applies; this fixes defects found in a full-project review. A healthy install behaves the same — these fixes matter on the unhappy paths (interrupted downloads, a wrong system clock, double-digit version numbers, failed operations).
 
-## Highlights & Fixes
+## Fixes
 
-- **Multiple translation sources, user-selectable**: switch between **English** ([ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL)) and **ไทย** ([PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH)) right from the main window. Installed-version detection, the modloader pin, and `AutoTranslatorConfig.ini` (language + texture list) all follow the selected source automatically.
-- **Per-user installer (no admin)**: a proper Inno Setup installer alongside the portable exe. It adds a Start Menu shortcut and a clean uninstall entry that also clears the app's local cache/settings. Self-update still works because it installs under your user profile.
-- **Safer installs**: the downloaded patch zip is SHA-256 verified against GitHub's published digest before anything is touched, so a corrupt or interrupted download can never half-overwrite a working install.
-- **Faster repeats**: the ~330 MB patch zip is cached locally, so reinstalling or switching back to a source you already downloaded skips the re-download.
-- **Ref-counted uninstall**: with both EN and TH installed, uninstalling one leaves the other (and the shared modloader) fully working; uninstalling the last one removes everything.
-- **Shortcut-wrapped launching**: wrap an existing launcher/account shortcut so launching it updates the patch first, then starts your game.
-- **Weekly update check**: the installer self-update check now caches its result for 7 days (it's a mature tool, not a browser). Patch/modloader checks stay frequent. A new **Check for Updates Now** menu action runs an on-demand live check any time.
-- **Quieter, more responsive UI**: every GitHub call runs off the UI thread, so a slow or rate-limited response never freezes the window. Installed files keep their real source-build dates.
-- **Runs on .NET Framework 4.8** (up from 4.7.2) — preinstalled on Windows 10 1903+/11, so there's nothing extra to install.
-- **Own neutral branding** — the installer now ships its own language-neutral "Priconne Re:ALLTL" logo instead of borrowing one translation source's artwork, so it stays fair to every supported language.
+- **Numeric version comparison** — `2.1.10` is now correctly newer than `2.1.9` (and `3.0.10` newer than `3.0.9`). Previously versions were compared letter-by-letter, so once a segment reached two digits a genuinely newer patch or installer update could be silently *not* offered.
+- **Interrupted downloads can't corrupt a working install** — the ~330 MB patch zip downloads to a temporary file and is promoted to the reusable cache only after it passes verification, so a partial or aborted download is never reused and extracted over your game. The rate-limit cache fallback now also restores the expected SHA-256 so the integrity check stays correct.
+- **No launch after a failed operation** — "Launch Game" starts the game only when the install/uninstall actually succeeded, so a half-patched install can't auto-launch (and the 5-second auto-exit can't hide the error).
+- **Path-guarded config/ignored removal** — "Remove Config" / "Remove Ignored Patch Files" deletions are confined to the game folder, matching the existing extraction and main-removal guards.
+- **A backward system clock no longer freezes update checks** — if your PC clock was set behind the time a check was cached (a dead CMOS battery, a manual change), the app used to treat the cached result as permanently fresh and stop checking; it now re-fetches when the cached age is out of range. (Separately: if translations don't appear in-game, make sure your system date/time is correct — the game itself can misbehave on a wrong clock.)
+- **Crash-safety** — a download with no Content-Length no longer throws on the progress bar (clamped to 0–100%); a malformed DMM game-path entry is rejected instead of causing a null-path crash; the "open game folder" command quotes the path so folders with spaces open correctly.
 
-## Security & hardening
+## Verification
 
-- GitHub token byte buffers are zeroed (`Array.Clear`) right after use (DPAPI, `CurrentUser` scope); logs neutralize CR/LF/tab to prevent log forging (OWASP A09) on top of fail-closed token redaction; **Dependabot** alerts + weekly dependency / GitHub-Actions update PRs are enabled.
-
-## Build & Distribution
-
-- Builds run entirely in GitHub Actions on every version tag. Local builds are not distributed.
-- The latest release ships the **portable exe**, the **per-user installer**, and **`SHA256SUMS.txt`**. Older releases keep only their source code — their installer/portable assets are removed automatically so nobody downloads a stale build.
+- Verify your download against **`SHA256SUMS.txt`** attached to this release:
+  `Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.1.exe`
+- Authenticode: not signed this release (verify via SHA-256 above).
 
 ## Compatibility
 
-- Windows 10 / 11.
-- Requires Princess Connect! Re:Dive installed via DMM Game Player.
+- Windows 10 / 11. Requires Princess Connect! Re:Dive installed via DMM Game Player.
+- Translation sources: EN ([ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL)), TH ([PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH)); modloader pinned to ImaterialC.
 - A GitHub token is optional — version checks are cached, so the app works fine unauthenticated.
 
 ## Upgrade Notes
 
-- Coming from the old PriconneReTL-Installer? This is a separate product with its own identity, so install it fresh. Your game's translation patch is detected in place — no need to reinstall the patch itself.
+- Drop-in over v3.0.0 — settings, token, and your installed patch are unaffected. No reinstall of the translation patch is needed.
+
+## Known Issues
+
+- Installing/uninstalling a source **manually** (by zip) is invisible to the app's tracked-install manifest, so a manual source can't be cleanly uninstalled by the app — install via the app for a clean per-source uninstall. (A 2-layer translation/modloader uninstall is planned.)

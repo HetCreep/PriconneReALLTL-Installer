@@ -81,6 +81,15 @@ namespace InstallerFunctions
 
                             gameVersion = content.detail.version;
 
+                            // #25: a malformed entry can leave priconnePath null/empty (Newtonsoft
+                            // dynamic returns null for a missing property) — never report a null path
+                            // as valid, or every downstream Path.Combine throws ArgumentNullException.
+                            if (string.IsNullOrWhiteSpace(priconnePath))
+                            {
+                                ErrorLog?.Invoke("Found the game entry but its install path is missing — reinstall Princess Connect Re:Dive via DMMGamePlayer.");
+                                DisableStart?.Invoke();
+                                return (priconnePath = "Not found", priconnePathValid = false, gameVersion = "Not found");
+                            }
                             Log?.Invoke("Found Princess Connect Re:Dive in " + priconnePath, "info", false);
                             return (priconnePath, priconnePathValid = true, gameVersion);
                         }
@@ -252,7 +261,7 @@ namespace InstallerFunctions
                 string stale = Helper.GetCachedVersion("patch:" + githubAPI, allowStale: true);
                 if (stale != null)
                 {
-                    try { var cj = JObject.Parse(stale); Log?.Invoke("Using last known patch version (GitHub unavailable / rate-limited).", "info", false); return (latestVersion = (string)cj["v"], true, assetLink = (string)cj["a"]); }
+                    try { var cj = JObject.Parse(stale); latestAssetDigest = (string)cj["d"]; if (DateTime.TryParse((string)cj["p"], null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime sp)) latestReleaseDate = sp; Log?.Invoke("Using last known patch version (GitHub unavailable / rate-limited).", "info", false); return (latestVersion = (string)cj["v"], true, assetLink = (string)cj["a"]); }   // #18: restore the digest+date too so the cached-zip verify uses the right expected hash on the stale path
                     catch { }
                 }
                 HttpWebResponse resp = webEx.Response as HttpWebResponse;
@@ -552,6 +561,11 @@ namespace InstallerFunctions
                 }
                 if (cachePath != null) PurgeStaleCachedZips(cachePath);
                 string target = cachePath ?? (fileToSave ?? tempFile);
+                // #18: download to a temp ".part" file and promote it to the real target ONLY after it
+                // verifies — so an interrupted/partial download can never masquerade as a complete cached
+                // zip that a later run would reuse + extract over the install.
+                string downloadTmp = target + ".part";
+                try { if (File.Exists(downloadTmp)) File.Delete(downloadTmp); } catch { }
 
                 Log?.Invoke("Downloading compressed files...", "info", true);
                 ProgressPictureChange?.Invoke(Resources.pecorun);
@@ -568,11 +582,8 @@ namespace InstallerFunctions
                         long? totalBytesResponse = response.Content.Headers.ContentLength;
                         long totalBytes = totalBytesResponse ?? -1;
 
-                        string fileName = Path.GetFileName(new Uri(assetLink).AbsolutePath);
-                        string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-
                         using (var contentStream = await response.Content.ReadAsStreamAsync())
-                        using (var fileStream = new FileStream(target, FileMode.Create, FileAccess.Write))
+                        using (var fileStream = new FileStream(downloadTmp, FileMode.Create, FileAccess.Write))
                         {
                             var buffer = new byte[4096];
                             long downloadedBytes = 0;
@@ -589,14 +600,17 @@ namespace InstallerFunctions
                     }
                 }
 
-                if (!VerifyZipDigest(target))
+                if (!VerifyZipDigest(downloadTmp))
                 {
                     ErrorLog?.Invoke("Downloaded file failed the SHA256 integrity check — aborting before touching the install. Please try again.");
-                    try { File.Delete(target); } catch { }
+                    try { File.Delete(downloadTmp); } catch { }
                     downloadSuccess = false;
                     ProgressPictureChange?.Invoke(null);
                     return;
                 }
+                // Verified → promote the temp file to the real target (replace any stale file there).
+                try { if (File.Exists(target)) File.Delete(target); } catch { }
+                File.Move(downloadTmp, target);
                 Log?.Invoke("Download completed + verified.", "info", true);
                 downloadSuccess = true;
                 StampZipSourceDate(target);   // stamp the just-downloaded zip with its source date
@@ -994,15 +1008,21 @@ namespace InstallerFunctions
             try
             {
                 Log?.Invoke($"Removing {type} files...", "remove", false);
+                // Path guard (#22): only ever delete INSIDE the game folder — a hand-edited ignore
+                // entry with "..\" or an absolute path must never escape (parity with RemovePatchFiles).
+                string gameRoot = Path.GetFullPath(priconnePath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
                 foreach (var entry in collection)
                 {
                     foreach (string rel in ExpandIgnoreGlob(entry == null ? "" : entry.ToString()))   // glob (e.g. */) -> actual files
                     {
                         string fullPath = Path.Combine(priconnePath, rel.Replace('/', Path.DirectorySeparatorChar));
-                        if (File.Exists(fullPath))
+                        string full;
+                        try { full = Path.GetFullPath(fullPath); } catch { continue; }
+                        if (!full.StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (File.Exists(full))
                         {
-                            File.Delete(fullPath);
-                            DeleteEmptyDirectories(Path.GetDirectoryName(fullPath));
+                            File.Delete(full);
+                            DeleteEmptyDirectories(Path.GetDirectoryName(full));
                         }
                     }
                 }
@@ -1022,7 +1042,7 @@ namespace InstallerFunctions
             // early-returns on !removeSuccess/!downloadSuccess) and/or report a false success.
             removeSuccess = true; downloadSuccess = true; extractSuccess = true; cancelledByUser = false;
             string processName = null;
-            int versioncompare = Helper.NormalizeVersion(localVersion).CompareTo(Helper.NormalizeVersion(latestVersion));
+            int versioncompare = Helper.CompareVersions(localVersion, latestVersion);
 
             StringCollection configFilesSelected = new StringCollection();
             StringCollection configFilesUnSelected = new StringCollection();
@@ -1129,8 +1149,11 @@ namespace InstallerFunctions
                 }
                 ProcessFinish?.Invoke();
 
-                if (launch && !cancelledByUser)
+                if (launch && !cancelledByUser && processSuccess)
                 {
+                    // Launch only on SUCCESS (#19): never start the game (and auto-exit) after a
+                    // failed/partial operation — that would run a half-patched install and the 5s
+                    // auto-exit would hide the error from the user.
                     // Arch B: in-GUI "Launch Game" launches vanilla DMM directly (the universal
                     // launcher). Per-launcher/account launching is via wrapped shortcuts.
                     bool result = StartDMMGamePlayer();

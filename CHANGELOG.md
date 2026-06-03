@@ -8,6 +8,21 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 _Nothing yet._
 
+## [3.0.1] — 2026-06-03
+
+Bug-fix release: correctness, install integrity, and crash-safety hardening from a full-project
+review. No behavioral change to a healthy install — all fixes matter on the unhappy paths.
+
+### Fixed
+- **Version comparison is now numeric, not lexicographic** — `2.1.10` is correctly newer than `2.1.9` (and `3.0.10` newer than `3.0.9`); semver patch numbers ≥ 10 and date tags with a trailing letter no longer mis-sort, so a genuinely newer patch or installer update can't be silently skipped.
+- **Interrupted downloads can no longer corrupt a working install** — the patch zip downloads to a temp file and is promoted to the reusable cache only after it verifies, so a partial/aborted download is never reused and extracted; the rate-limit cache fallback also restores the expected SHA-256 digest.
+- **The game is no longer launched after a failed operation** — "Launch Game" starts the game only when the install/uninstall actually succeeded, so a half-patched install can't auto-launch and hide the error.
+- **Config / ignored-file removal is path-guarded** — deletions during "Remove Config / Remove Ignored" are confined to the game folder (parity with the main removal + extraction guards).
+- **A backward system clock no longer freezes update checks** — the version cache treated a clock set *backward* as "always fresh"; it now re-fetches when the cache age is out of range.
+- **A missing Content-Length no longer crashes the progress bar** — download progress is clamped to 0–100%.
+- **A malformed game-path entry is rejected** instead of treated as valid (no more null-path crash).
+- **The "open game folder" command quotes the path** so folders with spaces open correctly.
+
 ## [3.0.0] — 2026-06-03 (first public release)
 
 PriconneReALLTL-Installer is a rebranded, fully detached fork of
@@ -66,5 +81,6 @@ installers never collide. This is the first version published as a GitHub Releas
 ### Attribution
 - MIT-licensed fork of tynave/PriconneReTL-Installer; original inspiration touanu/PriconeTL_Updater. Translation patches by ImaterialC (EN) and PeterkleCG (TH).
 
-[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.1
 [3.0.0]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.0

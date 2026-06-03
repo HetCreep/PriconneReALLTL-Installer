@@ -333,7 +333,7 @@ namespace PriconneReALLTLInstaller
             localVersionLabel.Text = Helper.NormalizeVersion(localVersion);
             localModloaderVersionLabel.Text = localModLoaderVersion;
 
-            versioncompare = Helper.NormalizeVersion(localVersion).CompareTo(Helper.NormalizeVersion(latestVersion));
+            versioncompare = Helper.CompareVersions(localVersion, latestVersion);
             if ((!localVersionValid || versioncompare != 0) && priconnePathValid)
             {
                 installCheckBox.Enabled = true;
@@ -448,11 +448,13 @@ namespace PriconneReALLTLInstaller
 
         public void OnDownloadProgress(double currentValue, double maxValue)
         {
-            double percentage = ((double)currentValue / (double)maxValue) * 100;
+            // #24: guard a missing Content-Length (maxValue <= 0 → NaN/negative %) — clamp to [0,100]
+            // so ProgressBar.Value never throws ArgumentOutOfRangeException on the UI thread.
+            int pct = maxValue > 0 ? (int)Math.Min(100, Math.Max(0, currentValue / maxValue * 100)) : 0;
             statusStrip1.Invoke((Action)(() =>
             {
-                toolStripProgressBar1.Value = (int)percentage;
-                toolStripStatusLabel3.Text = $"{Math.Truncate(percentage)}%";
+                toolStripProgressBar1.Value = pct;
+                toolStripStatusLabel3.Text = $"{pct}%";
             }));
         }
 
@@ -653,7 +655,7 @@ namespace PriconneReALLTLInstaller
             if (priconnePathValid)
             {
                 ProcessStartInfo startInfo = new ProcessStartInfo("explorer.exe");
-                startInfo.Arguments = priconnePath;
+                startInfo.Arguments = $"\"{priconnePath}\"";   // #33: quote — a path with spaces must not split into multiple args
                 Process.Start(startInfo);
             }
         }
@@ -902,7 +904,7 @@ namespace PriconneReALLTLInstaller
                     return;
                 }
 
-                int cmp = Helper.NormalizeVersion(Application.ProductVersion).CompareTo(Helper.NormalizeVersion(version));
+                int cmp = Helper.CompareVersions(Application.ProductVersion, version);
                 if (cmp < 0)
                 {
                     helper.CheckForInstallerUpdate(version, body, installerAssetlink, versionValid);   // shows the SelfUpdateForm

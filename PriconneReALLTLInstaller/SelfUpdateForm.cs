@@ -64,11 +64,13 @@ namespace PriconneReALLTLInstaller
 
         public void OnDownloadProgress(double currentValue, double maxValue)
         {
-            double percentage = ((double)currentValue / (double)maxValue) * 100;
+            // #24: guard a missing Content-Length (maxValue <= 0 → NaN/negative %) — clamp to [0,100]
+            // so ProgressBar.Value never throws ArgumentOutOfRangeException on the UI thread.
+            int pct = maxValue > 0 ? (int)Math.Min(100, Math.Max(0, currentValue / maxValue * 100)) : 0;
             statusStrip1.Invoke((Action)(() =>
             {
-                toolStripProgressBar1.Value = (int)percentage;
-                toolStripStatusLabel3.Text = $"{Math.Truncate(percentage)}%";
+                toolStripProgressBar1.Value = pct;
+                toolStripStatusLabel3.Text = $"{pct}%";
             }));
         }
         private void ParseMarkdownToRichTextBox(string markdown)

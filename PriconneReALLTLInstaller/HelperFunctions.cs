@@ -643,6 +643,37 @@ namespace HelperFunctions
         public static string NormalizeVersion(string v) =>
             string.IsNullOrEmpty(v) ? "" : v.Trim().TrimStart('v', 'V');
 
+        /// <summary>Compares two version/tag strings by NUMERIC precedence, not lexicographically (#17).
+        /// Semver ("2.1.10" &gt; "2.1.9", "3.0.10" &gt; "3.0.9") parses via <see cref="Version"/>; EN
+        /// 8-digit date tags ("20260531", optional trailing letter) compare by their numeric run.
+        /// Returns &lt;0 / 0 / &gt;0 like CompareTo. Ordinal string compare is the last resort only.</summary>
+        public static int CompareVersions(string a, string b)
+        {
+            string na = NormalizeVersion(a), nb = NormalizeVersion(b);
+            if (na == nb) return 0;
+            if (Version.TryParse(na, out var va) && Version.TryParse(nb, out var vb))
+                return va.CompareTo(vb);
+            if (TrySplitNumericTag(na, out long da, out string sa) && TrySplitNumericTag(nb, out long db, out string sb))
+            {
+                int c = da.CompareTo(db);
+                return c != 0 ? c : string.Compare(sa, sb, StringComparison.OrdinalIgnoreCase);
+            }
+            return string.Compare(na, nb, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Splits a leading digit run (EN date "20260531") from an optional trailing suffix
+        // ("20260531a") so the numeric part dominates and the letter only breaks ties.
+        private static bool TrySplitNumericTag(string s, out long num, out string suffix)
+        {
+            num = 0; suffix = "";
+            if (string.IsNullOrEmpty(s)) return false;
+            int i = 0;
+            while (i < s.Length && char.IsDigit(s[i])) i++;
+            if (i == 0) return false;
+            suffix = s.Substring(i);
+            return long.TryParse(s.Substring(0, i), out num);
+        }
+
         /// <summary>The authoritative modloader source — ALWAYS ImaterialC (the main, widely-used
         /// patch), regardless of the selected TL source. Its bundled BepInEx interop is the baseline
         /// (a TL source like PeterkleCG may ship its own copy, but ImaterialC's is treated as canonical).</summary>
@@ -674,9 +705,18 @@ namespace HelperFunctions
             try
             {
                 var dict = JsonConvert.DeserializeObject<Dictionary<string, CacheEntry>>(Settings.Default.versionCacheJson ?? "");
-                if (dict != null && dict.TryGetValue(key, out var e) && e != null
-                    && (allowStale || (DateTime.UtcNow - e.Ts).TotalHours < ttl))
-                    return e.Val;
+                if (dict != null && dict.TryGetValue(key, out var e) && e != null)
+                {
+                    // Clock-skew guard (#15): a system clock set BACKWARD after a cache write makes
+                    // (UtcNow - Ts) negative, which the old `< ttl` read as "fresh" → the cache froze
+                    // on a stale value and never re-fetched (the user couldn't get a newer patch until
+                    // they corrected the clock). Require age in [0, ttl): a negative age (clock moved
+                    // back) or a huge age (clock far ahead) now falls through to a live re-fetch.
+                    // allowStale still wins (offline / rate-limited fallback keeps the last value).
+                    double ageHours = (DateTime.UtcNow - e.Ts).TotalHours;
+                    if (allowStale || (ageHours >= 0 && ageHours < ttl))
+                        return e.Val;
+                }
             }
             catch { }
             return null;
@@ -962,7 +1002,7 @@ namespace HelperFunctions
 
         public void CheckForInstallerUpdate(string version, string body, string installerAssetLink, bool versionValid)
         {
-            int versioncompare = NormalizeVersion(String.Format(Application.ProductVersion)).CompareTo(NormalizeVersion(version));
+            int versioncompare = CompareVersions(Application.ProductVersion, version);
 
             if (versionValid && versioncompare < 0)
             {

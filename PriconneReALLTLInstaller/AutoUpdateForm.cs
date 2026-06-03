@@ -214,7 +214,8 @@ namespace PriconneReALLTLInstaller
         public void OnDownloadProgress(double currentValue, double maxValue)
         {
            
-            double percentage = ((double)currentValue / (double)maxValue) * 100;
+            // #24: guard a missing Content-Length (maxValue <= 0 → NaN) so the label/positions stay sane.
+            double percentage = maxValue > 0 ? Math.Min(100, Math.Max(0, currentValue / maxValue * 100)) : 0;
             statusLabel.Invoke((Action)(() =>
             {
                 progressPicture.Left = 30 + (int)(percentage * 5);
@@ -277,7 +278,7 @@ namespace PriconneReALLTLInstaller
 
             if (priconnePathValid && latestVersionValid)
             {
-                int versioncompare = Helper.NormalizeVersion(localVersion).CompareTo(Helper.NormalizeVersion(latestVersion));
+                int versioncompare = Helper.CompareVersions(localVersion, latestVersion);
 
                 if (versioncompare == 0)
                 {
@@ -317,7 +318,7 @@ namespace PriconneReALLTLInstaller
         {
              if (!priconnePathValid) return;   // don't open explorer on "Not found"/"ERROR!" (audit B15)
              ProcessStartInfo startInfo = new ProcessStartInfo("explorer.exe");
-             startInfo.Arguments = priconnePath;
+             startInfo.Arguments = $"\"{priconnePath}\"";   // #33: quote path (spaces)
              Process.Start(startInfo);
         }
 

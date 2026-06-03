@@ -20,7 +20,7 @@
 ; Overridable on the ISCC command line. AppVersion must be numeric (Inno [Setup]);
 ; Tag is the release tag used only in the output filename (defaults to "v"+AppVersion).
 #ifndef AppVersion
-  #define AppVersion "3.0.0"
+  #define AppVersion "3.0.1"
 #endif
 #ifndef Tag
   #define Tag "v" + AppVersion
