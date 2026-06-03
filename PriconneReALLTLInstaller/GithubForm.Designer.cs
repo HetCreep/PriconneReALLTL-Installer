@@ -120,6 +120,7 @@
             this.Controls.Add(this.backButton);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "GithubForm";
+            this.Text = "Priconne Re:ALLTL Installer - GitHub Token";   // #45: window caption
             this.Load += new System.EventHandler(this.GithubForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

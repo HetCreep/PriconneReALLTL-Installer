@@ -560,7 +560,7 @@
             // 
             this.wikiMenuItem.Name = "wikiMenuItem";
             this.wikiMenuItem.Size = new System.Drawing.Size(298, 22);
-            this.wikiMenuItem.Text = "GitHub Wiki page";
+            this.wikiMenuItem.Text = "GitHub Wiki Page";
             this.wikiMenuItem.Click += new System.EventHandler(this.helpMenuItem_Click);
             // 
             // aboutMenuItem
@@ -816,7 +816,7 @@
             this.tlInstalledLabel.Name = "tlInstalledLabel";
             this.tlInstalledLabel.Size = new System.Drawing.Size(80, 18);
             this.tlInstalledLabel.TabIndex = 48;
-            this.tlInstalledLabel.Text = "Installed :";
+            this.tlInstalledLabel.Text = "Installed:";
             // 
             // latestModloaderLabel
             // 
@@ -827,7 +827,7 @@
             this.latestModloaderLabel.Name = "latestModloaderLabel";
             this.latestModloaderLabel.Size = new System.Drawing.Size(126, 18);
             this.latestModloaderLabel.TabIndex = 46;
-            this.latestModloaderLabel.Text = "Latest Version :";
+            this.latestModloaderLabel.Text = "Latest Version:";
             // 
             // installedModloaderLabel
             // 
@@ -838,7 +838,7 @@
             this.installedModloaderLabel.Name = "installedModloaderLabel";
             this.installedModloaderLabel.Size = new System.Drawing.Size(80, 18);
             this.installedModloaderLabel.TabIndex = 45;
-            this.installedModloaderLabel.Text = "Installed :";
+            this.installedModloaderLabel.Text = "Installed:";
             // 
             // patchLabel
             // 
@@ -904,6 +904,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.Name = "MainForm";
+            this.Text = "Priconne Re:ALLTL Installer";   // #45: window caption (Task Manager / Alt-Tab)
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Activated += new System.EventHandler(this.MainForm_Activated);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);

@@ -200,7 +200,7 @@
             this.tlInstalledLabel.Name = "tlInstalledLabel";
             this.tlInstalledLabel.Size = new System.Drawing.Size(80, 18);
             this.tlInstalledLabel.TabIndex = 48;
-            this.tlInstalledLabel.Text = "Installed :";
+            this.tlInstalledLabel.Text = "Installed:";
             // 
             // latestModloaderLabel
             // 
@@ -211,7 +211,7 @@
             this.latestModloaderLabel.Name = "latestModloaderLabel";
             this.latestModloaderLabel.Size = new System.Drawing.Size(126, 18);
             this.latestModloaderLabel.TabIndex = 46;
-            this.latestModloaderLabel.Text = "Latest Version :";
+            this.latestModloaderLabel.Text = "Latest Version:";
             // 
             // installedModloaderLabel
             // 
@@ -222,7 +222,7 @@
             this.installedModloaderLabel.Name = "installedModloaderLabel";
             this.installedModloaderLabel.Size = new System.Drawing.Size(80, 18);
             this.installedModloaderLabel.TabIndex = 45;
-            this.installedModloaderLabel.Text = "Installed :";
+            this.installedModloaderLabel.Text = "Installed:";
             // 
             // patchLabel
             // 
@@ -363,6 +363,7 @@
             this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "AutoUpdateForm";
+            this.Text = "Priconne Re:ALLTL Installer - Auto-Update";   // #45: window caption
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AutoUpdateForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.progressPicture)).EndInit();

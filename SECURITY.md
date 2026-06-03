@@ -57,9 +57,11 @@ This tool will **never**:
 - Read or write the game's process memory.
 - Automate the game or send synthetic game-server requests (no botting / auto-anything).
 - Handle game or DMM account credentials, or switch accounts.
-- Bundle or redistribute Cygames/DMM game assets.
+- Bundle or redistribute Cygames/DMM game assets in what it downloads or deploys to your game (it installs only third-party translation patches).
 - Add telemetry, analytics, crash-reporting, or any Discord integration.
 - Contact any host outside the GitHub allow-list in [PRIVACY.md](PRIVACY.md).
+
+> **Disclosed gap — UI art:** the installer's own interface art is currently Cygames-derived (inherited from the upstream project), which is at odds with the game-assets rule above. This is acknowledged honestly — like the unsigned-binary gap below — and is tracked to be re-skinned to original or open-licensed art.
 
 ### Note on BepInEx (mod loading)
 

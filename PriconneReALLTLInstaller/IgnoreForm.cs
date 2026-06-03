@@ -16,7 +16,6 @@ namespace PriconneReALLTLInstaller
     public partial class IgnoreForm : BaseForm
     {
         private string defaultPath;
-        private StringCollection ignoreFilesCollection;
         public IgnoreForm(string arg)
         {
             InitializeComponent();
@@ -65,12 +64,11 @@ namespace PriconneReALLTLInstaller
 
         private void CreateFileList()
         {
-            ignoreFilesCollection = Settings.Default.ignoreFiles;
-
+            // #72: populate the listbox directly — do NOT keep a reference to the live StringCollection.
+            // Saving would otherwise Clear()/mutate Settings.Default.ignoreFiles in place, so a save-fail
+            // or mid-edit could corrupt the in-memory list. saveButton_Click builds a fresh collection.
             foreach (string item in Settings.Default.ignoreFiles)
-            {
                 fileListbox.Items.Add(item);
-            }
         }
        
         private void backButton_Click(object sender, EventArgs e)
@@ -87,14 +85,13 @@ namespace PriconneReALLTLInstaller
         {
             try
             {
-                ignoreFilesCollection.Clear();
-
+                // #72: build a FRESH collection from the listbox and assign it — never mutate the live
+                // Settings collection in place, so a failure here can't leave the in-memory list cleared.
+                var updated = new StringCollection();
                 foreach (var item in fileListbox.Items)
-                {
-                    ignoreFilesCollection.Add(item.ToString());
-                }
+                    updated.Add(item.ToString());
 
-                Settings.Default.ignoreFiles = ignoreFilesCollection;
+                Settings.Default.ignoreFiles = updated;
                 Settings.Default.Save();
                 MessageBox.Show("Ignore list saved!", "Save Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 saveButton.Enabled = false;

@@ -254,6 +254,17 @@ namespace PriconneReALLTLInstaller
             clearCacheMenuItem.Click += (s, e) => ClearDownloadCache();
             settingsMenuStrip.Items.Add(clearCacheMenuItem);
 
+            // #40-L1 Safe Reclaim: free disk in the GAME folder (BepInEx regenerable byproducts + empty
+            // dirs) — distinct from Clear Download Cache (the app's zip cache in %LOCALAPPDATA%).
+            var reclaimMenuItem = new ToolStripMenuItem("Reclaim Space in Game Folder");
+            if (settingsMenuStrip.Items.Count > 0)
+            {
+                reclaimMenuItem.Font = settingsMenuStrip.Items[0].Font;
+                reclaimMenuItem.ForeColor = settingsMenuStrip.Items[0].ForeColor;
+            }
+            reclaimMenuItem.Click += (s, e) => ReclaimGameFolderSpace();
+            settingsMenuStrip.Items.Add(reclaimMenuItem);
+
             // A dedicated "Check for Updates Now" action. The toggle above only auto-checks on startup
             // and stays silent when already up to date; this one always runs on demand, bypasses the
             // 6h version cache for a live result, and reports the outcome either way.
@@ -719,6 +730,21 @@ namespace PriconneReALLTLInstaller
             if (r != DialogResult.Yes) return;
             long freed = installer.ClearZipCache();
             logger.Log($"Cleared download cache — freed {freed / (1024 * 1024)} MB.", "success", true);
+        }
+
+        // #40-L1 Safe Reclaim: free disk by removing BepInEx's regenerable byproducts (LogOutput.log +
+        // assembly cache, both re-created on the next game launch) and pruning leftover empty / OS-metadata-
+        // only folders. ZERO user-data risk — nothing user-edited or source-shipped is touched. Opt-in.
+        private async void ReclaimGameFolderSpace()
+        {
+            try
+            {
+                var r = MessageBox.Show("Reclaim disk space in the game folder?\n\nRemoves only regenerable files — BepInEx's LogOutput.log and assembly cache (re-created on the next game launch) — and prunes leftover empty folders. Your translation patch, settings, and any user files are NOT affected.", "Reclaim space", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (r != DialogResult.Yes) return;
+                long freed = await Task.Run(() => installer.ReclaimGameFolder());   // off the UI thread (recursive cache + tree walk)
+                logger.Log($"Reclaimed {freed / (1024 * 1024)} MB from the game folder (regenerable BepInEx files + empty folders).", "success", true);
+            }
+            catch (Exception ex) { logger.Error("Reclaim failed: " + ex.Message); }   // #20: an async void handler must not throw into the message loop
         }
 
         private void editIgnoredFilesToolStripMenuItem_Click(object sender, EventArgs e)

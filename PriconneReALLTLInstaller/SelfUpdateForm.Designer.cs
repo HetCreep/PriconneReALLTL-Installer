@@ -64,7 +64,7 @@
             this.currentVersionLabel.Name = "currentVersionLabel";
             this.currentVersionLabel.Size = new System.Drawing.Size(125, 17);
             this.currentVersionLabel.TabIndex = 14;
-            this.currentVersionLabel.Text = "Current version:";
+            this.currentVersionLabel.Text = "Current Version:";
             // 
             // latestVersionLabel
             // 
@@ -134,7 +134,7 @@
             this.checkForUpdatesCheckbox.Name = "checkForUpdatesCheckbox";
             this.checkForUpdatesCheckbox.Size = new System.Drawing.Size(550, 36);
             this.checkForUpdatesCheckbox.TabIndex = 30;
-            this.checkForUpdatesCheckbox.Text = " Check for application updates on startup";
+            this.checkForUpdatesCheckbox.Text = " Check for Application Updates on Startup";
             this.checkForUpdatesCheckbox.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.checkForUpdatesCheckbox.UseVisualStyleBackColor = false;
             this.checkForUpdatesCheckbox.CheckedChanged += new System.EventHandler(this.checkForUpdatesCheckbox_CheckedChanged);
@@ -200,6 +200,7 @@
             this.Controls.Add(this.newVersionLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "SelfUpdateForm";
+            this.Text = "Priconne Re:ALLTL Installer - Update";   // #45: window caption
             this.Load += new System.EventHandler(this.SelfUpdateForm_Load);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();

@@ -40,6 +40,7 @@ namespace PriconneReALLTLInstaller
         private readonly string launchTarget;
         private readonly string launchArgs;
         private readonly string launchDir;
+        private EventHandler _tickHandler;   // #68: single reusable timer handler (never stack on re-entry)
         public AutoUpdateForm()
         {
             InitializeComponent();
@@ -74,6 +75,10 @@ namespace PriconneReALLTLInstaller
         private async Task InitializeUI()
         {
             Icon = Resources.jewel;
+
+            // #3: show the active TL source (EN/TH) in the patch header — a bare version like "2.1.5"
+            // doesn't say which language, and the main window already shows it. Mirrors MainForm.
+            patchLabel.Text = $"TL Patch Versions ({Helper.GetCurrentPatchSource().ShortCode}):";
 
             (priconnePath, priconnePathValid, gameVersion) = installer.GetGamePath();
             gamePathLinkLabel.Text = "Game Path: " + priconnePath;
@@ -130,8 +135,11 @@ namespace PriconneReALLTLInstaller
         }
         private void CountDownToProcess(bool install)
         {
-            int countdown = 2;
-            timer1.Tick += (sender, e) =>
+            int countdown = 4;
+            // #68: remove any prior handler before subscribing so a second call can't stack handlers
+            // (which would decrement the countdown twice per tick and start the op early).
+            if (_tickHandler != null) timer1.Tick -= _tickHandler;
+            _tickHandler = (sender, e) =>
             {
                 cancelButton.Visible = true;
                 if (countdown > 0)
@@ -147,6 +155,7 @@ namespace PriconneReALLTLInstaller
                     installer.ProcessAutoUpdateOperation(install, assetLink);
                 }
             };
+            timer1.Tick += _tickHandler;
             timer1.Start();
         }
         private async void StartGame()
@@ -185,6 +194,10 @@ namespace PriconneReALLTLInstaller
                         installer.StartDMMGamePlayer();
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                logger.Log("Launch failed: " + ex.Message, "error", true);   // #66: an async-void handler must not throw into the message loop
             }
             finally
             {
@@ -240,9 +253,10 @@ namespace PriconneReALLTLInstaller
         {
             if (progressImage == null)
             {
-                progressPicture.Visible = false;
+                // #69: this event fires from Task.Run (off the UI thread) — marshal the control access.
+                progressPicture.Invoke((Action)(() => { progressPicture.Visible = false; }));
             }
-            else 
+            else
             {
                 progressPicture.Invoke((Action)(() =>
                 {
@@ -260,13 +274,17 @@ namespace PriconneReALLTLInstaller
 
         private async void OnProcessFinish()
         {
-            UpdateUI();
-            if (modLoaderOutdated)
+            try
             {
-                logger.Log($"{modLoaderTooltip}", "error", true);
-                await Task.Delay(4000);
+                UpdateUI();
+                if (modLoaderOutdated)
+                {
+                    logger.Log($"{modLoaderTooltip}", "error", true);
+                    await Task.Delay(4000);
+                }
             }
-            StartGame();
+            catch (Exception ex) { logger.Log("Post-update step failed: " + ex.Message, "error", true); }   // #66: an async-void handler must not throw into the message loop
+            StartGame();   // launch regardless — the patch is already applied
         }
 
         private void OnProcessError() 

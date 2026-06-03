@@ -100,8 +100,12 @@ namespace PriconneReALLTLInstaller
             }
             else
             {
+                // #49: the managed list stores absolute .lnk paths, so a shortcut moved or deleted
+                // (e.g. dragged Desktop → Start Menu) leaves a stale entry. Flag a missing file so the
+                // user can spot it and Remove it to clean the list. The suffix is display-only — the
+                // index still maps to the real path for Remove.
                 foreach (var link in links)
-                    shortcutListBox.Items.Add(link);
+                    shortcutListBox.Items.Add(File.Exists(link) ? link : link + "   (missing — moved or deleted)");
                 shortcutListBox.Enabled = true;
             }
         }
@@ -178,7 +182,20 @@ namespace PriconneReALLTLInstaller
             if (idx < links.Count)
             {
                 string path = links[idx];
-                helper.RestoreShortcut(path);   // put the original launcher target back into the .lnk
+                // #48: a Desktop "(TL update)" copy is OUR artifact (the protected-folder original was
+                // never modified) → delete it so Remove doesn't leave a dead file behind. An in-place-
+                // wrapped original is the user's own .lnk → restore its launcher target instead.
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                bool isOurDesktopCopy = path.EndsWith(" (TL update).lnk", StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(Path.GetDirectoryName(path), desktop, StringComparison.OrdinalIgnoreCase);
+                if (isOurDesktopCopy)
+                {
+                    try { if (File.Exists(path)) File.Delete(path); } catch { }
+                }
+                else
+                {
+                    helper.RestoreShortcut(path);   // put the original launcher target back into the .lnk
+                }
                 links.RemoveAt(idx);
                 SaveLinks(links);
                 UpdateUI();

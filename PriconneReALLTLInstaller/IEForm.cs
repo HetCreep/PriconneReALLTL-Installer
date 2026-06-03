@@ -59,7 +59,7 @@ namespace PriconneReALLTLInstaller
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error during export!\n\nException: {ex.Message}\n\nStack trace: {ex.StackTrace}", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error during export!\n\nException: {ex.Message}", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);   // #71: no stack trace in the dialog (info disclosure) — it stays in the log below
                 ielogger.Error($"Error during export!\n\nException: {ex.Message}\n\nStack trace: {ex.StackTrace}");
             }
 
@@ -82,7 +82,7 @@ namespace PriconneReALLTLInstaller
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error during import!\n\nException: {ex.Message}\n\nStack trace: {ex.StackTrace}", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error during import!\n\nException: {ex.Message}", "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error);   // #71: no stack trace in the dialog
                 ielogger.Error($"Error during import!\n\nException: {ex.Message}\n\nStack trace: {ex.StackTrace}");
             }
         }

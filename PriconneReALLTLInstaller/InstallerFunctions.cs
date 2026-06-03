@@ -557,8 +557,10 @@ namespace InstallerFunctions
 
         public async Task DownloadPatchFiles(string assetLink, string fileToSave = null)
         {
-            string gitHubToken = Helper.DecryptString(Settings.Default.GithubAPIKey);
-            (bool tokenvalid, _) = Helper.ValidateGitHubToken(gitHubToken);
+            // #74: the release ASSET download (objects.githubusercontent.com, public repos) needs NO
+            // token, and setting Authorization on the HttpClient would forward the token to whatever host
+            // a redirect lands on. So we do NOT decrypt/attach the token for the download — integrity is
+            // guaranteed by the SHA-256 digest verify, not by auth. (API calls that need the token are elsewhere.)
             try
             {
                 // Reuse the cached zip for this source+version if present (no re-download); otherwise
@@ -591,7 +593,7 @@ namespace InstallerFunctions
                 using (HttpClient client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.UserAgent.ParseAdd("PriconneReALLTLInstaller");
-                    if (tokenvalid) client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", gitHubToken);
+                    // #74: no Authorization header on the asset download (see the note at the top of this method).
 
                     using (var response = await client.GetAsync(assetLink, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
                     {
@@ -949,6 +951,38 @@ namespace InstallerFunctions
                     int removed = 0;
                     string gameRoot = Path.GetFullPath(priconnePath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 
+                    // #44: PRE-FLIGHT lock/writability check. The remove loop below is destructive and
+                    // non-atomic — if a tracked file is locked (the game still loaded, antivirus / Windows
+                    // Search indexer / cloud-sync scanning it, or an editor open on it) the loop would
+                    // delete files UP TO the locked one, then throw → removeSuccess=false → the extract
+                    // never re-applies them → a half-removed, broken install. So verify EVERY target is
+                    // removable FIRST; if any is locked/read-only, abort before touching anything and the
+                    // install stays 100% intact. (Extends "verify before touch" → "verify WRITABLE before
+                    // touch"; same class as #38's locked-exe-on-uninstall.) Scope = the tracked file set
+                    // (the confirmed BT4 trigger); the opt-in config/ignored removal keeps its own catch.
+                    var lockedFiles = new List<string>();
+                    foreach (var file in currentFiles)
+                    {
+                        string probe;
+                        try { probe = Path.GetFullPath(Path.Combine(priconnePath, file)); } catch { continue; }
+                        if (!probe.StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!File.Exists(probe)) continue;
+                        if (IsFileLocked(probe))
+                        {
+                            lockedFiles.Add(file);
+                            if (lockedFiles.Count >= 5) break;   // enough to report; don't probe all 6000+
+                        }
+                    }
+                    if (lockedFiles.Count > 0)
+                    {
+                        removeSuccess = false;
+                        removeProgress = false;
+                        ProgressPictureChange?.Invoke(null);
+                        ErrorLog?.Invoke($"Cannot continue — {lockedFiles.Count}{(lockedFiles.Count >= 5 ? "+" : "")} file(s) are locked or read-only. Close the game, antivirus, cloud-sync (Drive/MEGA/Dropbox) and any editor, then retry. Your install was left untouched. First: {string.Join(", ", lockedFiles.Take(3))}");
+                        helper.ClearPendingManifest();   // #61: nothing was deleted → leave the manifest exactly as it was
+                        return;
+                    }
+
                     foreach (var file in currentFiles)
                     {
                         counter++;
@@ -971,11 +1005,19 @@ namespace InstallerFunctions
                     // same fix as the extract path). The manifest records the exact files if detail is needed.
                     Log?.Invoke($"Removed {removed} file(s).", "remove", false);
 
+                    // #61: the ref-counted delete loop succeeded → NOW persist the manifest mutation that
+                    // ResolveManifestUninstall staged (no-op on the ProcessTree fallback path).
+                    helper.CommitPendingManifest();
+
                     if (removeConfig) RemoveConfigOrIgnoredFiles("config", configList);
 
                     if (removeIgnored) RemoveConfigOrIgnoredFiles("ignored", ignoredList);
 
-                    removeSuccess = true;
+                    // #60: do NOT force removeSuccess=true here. It is already true when the main remove
+                    // loop succeeds (reset per-op; the loop throws to the catch on failure, and the #44
+                    // pre-flight returns before reaching this). Forcing it would clobber a removeConfig/
+                    // removeIgnored failure (RemoveConfigOrIgnoredFiles sets removeSuccess=false) into a
+                    // false "complete" while a locked Remove-Config/Ignored file is still on disk.
                     removeProgress = false;
 
                 }
@@ -983,21 +1025,137 @@ namespace InstallerFunctions
                 {
                     removeSuccess = false;
                     removeProgress = false;
+                    helper.ClearPendingManifest();   // #61: a partial/failed delete must not commit the manifest mutation
                     ErrorLog?.Invoke("Error removing files: " + ex.Message);
                     ProgressPictureChange?.Invoke(null);
                 }
             });
         }
+        // #44: probe whether a file is locked or non-writable WITHOUT modifying it — open with
+        // ReadWrite + FileShare.None (throws if another process holds the file) so the pre-flight check
+        // can abort a destructive removal before it touches anything. UnauthorizedAccessException covers
+        // a read-only attribute / restrictive ACL (File.Delete would fail on those too).
+        private static bool IsFileLocked(string path)
+        {
+            try
+            {
+                using (new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { }
+                return false;
+            }
+            catch (IOException) { return true; }
+            catch (UnauthorizedAccessException) { return true; }
+        }
+        // #11: OS-generated metadata Windows re-creates (folder view/icon, thumbnail caches). A dir
+        // holding ONLY these is a cosmetic leftover, not user/source data, so it's safe to clear.
+        private static readonly System.Collections.Generic.HashSet<string> OsMetadataFiles =
+            new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "desktop.ini", "thumbs.db", "ehthumbs.db", "ehthumbs_vista.db", ".DS_Store" };
+
+        // True if the dir has no subdirectories and every file is OS-metadata junk, so it is
+        // "effectively empty" even though EnumerateFileSystemEntries sees the hidden desktop.ini.
+        private static bool IsEffectivelyEmpty(string dir)
+        {
+            if (Directory.EnumerateDirectories(dir).Any()) return false;
+            foreach (string f in Directory.EnumerateFiles(dir))
+                if (!OsMetadataFiles.Contains(Path.GetFileName(f))) return false;
+            return true;
+        }
+
         private void DeleteEmptyDirectories(string directoryPath)
         {
             // Walk up removing empty parents — iterative (not recursive) so a very deep tree can't
-            // StackOverflow (audit B9).
+            // StackOverflow (audit B9). #11: also prune dirs left holding ONLY OS-metadata (a bare
+            // desktop.ini kept "empty" folders like Texture\Banner\ around forever).
+            string gameRoot = Path.GetFullPath(priconnePath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             string dir = directoryPath;
-            while (!string.IsNullOrEmpty(dir) && Directory.Exists(dir) && !Directory.EnumerateFileSystemEntries(dir).Any())
+            while (!string.IsNullOrEmpty(dir) && Directory.Exists(dir) && IsEffectivelyEmpty(dir))
             {
-                Directory.Delete(dir);
+                // Defensive bound: we now delete files (the metadata), so never climb to/above the game
+                // root — stop at the first dir outside it (the game's own non-empty dirs also stop us).
+                string full;
+                try { full = Path.GetFullPath(dir); } catch { break; }
+                if (!full.StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase)) break;
+
+                foreach (string junk in Directory.EnumerateFiles(dir).ToList())
+                {
+                    try { File.SetAttributes(junk, FileAttributes.Normal); File.Delete(junk); } catch { }
+                }
+                try { Directory.Delete(dir); } catch { break; }   // a metadata file was locked → stop, don't loop
                 dir = Path.GetDirectoryName(dir);
             }
+        }
+
+        // #40-L1 Safe Reclaim: free disk by removing BepInEx's regenerable byproducts (LogOutput.log +
+        // the assembly cache, both re-created on the next game launch) and pruning empty / OS-metadata-only
+        // dirs under Translation. ZERO user-data risk — nothing user-edited or source-shipped is touched.
+        // Path-guarded to the game folder. Returns bytes freed. Opt-in (Settings menu).
+        public long ReclaimGameFolder()
+        {
+            long freed = 0;
+            if (string.IsNullOrEmpty(priconnePath) || !Directory.Exists(priconnePath)) return 0;
+            string gameRoot = Path.GetFullPath(priconnePath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            string bep = Path.Combine(priconnePath, "BepInEx");
+            if (!Directory.Exists(bep)) return 0;
+
+            // 1. Regenerable byproducts — BepInEx re-creates these on the next game launch.
+            string log = Path.Combine(bep, "LogOutput.log");
+            try { if (File.Exists(log) && Path.GetFullPath(log).StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase)) { freed += new FileInfo(log).Length; File.Delete(log); } } catch { }
+            // SafeDeleteDirectory (NOT Directory.Delete(cache, true)): on .NET Framework the recursive
+            // delete descends INTO a junction/symlink and deletes its TARGET — which could escape the game
+            // folder. SafeDeleteDirectory removes a reparse point as a link (never traverses it) and
+            // re-asserts the game-folder bound on every entry.
+            string cache = Path.Combine(bep, "cache");
+            try { if (Directory.Exists(cache)) freed += SafeDeleteDirectory(cache, gameRoot); } catch { }
+
+            // 2. Prune empty / OS-metadata-only dirs under Translation, deepest first (reuses the #11
+            //    IsEffectivelyEmpty rule so a folder left holding only a hidden desktop.ini also goes).
+            string tl = Path.Combine(bep, "Translation");
+            if (Directory.Exists(tl))
+            {
+                string[] dirs;
+                try { dirs = Directory.GetDirectories(tl, "*", SearchOption.AllDirectories); } catch { dirs = new string[0]; }
+                foreach (string d in dirs.OrderByDescending(x => x.Length))
+                {
+                    try
+                    {
+                        if (!Directory.Exists(d) || !Path.GetFullPath(d).StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!IsEffectivelyEmpty(d)) continue;
+                        foreach (string junk in Directory.EnumerateFiles(d).ToList())
+                        {
+                            try { freed += new FileInfo(junk).Length; File.SetAttributes(junk, FileAttributes.Normal); File.Delete(junk); } catch { }
+                        }
+                        Directory.Delete(d);
+                    }
+                    catch { }
+                }
+            }
+            return freed;
+        }
+
+        // Recursively delete a directory WITHOUT following reparse points (junctions/symlinks). On .NET
+        // Framework, Directory.Delete(path, true) descends INTO a junction and deletes its TARGET's
+        // contents — which could escape the game folder. Here a reparse point is removed as a link only
+        // (never traversed), and the game-folder bound is re-asserted on every entry. Returns bytes freed.
+        private static long SafeDeleteDirectory(string dir, string gameRoot)
+        {
+            long freed = 0;
+            string full;
+            try { full = Path.GetFullPath(dir); } catch { return 0; }
+            if (!full.StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase)) return 0;
+            if (!Directory.Exists(dir)) return 0;
+            // A reparse point (junction/symlink): remove the LINK only — do NOT recurse into its target.
+            try { if ((File.GetAttributes(dir) & FileAttributes.ReparsePoint) != 0) { Directory.Delete(dir, false); return 0; } } catch { return 0; }
+            try { foreach (string sub in Directory.EnumerateDirectories(dir)) freed += SafeDeleteDirectory(sub, gameRoot); } catch { }
+            try
+            {
+                foreach (string f in Directory.EnumerateFiles(dir).ToList())
+                {
+                    try { freed += new FileInfo(f).Length; File.SetAttributes(f, FileAttributes.Normal); File.Delete(f); } catch { }
+                }
+            }
+            catch { }
+            try { Directory.Delete(dir, false); } catch { }
+            return freed;
         }
         // Expands an ignore entry to actual relative paths present under the game folder. A '*' matches
         // exactly one folder segment (BepInEx/Translation/*/Text/_Postprocessors.txt -> the file under

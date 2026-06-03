@@ -127,13 +127,12 @@
     <value>271, 17</value>
   </metadata>
   <data name="importExportDescriptionLabel.Text" xml:space="preserve">
-    <value>You can import / export the following user settings:
+    <value>You can import / export the following portable user settings:
+- The selected translation source (English / Thai)
+- The list of ignored files
 - The state of the "Launch Game" checkbox
 - The state of the "Show Logs" checkbox
 - The state of the "Check for Installer Updates on Startup" option
-- The selected launcher
-- The list of ignored files
-- The shortcut to the DMMGamePlayerFastLauncher
 </value>
   </data>
 </root>

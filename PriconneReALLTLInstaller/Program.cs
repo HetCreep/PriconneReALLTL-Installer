@@ -19,6 +19,15 @@ namespace PriconneReALLTLInstaller
             // sitting next to the exe. Registered before any Newtonsoft type is touched.
             AppDomain.CurrentDomain.AssemblyResolve += ResolveEmbeddedAssembly;
 
+            // #52/#8: headless un-wrap of every managed shortcut, invoked by the Inno uninstaller
+            // (--unwrap-all) BEFORE the exe is deleted, so wrapped .lnks don't end up pointing at a
+            // removed installer exe. No UI; exits immediately.
+            if (args.Length > 0 && args[0] == "--unwrap-all")
+            {
+                try { new HelperFunctions.Helper().UnwrapAllManagedShortcuts(); } catch { }
+                return;
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -35,7 +44,14 @@ namespace PriconneReALLTLInstaller
             }
             else
             {
-                Application.Run(new MainForm());
+                // #38: hold a named mutex while the main UI runs so the Inno installer/uninstaller
+                // (AppMutex=PriconneReALLTLInstaller) can detect a running instance and offer to close it,
+                // instead of failing to replace/remove the locked exe ("some elements could not be
+                // removed"). Session-local name matches the per-user Setup's AppMutex.
+                using (new System.Threading.Mutex(false, "PriconneReALLTLInstaller"))
+                {
+                    Application.Run(new MainForm());
+                }
             }
         }
 

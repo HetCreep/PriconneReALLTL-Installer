@@ -776,7 +776,23 @@ namespace HelperFunctions
                         if (existing?.files != null)
                             foreach (var kv in existing.files) files[kv.Key] = kv.Value ?? new System.Collections.Generic.List<string>();
                     }
-                    catch { }
+                    catch
+                    {
+                        // #62: the manifest exists but is unparseable. Merging into the empty map would
+                        // silently DROP every OTHER source's ownership rows → a later uninstall could
+                        // delete a still-shared file. Back the corrupt file up + log loudly instead of
+                        // silently overwriting with a single-source manifest.
+                        try
+                        {
+                            string bak = manifestPath + ".corrupt";
+                            File.SetAttributes(manifestPath, FileAttributes.Normal);
+                            if (File.Exists(bak)) File.Delete(bak);
+                            File.Move(manifestPath, bak);
+                        }
+                        catch { }
+                        Log?.Invoke("Install manifest was corrupt — backed it up (.corrupt) and rebuilt; ref-counting for any other installed source may be incomplete until it is reinstalled.", "info", false);
+                        files.Clear();
+                    }
                 }
 
                 var owned = new System.Collections.Generic.List<string>(extractedRelPaths ?? new System.Collections.Generic.List<string>());
@@ -843,30 +859,53 @@ namespace HelperFunctions
                     else remaining[rel] = owners;                     // not this source's → keep
                 }
 
-                // Drop the manifest if nothing remains (last source removed); otherwise persist the rest.
-                try
-                {
-                    if (File.Exists(manifestPath)) File.SetAttributes(manifestPath, FileAttributes.Normal);
-                    if (remaining.Count == 0) File.Delete(manifestPath);
-                    else
-                    {
-                        File.WriteAllText(manifestPath, JsonConvert.SerializeObject(new InstallManifest { files = remaining }, Newtonsoft.Json.Formatting.Indented));
-                        try { File.SetAttributes(manifestPath, FileAttributes.Hidden); } catch { }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // #27: if the manifest couldn't be updated, the on-disk manifest is now STALE vs the
-                    // delete plan — proceeding would let a later uninstall double-remove shared files.
-                    // Bail to the safe ProcessTree fallback (return null) instead of returning the plan.
-                    Log?.Invoke("Could not update the install manifest — falling back to full removal: " + ex.Message, "info", false);
-                    return null;
-                }
-
+                // #61: do NOT persist the manifest here. The caller (RemovePatchFiles) runs a pre-flight
+                // lock check AFTER this and may abort before deleting anything — persisting now would drop
+                // this source from the manifest while its files remain on disk (orphan + inaccurate "left
+                // untouched"). Stash the new state; the caller calls CommitPendingManifest() ONLY after the
+                // delete loop succeeds, or ClearPendingManifest() on abort/failure (manifest untouched).
+                _pendingManifestPath = manifestPath;
+                _pendingManifestRemaining = remaining;
                 return toDelete;
             }
             catch { return null; }
         }
+
+        // #61: manifest mutation staged by ResolveManifestUninstall, committed by the caller ONLY after the
+        // ref-counted delete succeeds (so a pre-flight lock abort leaves the on-disk manifest untouched).
+        private string _pendingManifestPath;
+        private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> _pendingManifestRemaining;
+
+        /// <summary>Persist the manifest mutation staged by ResolveManifestUninstall. Call ONLY after the
+        /// delete loop succeeded. No-op if nothing is staged (e.g. the ProcessTree fallback path).</summary>
+        public void CommitPendingManifest()
+        {
+            if (_pendingManifestPath == null) return;
+            string path = _pendingManifestPath;
+            var remaining = _pendingManifestRemaining;
+            _pendingManifestPath = null; _pendingManifestRemaining = null;
+            try
+            {
+                if (File.Exists(path)) File.SetAttributes(path, FileAttributes.Normal);
+                if (remaining == null || remaining.Count == 0) { if (File.Exists(path)) File.Delete(path); }
+                else
+                {
+                    File.WriteAllText(path, JsonConvert.SerializeObject(new InstallManifest { files = remaining }, Newtonsoft.Json.Formatting.Indented));
+                    try { File.SetAttributes(path, FileAttributes.Hidden); } catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Files are already removed; a failed manifest write leaves it stale (lists removed files).
+                // Harmless + self-healing — a later op skips the missing files (File.Exists) and an install/
+                // update rewrites the manifest. Co-ownership of shared files stays intact → no over-delete.
+                Log?.Invoke("Could not update the install manifest after removal: " + ex.Message, "info", false);
+            }
+        }
+
+        /// <summary>Discard a staged manifest mutation WITHOUT persisting (pre-flight lock abort / remove
+        /// failure), so the on-disk manifest stays exactly as it was.</summary>
+        public void ClearPendingManifest() { _pendingManifestPath = null; _pendingManifestRemaining = null; }
 
         private sealed class InstallManifest
         {
@@ -893,24 +932,37 @@ namespace HelperFunctions
             return null;
         }
 
+        // #64: release a WSH COM object (RCW) promptly instead of waiting for GC finalization — the
+        // shortcut helpers run per-.lnk (wrap / restore / unwrap loops), so leaked RCWs accumulate.
+        private static void ReleaseCom(object o)
+        {
+            try { if (o != null && System.Runtime.InteropServices.Marshal.IsComObject(o)) System.Runtime.InteropServices.Marshal.ReleaseComObject(o); }
+            catch { }
+        }
+
         /// <summary>True if the .lnk already routes through this installer (TargetPath == our exe).</summary>
         public bool IsWrappedShortcut(string lnkPath)
         {
+            IWshRuntimeLibrary.WshShell wsh = null;
+            IWshRuntimeLibrary.IWshShortcut sc = null;
             try
             {
                 if (!File.Exists(lnkPath)) return false;
-                var wsh = new IWshRuntimeLibrary.WshShell();
-                var sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+                wsh = new IWshRuntimeLibrary.WshShell();
+                sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
                 string installerExe = Assembly.GetExecutingAssembly().Location;
                 return string.Equals(sc.TargetPath, installerExe, StringComparison.OrdinalIgnoreCase);
             }
             catch { return false; }
+            finally { ReleaseCom(sc); ReleaseCom(wsh); }   // #64
         }
 
         /// <summary>Rewrites an existing launcher .lnk to route through the installer
         /// (update → launch original). Keeps the original icon. Idempotent.</summary>
         public bool WrapShortcut(string lnkPath)
         {
+            IWshRuntimeLibrary.WshShell wsh = null;
+            IWshRuntimeLibrary.IWshShortcut sc = null;
             try
             {
                 if (!File.Exists(lnkPath)) { ErrorLog?.Invoke($"Shortcut not found: {lnkPath}"); return false; }
@@ -918,8 +970,8 @@ namespace HelperFunctions
                 string installerExe = Assembly.GetExecutingAssembly().Location;
                 string installerDir = Path.GetDirectoryName(installerExe);
 
-                var wsh = new IWshRuntimeLibrary.WshShell();
-                var sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+                wsh = new IWshRuntimeLibrary.WshShell();
+                sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
 
                 if (string.Equals(sc.TargetPath, installerExe, StringComparison.OrdinalIgnoreCase))
                 {
@@ -947,17 +999,20 @@ namespace HelperFunctions
                 ErrorLog?.Invoke($"Error wrapping shortcut: {ex.Message}");
                 return false;
             }
+            finally { ReleaseCom(sc); ReleaseCom(wsh); }   // #64
         }
 
         /// <summary>Reverses WrapShortcut using the base64 payload in the .lnk Arguments.</summary>
         public bool RestoreShortcut(string lnkPath)
         {
+            IWshRuntimeLibrary.WshShell wsh = null;
+            IWshRuntimeLibrary.IWshShortcut sc = null;
             try
             {
                 if (!File.Exists(lnkPath)) { ErrorLog?.Invoke($"Shortcut not found: {lnkPath}"); return false; }
 
-                var wsh = new IWshRuntimeLibrary.WshShell();
-                var sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+                wsh = new IWshRuntimeLibrary.WshShell();
+                sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
 
                 string[] parts = (sc.Arguments ?? "").Split(' ');
                 string target = DecodeFlag(parts, "--launch");
@@ -968,8 +1023,11 @@ namespace HelperFunctions
                 }
                 sc.TargetPath = target;
                 sc.Arguments = DecodeFlag(parts, "--targs") ?? "";
-                string dir = DecodeFlag(parts, "--tdir");
-                if (!string.IsNullOrEmpty(dir)) sc.WorkingDirectory = dir;
+                // #51: ALWAYS restore the working directory. If the original had none (no --tdir in the
+                // payload), clear it back to empty instead of leaving it at the installer dir that
+                // WrapShortcut set — otherwise an un-wrapped no-workdir shortcut keeps pointing at the
+                // installer folder.
+                sc.WorkingDirectory = DecodeFlag(parts, "--tdir") ?? "";
                 sc.Save();
                 Log?.Invoke($"Restored shortcut to its original launcher: {Path.GetFileName(lnkPath)}", "success", false);
                 return true;
@@ -979,6 +1037,42 @@ namespace HelperFunctions
                 ErrorLog?.Invoke($"Error restoring shortcut: {ex.Message}");
                 return false;
             }
+            finally { ReleaseCom(sc); ReleaseCom(wsh); }   // #64
+        }
+
+        /// <summary>#52/#8: un-wrap EVERY managed shortcut — restore in-place wraps to their original
+        /// launcher, and delete the Desktop "(TL update)" copies we created. Called headless by the Inno
+        /// uninstaller (--unwrap-all) BEFORE the exe is removed (so wrapped .lnks don't end up pointing at
+        /// a deleted installer), and reusable by a future "remove all shortcuts" UI. Best-effort per
+        /// shortcut; clears the managed list when done.</summary>
+        public void UnwrapAllManagedShortcuts()
+        {
+            try
+            {
+                var col = Settings.Default.fastLauncherLinks;
+                if (col == null || col.Count == 0) return;
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                var paths = new string[col.Count];
+                col.CopyTo(paths, 0);
+                foreach (string path in paths)
+                {
+                    if (string.IsNullOrEmpty(path)) continue;
+                    try
+                    {
+                        // A Desktop "(TL update)" copy is OUR artifact (the protected-folder original was
+                        // never touched) → just delete it. An in-place-wrapped original is the user's own
+                        // .lnk → restore its launcher target instead of deleting.
+                        bool isOurDesktopCopy = path.EndsWith(" (TL update).lnk", StringComparison.OrdinalIgnoreCase)
+                            && string.Equals(Path.GetDirectoryName(path), desktop, StringComparison.OrdinalIgnoreCase);
+                        if (isOurDesktopCopy) { if (File.Exists(path)) File.Delete(path); }
+                        else RestoreShortcut(path);
+                    }
+                    catch { /* best-effort per shortcut; keep going */ }
+                }
+                Settings.Default.fastLauncherLinks = new System.Collections.Specialized.StringCollection();
+                Settings.Default.Save();
+            }
+            catch { /* never throw from cleanup */ }
         }
 
         public void CreateAutoUpdaterShortcut(string priconnePath)
@@ -1293,13 +1387,15 @@ namespace HelperFunctions
         {
             try
             {
+                // #55: export only PORTABLE preferences. Machine-specific shortcut paths
+                // (fastLauncherLink/fastLauncherLinks = absolute .lnk paths) and the internal migration
+                // marker (LastKnownVersion) are intentionally NOT exported — importing them on another
+                // machine/user yields broken paths or misfires the startup version-migration gate.
                 var userSettings = new UserSettings
                 {
                     launchState = Settings.Default.launchState,
                     ignoreFiles = Settings.Default.ignoreFiles,
-                    fastLauncherLink = Settings.Default.fastLauncherLink,
-                    fastLauncherLinks = Settings.Default.fastLauncherLinks,
-                    LastKnownVersion = Settings.Default.LastKnownVersion,
+                    selectedPatchSource = Settings.Default.selectedPatchSource,
                     checkForInstallerUpdates = Settings.Default.checkForInstallerUpdates,
                     showLogChecked = Settings.Default.showLogChecked
                 };
@@ -1321,19 +1417,26 @@ namespace HelperFunctions
         {
             try
             {
-                // Deserialize settings from file
+                // Deserialize settings from file. #54: harden against XXE — the file is user-chosen
+                // (untrusted), so disable DTD processing + external-entity resolution (parity with
+                // DeserializeStringCollection). #55: apply only PORTABLE preferences; any machine-specific
+                // shortcut paths / migration marker an older export still contains are ignored (those
+                // properties were dropped from UserSettings → XmlSerializer skips the unknown elements).
                 XmlSerializer serializer = new XmlSerializer(typeof(UserSettings));
+                var xmlSettings = new System.Xml.XmlReaderSettings { DtdProcessing = System.Xml.DtdProcessing.Prohibit, XmlResolver = null };
                 using (StreamReader reader = new StreamReader(filePath))
+                using (var xmlReader = System.Xml.XmlReader.Create(reader, xmlSettings))
                 {
-                    var importedSettings = (UserSettings)serializer.Deserialize(reader);
+                    // Reject a non-settings / malformed file up front (parity with DeserializeStringCollection's
+                    // CanDeserialize gate) so the caller shows a clear error instead of a raw XML exception.
+                    if (!serializer.CanDeserialize(xmlReader))
+                        throw new FormatException("This file is not a valid settings export.");
+                    var importedSettings = (UserSettings)serializer.Deserialize(xmlReader);
 
-                    // Update application settings with imported settings
+                    // Apply only the portable preferences.
                     Settings.Default.launchState = importedSettings.launchState;
-                    Settings.Default.ignoreFiles = importedSettings.ignoreFiles;
-                    Settings.Default.fastLauncherLink = importedSettings.fastLauncherLink;
-                    if (importedSettings.fastLauncherLinks != null)
-                        Settings.Default.fastLauncherLinks = importedSettings.fastLauncherLinks;
-                    Settings.Default.LastKnownVersion = importedSettings.LastKnownVersion;
+                    Settings.Default.ignoreFiles = importedSettings.ignoreFiles ?? new System.Collections.Specialized.StringCollection();   // null if the <ignoreFiles> element was absent
+                    Settings.Default.selectedPatchSource = importedSettings.selectedPatchSource;
                     Settings.Default.checkForInstallerUpdates = importedSettings.checkForInstallerUpdates;
                     Settings.Default.showLogChecked = importedSettings.showLogChecked;
 
@@ -1353,11 +1456,13 @@ namespace HelperFunctions
 [Serializable]
 public class UserSettings
 {
+    // #55: PORTABLE preferences only. Machine-specific shortcut paths (fastLauncherLink[s]) and the
+    // internal LastKnownVersion migration marker were intentionally removed — they don't transfer
+    // across machines/users. An older export that still contains them imports cleanly (XmlSerializer
+    // ignores the now-unknown elements).
     public bool launchState { get; set; }
     public System.Collections.Specialized.StringCollection ignoreFiles { get; set; }
-    public string fastLauncherLink { get; set; }   // legacy — kept for backward compat
-    public System.Collections.Specialized.StringCollection fastLauncherLinks { get; set; }
-    public string LastKnownVersion { get; set; }
+    public int selectedPatchSource { get; set; }   // EN=0 / TH=1 — a meaningful portable language choice
     public bool checkForInstallerUpdates { get; set; }
     public bool showLogChecked { get; set; }
 }

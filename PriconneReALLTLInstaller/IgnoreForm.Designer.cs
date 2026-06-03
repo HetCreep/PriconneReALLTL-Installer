@@ -165,6 +165,7 @@
             this.Controls.Add(this.backButton);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "IgnoreForm";
+            this.Text = "Priconne Re:ALLTL Installer - Ignored Files";   // #45: window caption
             this.Load += new System.EventHandler(this.SettingsForm_Load);
             this.Click += new System.EventHandler(this.SettingsForm_Click);
             this.ResumeLayout(false);

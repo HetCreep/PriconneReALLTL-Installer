@@ -42,7 +42,7 @@ namespace LoggerFunctions
                 { "error", Color.Red },
                 { "success", Color.Green },
                 { "add", Color.Blue },
-                { "remove", Color.Red },
+                { "remove", Color.Black },   // #47: normal "removing/refreshing" progress is neutral, not error-red
             };
         private RichTextBox outputTextBox;
         private ToolStripStatusLabel toolStripStatusLabel1;
@@ -123,7 +123,7 @@ namespace LoggerFunctions
                 { "error", Color.Red },
                 { "success", Color.Green },
                 { "add", Color.Blue },
-                { "remove", Color.Red },
+                { "remove", Color.Black },   // #47: normal "removing/refreshing" progress is neutral, not error-red
             };
         private Label statusLabel;
 

@@ -32,8 +32,12 @@ namespace PriconneReALLTLInstaller
         private void InitializeUI()
         {
             apiKeyTextbox.UseSystemPasswordChar = true;   // a GitHub token is a credential — mask it on screen (DPAPI-encrypted at rest)
-            apiKeyTextbox.Text = Helper.DecryptString(Settings.Default.GithubAPIKey);
-            if (apiKeyTextbox.Text == "") validateButton.Enabled = false;
+            // #73: do NOT load the decrypted token into the textbox — that would hold the plaintext as a
+            // long-lived managed string inside a UI control (credential-vault "no long-lived field").
+            // Leave it blank; a stored token still enables Validate (which reads the STORED token, not the
+            // textbox), and Save (disabled until the user types) encrypts only newly-typed input.
+            apiKeyTextbox.Text = "";
+            validateButton.Enabled = !string.IsNullOrEmpty(Settings.Default.GithubAPIKey);
             saveButton.Enabled = false;
         }
 
@@ -79,20 +83,26 @@ namespace PriconneReALLTLInstaller
             validateButton.BackgroundImage = validateButton.Enabled ? Resources.validatetokenbutton : Resources.validatetokenbutton_disabled;
         }
 
-        private void validateButton_Click(object sender, EventArgs e)
+        private async void validateButton_Click(object sender, EventArgs e)
         {
-            string githubToken = Helper.DecryptString(Settings.Default.GithubAPIKey);
-            (bool tokenvalid, string username) = Helper.ValidateGitHubToken(githubToken);
-            if (tokenvalid) MessageBox.Show($"Token valid!\n\nUsername: {username}", "Token validation", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            else
+            // #67: ValidateGitHubToken does a synchronous WebClient call — run it OFF the UI thread so a
+            // cold (never-validated) token can't freeze the window. #66: guard the async void.
+            try
             {
-                Settings.Default.GithubAPIKey = "";
-                Settings.Default.Save();
-                apiKeyTextbox.Text = "";
-                MessageBox.Show($"Token invalid! Clearing saved token!", "Token validation", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                saveButton.Enabled = false;
                 validateButton.Enabled = false;
+                var (tokenvalid, username) = await Task.Run(() => Helper.ValidateGitHubToken(Helper.DecryptString(Settings.Default.GithubAPIKey)));
+                if (tokenvalid) MessageBox.Show($"Token valid!\n\nUsername: {username}", "Token validation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                else
+                {
+                    Settings.Default.GithubAPIKey = "";
+                    Settings.Default.Save();
+                    apiKeyTextbox.Text = "";
+                    MessageBox.Show("Token invalid! Clearing saved token!", "Token validation", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    saveButton.Enabled = false;
+                }
             }
+            catch (Exception ex) { MessageBox.Show("Could not validate the token: " + ex.Message, "Token validation", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { validateButton.Enabled = !string.IsNullOrEmpty(Settings.Default.GithubAPIKey); }
         }
     }
 }

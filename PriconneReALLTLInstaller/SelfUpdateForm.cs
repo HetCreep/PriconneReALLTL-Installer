@@ -116,6 +116,18 @@ namespace PriconneReALLTLInstaller
             changeLogRichTextbox.SelectionLength = 0;
         }
 
+        // #70: unsubscribe so a late DownloadProgress/Log callback (an in-flight async op, or a second
+        // open of this dialog) can't fire on this disposed form (ObjectDisposedException on the UI thread).
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            installer.Log -= OnLog;
+            installer.ErrorLog -= OnErrorLog;
+            helper.Log -= OnLog;
+            helper.ErrorLog -= OnErrorLog;
+            installer.DownloadProgress -= OnDownloadProgress;
+            base.OnFormClosed(e);
+        }
+
         private void cancelButton_Click(object sender, EventArgs e)
         {
             this.Close();

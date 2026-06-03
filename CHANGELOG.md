@@ -8,6 +8,31 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 _Nothing yet._
 
+## [3.0.5] — 2026-06-04
+
+A large correctness, safety, and security release from a full-codebase deep audit (parallel reviewers across the install engine, the credential/network paths, and the WinForms/async surface) layered on top of the v3.0.4 test campaign. Most fixes matter on the unhappy paths — a locked file, a running instance, a corrupt manifest, a cold token — and several are leaks/races that manual testing can't surface. No behavioral change to a healthy install.
+
+### Fixed
+- **A locked translation file can no longer break a reinstall/uninstall.** Before deleting anything, the installer now checks that every tracked file is unlocked and writable; if the game is open, or antivirus / Windows Search / a cloud-sync app / an editor is holding a file, it aborts cleanly and leaves your install 100% intact (with a "close X and retry" message) instead of half-removing then failing.
+- **The installer/uninstaller now detects a running instance** and offers to close it first, instead of failing to replace or remove the locked program.
+- **Wrapped launcher shortcuts have a clean lifecycle** — removing one deletes the Desktop "… (TL update)" copy; un-wrapping restores the original working directory; and **uninstalling the program first un-wraps your managed shortcuts** so they revert to plain game-launchers instead of pointing at a deleted exe. Shortcuts that were moved or deleted are flagged "(missing)".
+- **Import / Export carries only portable preferences** (translation source, ignore list, toggles) — not machine-specific shortcut paths or internal migration state — and rejects a non-settings file with a clear message.
+- **Normal progress text is no longer shown in alarming red** (red is reserved for real errors); operational steps read neutral.
+- **Every window now has a title** (visible in Task Manager / Alt-Tab) and the UI text capitalization is consistent.
+- **The AutoUpdater window now shows the active translation source** (e.g. "TL Patch Versions (TH)"), and its pre-launch cancel window is a bit longer.
+- **New: Settings → "Reclaim Space in Game Folder"** frees disk by removing BepInEx's regenerable files (its log + assembly cache) and pruning leftover empty folders — your translation patch, settings, and any user files are never touched.
+- **A corrupt install manifest is now backed up and rebuilt** instead of silently dropping another installed language's tracking; old install-folder logs from pre-3.0.2 versions are swept on uninstall.
+- **Crash-safety, resource-leak, and UI-responsiveness fixes** from the audit: guarded background handlers (no silent process exit), released COM/font/event-handler resources, and moved token validation + a couple of operations off the UI thread.
+
+### Security
+- The optional GitHub token is **no longer loaded into a UI text field**, is **no longer attached to release-asset downloads** (closing a path where a redirect could forward it off-GitHub), and is **validated off the UI thread**.
+- Settings import is hardened against **XXE**; error dialogs no longer print stack traces.
+- The honest-disclosure docs now acknowledge the inherited UI art as a known gap to re-skin (it was previously, incorrectly, described as containing no game-derived assets).
+
+### Changed
+- The installer now shows a **license + acknowledgments page** during setup (MIT + credits to the upstream and the patch authors). The root `LICENSE.txt` stays pure MIT.
+- Internally, the install manifest is now written **after** a successful removal, so a locked-file abort can never leave it inconsistent.
+
 ## [3.0.4] — 2026-06-03
 
 Security + a small UI polish. No behavioral change to a healthy install.

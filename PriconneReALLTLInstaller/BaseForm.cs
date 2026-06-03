@@ -114,5 +114,14 @@ namespace PriconneReALLTLInstaller
             helper.PriconneFont(priconnefont);
             helper.SetFontForAllControls(priconnefont, Controls);
         }
+
+        // #65: free the private font collection's GDI resources when the form closes (it allocated an
+        // AddMemoryFont block per form). The per-control Font objects SetFontForAllControls created are
+        // reclaimed by GC; the collection is the explicit IDisposable worth releasing promptly.
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            try { priconnefont?.Dispose(); } catch { }
+            base.OnFormClosed(e);
+        }
     }
 }

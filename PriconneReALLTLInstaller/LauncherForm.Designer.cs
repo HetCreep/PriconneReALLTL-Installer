@@ -208,6 +208,7 @@ namespace PriconneReALLTLInstaller
             this.Controls.Add(this.backButton);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "LauncherForm";
+            this.Text = "Priconne Re:ALLTL Installer - Launch Shortcuts";   // #45: window caption
             this.Load += new System.EventHandler(this.FastLauncherForm_Load);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
