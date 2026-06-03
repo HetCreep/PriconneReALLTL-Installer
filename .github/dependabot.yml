@@ -12,10 +12,16 @@ updates:
       prefix: "chore(deps)"
     labels:
       - "dependencies"
+    # Batch minor + patch bumps into ONE PR (a single build verifies them, less noise);
+    # major bumps stay individual so each gets its own review (API-break risk on net48).
+    groups:
+      nuget-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
-  # GitHub Actions used by the release workflow (addresses the SHA-pinning
-  # follow-up tracked in distribution-security: Dependabot will surface action
-  # updates so they can be reviewed/pinned).
+  # GitHub Actions used by the release + CodeQL workflows (addresses the SHA-pinning
+  # follow-up tracked in distribution-security: Dependabot surfaces action updates so
+  # they can be reviewed and pinned).
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -26,3 +32,7 @@ updates:
     labels:
       - "dependencies"
       - "ci"
+    # One PR for all action updates — the release + CodeQL CI verify them together.
+    groups:
+      github-actions:
+        patterns: ["*"]
