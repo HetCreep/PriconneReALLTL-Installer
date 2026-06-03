@@ -20,16 +20,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Acknowledgments (credits, not copyright)
-
-- Original inspiration: touanu/PriconeTL_Updater
-  (https://github.com/touanu/PriconeTL_Updater)
-- Translation patches deployed by this installer:
-  ImaterialC/PriconneRe-TL (English) and PeterkleCG/PriconneTH (Thai)
-
-These projects are credited for inspiration and for the translation content this
-installer deploys. Their authors are not copyright holders of this installer's
-code; the copyright above (tynave, HetCreep) covers the installer itself.
