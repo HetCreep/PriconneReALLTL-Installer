@@ -81,14 +81,15 @@
     <TargetZone>LocalIntranet</TargetZone>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <!-- Embed Newtonsoft.Json into the exe so it runs as a single self-contained file (resolved at
          runtime by Program.ResolveEmbeddedAssembly). No loose Newtonsoft.Json.dll needed next to the exe. -->
-    <EmbeddedResource Include="..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll">
+    <EmbeddedResource Include="..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll">
       <LogicalName>Newtonsoft.Json.dll</LogicalName>
     </EmbeddedResource>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
