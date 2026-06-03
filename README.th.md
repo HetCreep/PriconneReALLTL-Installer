@@ -17,11 +17,11 @@
 ## 🌟 ฟีเจอร์
 
 * **เลือกแหล่งแปลได้ (English / ไทย)** — สลับระหว่าง [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) กับ [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) ได้จากหน้าหลักเลย ทุก URL ของแพตช์อิงตามแหล่งที่เลือก — เพิ่มภาษาใหม่ = เพิ่มรายการเดียวในลิสต์
-* **เปิดเกมผ่านช็อตคัตแบบ wrap** — ตัว GUI เน้นที่การแพตช์ ส่วนการเล่นใช้วิธี **wrap** ช็อตคัต launcher ที่**ชี้ไปที่ตัวเกม** ([DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), หรือช็อตคัตบัญชีของ [PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher)) กดช็อตคัตที่ wrap แล้ว → อัปเดตแพตช์ก่อน แล้วเปิดเป้าหมายนั้นทันที — คลิกเดียว *อัปเดต + เล่น* แยกตามบัญชี ย้อนกลับได้ (un-wrap คืนค่าเดิม) *ถ้าเปิดผ่าน DMM ธรรมดา ให้ใช้ **AutoUpdater shortcut** แทน (ดูด้านล่าง) — การ wrap ช็อตคัต DMM เปล่า ๆ จะแค่เปิดตัว DMM launcher ซ้ำ ไม่ได้เข้าเกมตรง*
+* **เปิดเกมผ่านช็อตคัตแบบ wrap** — ตัว GUI เน้นที่การแพตช์; ปุ่ม **Launch Game** ในแอปเปิดเกมผ่าน DMM ถ้าต้องการเล่น *แยกตามบัญชี* หรือ *อัปเดต + เล่น* คลิกเดียว ให้ **wrap** ช็อตคัต launcher ที่**ชี้ไปที่ตัวเกม** ([DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), หรือช็อตคัตบัญชีของ [PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher)) กดช็อตคัตที่ wrap แล้ว → อัปเดตแพตช์ก่อน แล้วเปิดเป้าหมายนั้นทันที — แยกตามบัญชี ย้อนกลับได้ (un-wrap คืนค่าเดิม) *ถ้าเปิดผ่าน DMM ธรรมดา ให้ใช้ **AutoUpdater shortcut** แทน (ดูด้านล่าง) — การ wrap ช็อตคัต DMM เปล่า ๆ จะแค่เปิดตัว DMM launcher ซ้ำ ไม่ได้เข้าเกมตรง*
 * **รองรับ PriconneMultiAccountLauncher** — ตรวจจับอัตโนมัติผ่าน Inno Setup uninstall key (HKCU/HKLM) พร้อม fallback ที่ `%APPDATA%`
-* **Modloader ปักหมุดที่ ImaterialC** — baseline ของ BepInEx IL2CPP interop มาจาก release ของ ImaterialC (canonical) เสมอ ไม่ขึ้นกับแหล่งแปลที่เลือก
-* **ติดตั้งปลอดภัย + ถอนสะอาด** — ไฟล์แพตช์ `.zip` ถูก **ตรวจ SHA-256** เทียบกับ digest ที่ GitHub เผยแพร่ก่อนแตะไฟล์ใด ๆ; การแตกไฟล์มี **zip-slip guard**; การถอนเป็นแบบ **ref-counted** (ถ้าลงทั้ง English และ ไทย การถอนภาษาหนึ่งจะคงอีกภาษากับ modloader ที่ใช้ร่วมกันไว้) และ **path-guard** อยู่ในโฟลเดอร์เกมเท่านั้น
-* **เป็นมิตรกับ rate-limit** — การเช็คเวอร์ชั่นกับ GitHub ถูก cache (~6 ชม.; การเช็ค self-update ของตัวติดตั้ง ~7 วัน) ดังนั้น GitHub API token จึง *ไม่บังคับ* หากตั้งค่าไว้ token จะถูกเก็บแบบเข้ารหัส (Windows DPAPI), ปิดบังบนหน้าจอ, และไม่ถูกบันทึกลง log
+* **Modloader ปักหมุด source ที่ ImaterialC** — BepInEx IL2CPP interop มาจาก repo canonical ของ ImaterialC (release ล่าสุด) เสมอ ไม่ขึ้นกับแหล่งแปลที่เลือก
+* **ติดตั้งปลอดภัย + ถอนสะอาด** — ไฟล์แพตช์ `.zip` ถูก **ตรวจ SHA-256** เทียบกับ digest ที่ GitHub เผยแพร่ก่อนแตะไฟล์ใด ๆ; การแตกไฟล์มี **zip-slip guard**; การถอนเป็นแบบ **ref-counted** (ถ้าลงทั้ง English และ ไทย **ผ่านแอปนี้** การถอนภาษาหนึ่งจะคงอีกภาษากับ modloader ที่ใช้ร่วมกันไว้) และ **path-guard** อยู่ในโฟลเดอร์เกมเท่านั้น
+* **เป็นมิตรกับ rate-limit** — การเช็คเวอร์ชั่น patch/modloader ถูก cache ~6 ชม. (การเช็ค self-update ของตัวติดตั้งเอง ~7 วัน) ดังนั้น GitHub API token จึง *ไม่บังคับ* หากตั้งค่าไว้ token จะถูกเก็บแบบเข้ารหัส (Windows DPAPI), ปิดบังบนหน้าจอ, และไม่ถูกบันทึกลง log
 * **บิลด์บนคลาวด์ที่ตรวจสอบได้** — บิลด์โดย GitHub Actions บน tag `v*` **เท่านั้น**; ทุก release แนบ **`SHA256SUMS.txt`** เซ็นแบบ strong-name (ยังไม่ได้เซ็น Authenticode — ให้ตรวจด้วย SHA-256 ดูด้านล่าง)
 
 ---
@@ -59,7 +59,7 @@ Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.4.exe
 
 ## ⚙️ ควรรู้
 
-- **การเปิดเกม** ปุ่ม **Launch Game** หลักเปิดเกมผ่าน **DMM** หากต้องการเล่น *แยกตามบัญชี* หรือ *อัปเดต + เล่น* ในคลิกเดียว: **wrap** ช็อตคัต launcher ที่ชี้ไปที่ตัวเกม (DMMGamePlayerFastLauncher หรือบัญชีของ PriconneMultiAccountLauncher) — หรือถ้าเปิดผ่าน **DMM ธรรมดา** ให้ใช้ **Create AutoUpdater Shortcut** ทั้งสองแบบ กดแล้วจะอัปเดตแพตช์ก่อน แล้วค่อยเปิดเกม (wrap ย้อนกลับได้)
+- **การเปิดเกม** ปุ่ม **Launch Game** หลักเปิดเกมผ่าน **DMM** — **ไม่ได้** อัปเดตแพตช์ก่อน ถ้าต้องการ *อัปเดต + เล่น* คลิกเดียว ให้ใช้ช็อตคัตที่อัปเดตให้: **wrap** ช็อตคัต launcher ที่ชี้ไปที่ตัวเกม (DMMGamePlayerFastLauncher หรือบัญชีของ PriconneMultiAccountLauncher) — หรือถ้าเปิดผ่าน **DMM ธรรมดา** ใช้ **Create AutoUpdater Shortcut** สองแบบนี้จะอัปเดตแพตช์ก่อน แล้วค่อยเปิดเกม (wrap ย้อนกลับได้)
 - **เมนู Settings** นอกจาก toggle เช็คอัปเดตตอนเปิดโปรแกรมแล้ว ยังมี: **Clear Download Cache**, **Edit Ignored Files** (กันไฟล์ถูกเขียนทับ/ลบตอนอัปเดต), **Import / Export Settings**, **GitHub API Settings** (token ทางเลือก), และ **Rate-Limit Info**
 - **การถอนการติดตั้ง** การถอนแอป (Windows / Setup uninstall) จะล้างข้อมูล *ของแอปเอง* — settings, token, cache, log — แต่ **ไม่ลบแพตช์ออกจากเกม** ให้รันคำสั่ง **Uninstall** ในแอปก่อนเพื่อลบตัวแปลออก *แล้วค่อย* ถอนแอป
 
