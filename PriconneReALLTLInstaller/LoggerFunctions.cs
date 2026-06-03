@@ -66,7 +66,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error clearing log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error clearing log file: {ex.Message}");
             }
         }
 
@@ -89,7 +89,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error writing to log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {ex.Message}");
             }
         }
 
@@ -109,7 +109,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error writing to log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {ex.Message}");
             }
         }
 
@@ -145,7 +145,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error clearing log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error clearing log file: {ex.Message}");
             }
         }
 
@@ -164,7 +164,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error writing to log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {ex.Message}");
             }
         }
 
@@ -181,7 +181,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error writing to log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {ex.Message}");
             }
         }
 

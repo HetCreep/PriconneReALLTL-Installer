@@ -119,19 +119,49 @@ namespace PriconneReALLTLInstaller
                 if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
 
                 var links = GetLinks();
-                int wrapped = 0;
+                int wrapped = 0, copied = 0;
+                var failed = new System.Collections.Generic.List<string>();
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 foreach (string file in openFileDialog1.FileNames)
                 {
                     if (helper.WrapShortcut(file))
                     {
                         if (!links.Contains(file)) links.Add(file);
                         wrapped++;
+                        continue;
                     }
+                    // #4b: an in-place wrap failed — usually the .lnk lives in a protected folder
+                    // (e.g. the All-Users Start Menu, C:\ProgramData\…) that a per-user app can't write.
+                    // Wrap a COPY on the Desktop so wrapping still works without admin rights.
+                    try
+                    {
+                        string copy = System.IO.Path.Combine(desktop, System.IO.Path.GetFileNameWithoutExtension(file) + " (TL update).lnk");
+                        System.IO.File.Copy(file, copy, true);
+                        if (helper.WrapShortcut(copy))
+                        {
+                            if (!links.Contains(copy)) links.Add(copy);
+                            copied++;
+                            continue;
+                        }
+                        try { System.IO.File.Delete(copy); } catch { }
+                    }
+                    catch { }
+                    failed.Add(System.IO.Path.GetFileName(file));
                 }
                 SaveLinks(links);
                 UpdateUI();
-                if (wrapped > 0)
-                    MessageBox.Show($"Wrapped {wrapped} shortcut(s).\nPressing them now updates the TL patch, then launches the game.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // #4a: ALWAYS report the result — never silent, even when nothing got wrapped.
+                var sb = new System.Text.StringBuilder();
+                if (wrapped > 0) sb.AppendLine($"Wrapped {wrapped} shortcut(s) in place.");
+                if (copied > 0) sb.AppendLine($"{copied} shortcut(s) were in a protected folder — wrapped a copy on your Desktop instead (look for \"… (TL update)\").");
+                if (failed.Count > 0) sb.AppendLine($"Could not wrap: {string.Join(", ", failed)}.");
+                if (wrapped + copied > 0) sb.Append("Pressing a wrapped shortcut now updates the TL patch, then launches the game.");
+                else sb.Append("Nothing was wrapped. If a shortcut is in a protected folder, copy it to your Desktop and wrap that copy.");
+                MessageBox.Show(sb.ToString().Trim(),
+                    (wrapped + copied > 0) ? "Done" : "Nothing wrapped",
+                    MessageBoxButtons.OK,
+                    (wrapped + copied > 0) ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
             }
             catch (Exception ex)
             {

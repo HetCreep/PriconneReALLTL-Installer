@@ -122,7 +122,7 @@ namespace PriconneReALLTLInstaller
 
                 foreach (string value in defaultValue)
                 {
-                    Console.WriteLine(value);
+                    System.Diagnostics.Debug.WriteLine(value);
                     fileListbox.Items.Add(value);
                 }
                 fileListbox.SelectedIndex = -1;

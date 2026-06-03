@@ -870,7 +870,7 @@ namespace InstallerFunctions
                 }
                 if (responseBody == null)
                 {
-                    Console.WriteLine($"Failed to fetch tree for tag '{releaseTag}'. Status code: {status}");
+                    System.Diagnostics.Debug.WriteLine($"Failed to fetch tree for tag '{releaseTag}'. Status code: {status}");
                     ErrorLog?.Invoke($"Failed to fetch tree for tag '{releaseTag}'. Status code: {status}");
                     return null;
                 }
@@ -1235,27 +1235,35 @@ namespace InstallerFunctions
         }
         public async void ProcessInstallerUpdateOperation(string installerAssetLink, SaveFileDialog saveFileDialog, Form form)
         {
-            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            DialogResult result = saveFileDialog.ShowDialog();
-
-            if (result == DialogResult.OK)
+            // #20: async void — contain any exception so it can't surface as Application.ThreadException
+            // and terminate the process (the other two Process* ops already have a top-level try/catch).
+            try
             {
-                string selectedFile = saveFileDialog.FileName;
-                Log?.Invoke("Downloading latest PriconneReALLTLInstaller version..", "info", true);
-                await DownloadPatchFiles(installerAssetLink, selectedFile);
+                saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                DialogResult result = saveFileDialog.ShowDialog();
 
-                if (downloadSuccess)
+                if (result == DialogResult.OK)
                 {
-                    Log?.Invoke($"New PriconneReALLTLInstaller version successfully downloaded to: {selectedFile}", "info", false);
-                    DialogResult result2 = MessageBox.Show($"New installer version successfully downloaded to:\n{selectedFile}\n\nWould you like to close the application?", "Download successful!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-                    if (result2 == DialogResult.Yes) Application.Exit();
-                    else form.Close();
-                }
+                    string selectedFile = saveFileDialog.FileName;
+                    Log?.Invoke("Downloading latest PriconneReALLTLInstaller version..", "info", true);
+                    await DownloadPatchFiles(installerAssetLink, selectedFile);
 
-                else
-                {
-                    MessageBox.Show("Error downloading the new installer version!\n\nCheck log for details!", "Download failed!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (downloadSuccess)
+                    {
+                        Log?.Invoke($"New PriconneReALLTLInstaller version successfully downloaded to: {selectedFile}", "info", false);
+                        DialogResult result2 = MessageBox.Show($"New installer version successfully downloaded to:\n{selectedFile}\n\nWould you like to close the application?", "Download successful!", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                        if (result2 == DialogResult.Yes) Application.Exit();
+                        else form.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Error downloading the new installer version!\n\nCheck log for details!", "Download failed!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                ErrorLog?.Invoke("Error during installer self-update: " + ex.Message);
             }
         }
 

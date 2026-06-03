@@ -8,6 +8,19 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 _Nothing yet._
 
+## [3.0.3] — 2026-06-03
+
+Security + robustness hardening. No behavioral change to a healthy install.
+
+### Fixed
+- **Wrapping a launcher shortcut is no longer silent and works for protected folders** — the action always reports its result, and when a shortcut lives in a write-protected folder (e.g. the All-Users Start Menu, `C:\ProgramData\…`) it now wraps a copy on your Desktop ("… (TL update)") instead of failing quietly.
+- **Self-update can no longer crash the app** — the installer-update path is guarded against unhandled exceptions.
+
+### Security
+- The validated GitHub token is cached by **SHA-256 hash**, never kept as plaintext in a long-lived field.
+- Diagnostic logging no longer uses `Console.WriteLine` (which bypassed the log redactor); debug traces are compiled out of release builds.
+- **CodeQL code scanning** added (C#) — static security analysis on every push/PR, complementing Dependabot.
+
 ## [3.0.2] — 2026-06-03
 
 A hardening release from a full-project security + correctness review. No behavioral change to a
@@ -103,7 +116,8 @@ installers never collide. This is the first version published as a GitHub Releas
 ### Attribution
 - MIT-licensed fork of tynave/PriconneReTL-Installer; original inspiration touanu/PriconeTL_Updater. Translation patches by ImaterialC (English) and PeterkleCG (ไทย).
 
-[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.2...HEAD
+[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.3...HEAD
+[3.0.3]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.3
 [3.0.2]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.2
 [3.0.1]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.1
 [3.0.0]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.0

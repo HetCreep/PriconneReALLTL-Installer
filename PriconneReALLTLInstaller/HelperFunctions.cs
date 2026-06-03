@@ -206,7 +206,7 @@ namespace HelperFunctions
                     string exePath = GetExecutablePath(process);
                     string folder = Path.GetDirectoryName(exePath);
 
-                    Console.WriteLine($"Detected process path: {exePath}");
+                    System.Diagnostics.Debug.WriteLine($"Detected process path: {exePath}");
 
                     if (string.Equals(
                             Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar),
@@ -220,7 +220,7 @@ namespace HelperFunctions
                 catch (Exception ex)
                 {
                     // Log if a process cannot be accessed
-                    Console.WriteLine($"Cannot access process {process.ProcessName}: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Cannot access process {process.ProcessName}: {ex.Message}");
                     MessageBox.Show($"Cannot access game process to check if it's running.\nTry running the installer in admin mode.", "Cannot Start", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return true;
                 }
@@ -338,7 +338,7 @@ namespace HelperFunctions
                 catch (Exception ex)
                 {
                     // Registry read is best-effort; fall through to the next probe / fallback.
-                    Console.WriteLine($"PMAL registry probe failed ({probe.hive}/{probe.view}): {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"PMAL registry probe failed ({probe.hive}/{probe.view}): {ex.Message}");
                 }
             }
 
@@ -1013,13 +1013,13 @@ namespace HelperFunctions
 
                 shortcut.Save();
 
-                Console.WriteLine("Shortcut created successfully!");
+                System.Diagnostics.Debug.WriteLine("Shortcut created successfully!");
 
                 MessageBox.Show("Shortcut created!\n\nPlease note that the shortcut points to the PriconneReALLTL-Installer! If you move or remove the installer, you have to recreate the shortcut!", "Shortcut created!", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                Console.WriteLine("Operation canceled by the user.");
+                System.Diagnostics.Debug.WriteLine("Operation canceled by the user.");
             }
         }
 
@@ -1044,8 +1044,14 @@ namespace HelperFunctions
         // Session cache for the last validated token (valid results only — failures aren't cached,
         // so a transient error is retried). Cuts the repeated /user calls that each GetLatest* and
         // every UI refresh would otherwise make on the UI thread.
-        private static string _validatedToken;
+        private static string _validatedTokenHash;   // #28: SHA-256 of the last validated token — NEVER hold the plaintext in a long-lived static field (credential-vault)
         private static string _validatedUser;
+        private static string TokenHash(string t)
+        {
+            if (string.IsNullOrEmpty(t)) return null;
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+                return BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(t))).Replace("-", "");
+        }
         public static (bool, string) ValidateGitHubToken(string token)
         {
             string username = null;
@@ -1053,7 +1059,7 @@ namespace HelperFunctions
             if (string.IsNullOrWhiteSpace(token))
                 return (false, null);
 
-            if (token == _validatedToken)
+            if (_validatedTokenHash != null && TokenHash(token) == _validatedTokenHash)   // #28: compare by hash, not the plaintext token
                 return (true, _validatedUser);
 
             try
@@ -1067,7 +1073,7 @@ namespace HelperFunctions
                     dynamic userJson = JsonConvert.DeserializeObject(response);
 
                     username = userJson.login;
-                    _validatedToken = token;   // cache valid tokens only
+                    _validatedTokenHash = TokenHash(token);   // #28: cache the HASH of valid tokens only (not the plaintext)
                     _validatedUser = username;
                     return (true, username); // Token is valid
                 }
@@ -1122,7 +1128,7 @@ namespace HelperFunctions
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error checking rate limit: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error checking rate limit: {ex.Message}");
                 return (-1, DateTime.MinValue, TimeSpan.Zero, null); // Fallback values on error
             }
         }
