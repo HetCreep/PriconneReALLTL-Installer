@@ -35,7 +35,7 @@ namespace PriconneReALLTLInstaller
 
             priconnePath = arg;
 
-            ielogger = new Logger("ReALLTLInstaller.log", null , toolStripStatusLabel1);
+            ielogger = new Logger(HelperFunctions.Helper.LogPath("ReALLTLInstaller.log"), null , toolStripStatusLabel1);   // #6: data dir, not install dir
         }
 
         private void backButton_Click(object sender, EventArgs e)

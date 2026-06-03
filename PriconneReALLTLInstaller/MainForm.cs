@@ -98,7 +98,7 @@ namespace PriconneReALLTLInstaller
             operationLabel.TextChanged += OnOperationLabelChange;
 
 
-            logger = new Logger("ReALLTLInstaller.log", outputTextBox, toolStripStatusLabel1);
+            logger = new Logger(HelperFunctions.Helper.LogPath("ReALLTLInstaller.log"), outputTextBox, toolStripStatusLabel1);   // #6: data dir, not install dir
             logger.StartSession();
 
         }
@@ -900,6 +900,7 @@ namespace PriconneReALLTLInstaller
 
                 if (!versionValid)
                 {
+                    logger.Log("Update check failed — GitHub unreachable or rate-limited.", "info", true);   // #5: log the RESULT so the status bar doesn't stay stuck on "Checking..."
                     MessageBox.Show("Couldn't check for updates — GitHub is unreachable or rate-limited. Try again later.", "Check for Updates", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
@@ -907,10 +908,12 @@ namespace PriconneReALLTLInstaller
                 int cmp = Helper.CompareVersions(Application.ProductVersion, version);
                 if (cmp < 0)
                 {
+                    logger.Log($"Installer update available: v{Helper.NormalizeVersion(version)} (you have v{Helper.NormalizeVersion(Application.ProductVersion)}).", "info", true);   // #5
                     helper.CheckForInstallerUpdate(version, body, installerAssetlink, versionValid);   // shows the SelfUpdateForm
                 }
                 else
                 {
+                    logger.Log($"Installer is up to date (v{Helper.NormalizeVersion(Application.ProductVersion)}).", "info", true);   // #5: log the result (resets the status bar from "Checking...")
                     MessageBox.Show($"You're on the latest version ({Helper.NormalizeVersion(Application.ProductVersion)}).", "Check for Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }

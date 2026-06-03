@@ -115,15 +115,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Keep every release + tag for history, but only the LATEST release offers the
-          # installer/portable/checksums. Older releases keep just their "Source code" archive.
+          # Keep every release + tag for history, but only the LATEST release offers the heavy
+          # installer/portable binaries. Older releases keep their "Source code" archive AND
+          # SHA256SUMS.txt — so anyone still holding an old build can verify it (distribution-security).
           $current = "${{ steps.ver.outputs.tag }}"
           $existing = gh release list --json tagName --jq '.[].tagName'
           foreach ($r in $existing) {
             if ($r -and ($r -ne $current)) {
-              Write-Host "Stripping installer assets from old release: $r"
+              Write-Host "Stripping installer binaries from old release: $r (keeping SHA256SUMS.txt)"
               $assets = gh release view $r --json assets --jq '.assets[].name'
-              foreach ($a in $assets) { if ($a) { Write-Host "  deleting asset: $a"; gh release delete-asset $r "$a" --yes } }
+              foreach ($a in $assets) { if ($a -and $a -ne 'SHA256SUMS.txt') { Write-Host "  deleting asset: $a"; gh release delete-asset $r "$a" --yes } }
             }
           }
 

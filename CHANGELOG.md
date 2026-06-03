@@ -8,6 +8,28 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 _Nothing yet._
 
+## [3.0.2] — 2026-06-03
+
+A hardening release from a full-project security + correctness review. No behavioral change to a
+healthy install — these fixes matter on the unhappy paths (multi-language, a wrong clock, interrupted state).
+
+### Fixed
+- **"Remove Ignored Patch Files" is now per-language** — uninstalling one source's ignored data no longer deletes another installed language's user-edited XUnity files (uninstalling English no longer touches ไทย's `_Substitutions.txt` / pre/post-processors).
+- **Runtime logs write to the app data folder** (`%LOCALAPPDATA%\PriconneReALLTLInstaller`), not the install folder — a Windows uninstall leaves no stray `ReALLTLInstaller.log` / `ReALLTLAutoUpdater.log`.
+- **"Check for Updates Now"** logs its result and resets the status bar (no more stuck "Checking…").
+- **Wrong-system-clock detection** — if the clock is off by more than a day vs GitHub's server time, the app warns once to correct it (a wrong clock breaks update checks and can stop translations from showing).
+- **Version-cache bypass is per-flow** (AsyncLocal) — fixes a race where switching source + "Check Now" could briefly show a stale version.
+- **A failed manifest update during uninstall falls back to the safe full-removal path** instead of leaving a stale manifest (which could double-remove shared files later).
+- **A missing wrapped-launch target is validated** before launch (must be an existing `.exe`/`.lnk`), else it falls back to DMM Game Player.
+- **Hardened internals** — the release-tree fallback is awaited properly (no blocking-on-async deadlock risk); the release asset list is null-guarded; the self-update download no longer tries to stamp a `.exe` as a zip.
+
+### Changed
+- Old releases now keep their **`SHA256SUMS.txt`** (only the heavy installer binaries are stripped), so an older build stays verifiable.
+- Language labels standardized — full names use each language's native form (**English / ไทย**), abbreviations use ISO codes (**EN / TH**).
+
+### Security
+- **XXE prevention** on settings import — XML is parsed with DTD and external-entity resolution disabled.
+
 ## [3.0.1] — 2026-06-03
 
 Bug-fix release: correctness, install integrity, and crash-safety hardening from a full-project
@@ -32,7 +54,7 @@ installers never collide. This is the first version published as a GitHub Releas
 (the earlier 2.x line was internal, dev-only).
 
 ### Added
-- **Selectable translation source (EN / TH).** Switch between
+- **Selectable translation source (English / ไทย).** Switch between
   [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) and
   [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) from the main screen.
   Every patch URL derives from the selected source — adding a language is a single registry entry.
@@ -42,7 +64,7 @@ installers never collide. This is the first version published as a GitHub Releas
 - **SHA-256 verify-before-touch** — the downloaded patch zip is verified against GitHub's published digest
   before any file is removed or extracted, so a corrupt/interrupted download can't half-overwrite a working install.
 - **Local zip cache** — the ~330 MB patch zip is reused on repeat installs / source switches (no re-download).
-- **Ref-counted uninstall (install manifest)** — with EN+TH installed, uninstalling one keeps the other and the
+- **Ref-counted uninstall (install manifest)** — with English + ไทย installed, uninstalling one keeps the other and the
   shared modloader working; uninstalling the last source removes everything.
 - **Per-source `AutoTranslatorConfig.ini` sync** — language + texture list follow the active source automatically.
 - **Shortcut-wrapped launching** — "wrap" an existing launcher shortcut (DMM, DMMGamePlayerFastLauncher,
@@ -79,8 +101,9 @@ installers never collide. This is the first version published as a GitHub Releas
 - **Dependabot** alerts + automated security fixes enabled, with a weekly NuGet / GitHub-Actions update config.
 
 ### Attribution
-- MIT-licensed fork of tynave/PriconneReTL-Installer; original inspiration touanu/PriconeTL_Updater. Translation patches by ImaterialC (EN) and PeterkleCG (TH).
+- MIT-licensed fork of tynave/PriconneReTL-Installer; original inspiration touanu/PriconeTL_Updater. Translation patches by ImaterialC (English) and PeterkleCG (ไทย).
 
-[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.2...HEAD
+[3.0.2]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.2
 [3.0.1]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.1
 [3.0.0]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.0

@@ -59,7 +59,7 @@ namespace PriconneReALLTLInstaller
 
             RegisterMouseDrag(new List<Control> { gameInfoPanel, patchInfoPanel });
 
-            logger = new AutoUpdateLogger("ReALLTLAutoUpdater.log", statusLabel);
+            logger = new AutoUpdateLogger(HelperFunctions.Helper.LogPath("ReALLTLAutoUpdater.log"), statusLabel);   // #6: data dir, not install dir
             logger.StartSession();
 
         }
@@ -163,10 +163,21 @@ namespace PriconneReALLTLInstaller
                 {
                     try
                     {
-                        ProcessStartInfo startInfo = new ProcessStartInfo { FileName = launchTarget };
-                        if (!string.IsNullOrEmpty(launchArgs)) startInfo.Arguments = launchArgs;
-                        if (!string.IsNullOrEmpty(launchDir)) startInfo.WorkingDirectory = launchDir;
-                        Process.Start(startInfo);
+                        // #32: validate the wrapped target before launching — must be an existing .exe/.lnk
+                        // (it comes from a base64 --launch arg); otherwise fall back to DMMGamePlayer.
+                        string ext = System.IO.Path.GetExtension(launchTarget ?? "").ToLowerInvariant();
+                        if (string.IsNullOrEmpty(launchTarget) || !System.IO.File.Exists(launchTarget) || (ext != ".exe" && ext != ".lnk"))
+                        {
+                            logger.Log("Wrapped launch target is missing or not an .exe/.lnk — launching DMMGamePlayer instead.", "info", true);
+                            installer.StartDMMGamePlayer();
+                        }
+                        else
+                        {
+                            ProcessStartInfo startInfo = new ProcessStartInfo { FileName = launchTarget };
+                            if (!string.IsNullOrEmpty(launchArgs)) startInfo.Arguments = launchArgs;
+                            if (!string.IsNullOrEmpty(launchDir)) startInfo.WorkingDirectory = launchDir;
+                            Process.Start(startInfo);
+                        }
                     }
                     catch (Exception ex)
                     {

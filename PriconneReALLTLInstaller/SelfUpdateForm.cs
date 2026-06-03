@@ -48,7 +48,7 @@ namespace PriconneReALLTLInstaller
 
             checkForUpdatesCheckbox.Checked = Settings.Default.checkForInstallerUpdates;
 
-            updatelogger = new Logger("ReALLTLSelfUpdate.log", null, toolStripStatusLabel1);
+            updatelogger = new Logger(HelperFunctions.Helper.LogPath("ReALLTLSelfUpdate.log"), null, toolStripStatusLabel1);   // #6: data dir, not install dir
             updatelogger.StartSession();
         }
 

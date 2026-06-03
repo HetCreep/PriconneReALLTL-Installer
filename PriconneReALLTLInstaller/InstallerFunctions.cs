@@ -43,6 +43,7 @@ namespace InstallerFunctions
         private string _lastLoggedPatchVer;   // de-dupe "Found ... installed!" logs (read many times/op + Load+Shown)
         private string _lastLoggedModVer;
         private DateTime? latestReleaseDate;   // selected source's release published_at — stamped onto installed files/dirs
+        private static bool _clockSkewWarned = false;   // #16: warn at most once per session about a wrong system clock
         private string latestAssetDigest;      // GitHub asset SHA256 ("sha256:…") for verify-before-touch
         private string tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());   // no file created (GetTempFileName throws when %TEMP% is full) — audit B3
         private bool removeSuccess = true;
@@ -218,6 +219,22 @@ namespace InstallerFunctions
                     client.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
                     if (tokenvalid) client.Headers.Add("Authorization", $"Bearer {gitHubToken}");
                     string response = client.DownloadString(releaseUrl);
+                    // #16: GitHub's response carries a server-time `Date` header. A system clock off by
+                    // more than ~a day breaks the version cache (#15) and can stop the game/translation
+                    // from working — warn once per session so the user corrects their Windows clock.
+                    if (!_clockSkewWarned)
+                    {
+                        string httpDate = client.ResponseHeaders?["Date"];
+                        if (!string.IsNullOrEmpty(httpDate) && DateTimeOffset.TryParse(httpDate, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var srv))
+                        {
+                            double skewH = Math.Abs((DateTimeOffset.UtcNow - srv).TotalHours);
+                            if (skewH >= 24)
+                            {
+                                _clockSkewWarned = true;
+                                Log?.Invoke($"⚠ Your system clock looks off by ~{Math.Round(skewH / 24)} day(s) vs GitHub's time. A wrong date/time breaks update checks and can stop the game/translation from working — please correct your Windows date & time.", "info", true);
+                            }
+                        }
+                    }
                     dynamic releaseJson = JsonConvert.DeserializeObject(response);
                     if (releaseJson == null)
                     {
@@ -230,6 +247,7 @@ namespace InstallerFunctions
                     // in the same release); fall back to the first asset if none match.
                     assetLink = null;
                     latestAssetDigest = null;
+                    if (releaseJson.assets != null)   // #35: guard before iterating so a release with no assets array reaches the graceful "no asset yet" path below instead of throwing
                     foreach (var asset in releaseJson.assets)
                     {
                         string assetName = (string)asset.name;
@@ -613,7 +631,7 @@ namespace InstallerFunctions
                 File.Move(downloadTmp, target);
                 Log?.Invoke("Download completed + verified.", "info", true);
                 downloadSuccess = true;
-                StampZipSourceDate(target);   // stamp the just-downloaded zip with its source date
+                if (fileToSave == null) StampZipSourceDate(target);   // #34: zips only — never open a downloaded .exe (self-update) as a zip
                 if (cachePath != null) tempFile = cachePath;   // extract from (and keep) the cached zip
             }
             catch (Exception ex)
@@ -886,37 +904,36 @@ namespace InstallerFunctions
             }
 
 
+            // #21: resolve the file list to remove BEFORE entering Task.Run — the ProcessTree fallback
+            // is async (a GitHub git-tree call), so await it properly here instead of blocking on
+            // GetAwaiter().GetResult() inside the Task.Run (deadlock-brittle on .NET Framework).
+            // Ref-counted uninstall: when a manifest covers this source, remove only the files it solely
+            // owns — shared modloader/engine files stay for any other installed source. The manifest is
+            // the source of truth for BOTH uninstall AND update/reinstall (no network call when present,
+            // so it can't fail on a 403/rate-limit; renamed/moved/deleted files are still dropped).
+            string[] currentFiles;
+            bool refCounted = false;
+            var plan = helper.ResolveManifestUninstall(priconnePath);
+            if (plan != null) { currentFiles = plan.ToArray(); refCounted = true; }
+            else
+            {
+                // No manifest (installed before manifests / source not tracked) → fall back to the
+                // source's git tree at the INSTALLED version's tag.
+                currentFiles = await ProcessTree(priconnePath, localVersion);
+                if (currentFiles == null)
+                {
+                    removeSuccess = false;
+                    ProgressPictureChange?.Invoke(null);
+                    ErrorLog?.Invoke("Failed to get the list of files to remove — cannot continue (GitHub unreachable / rate-limited?).");
+                    return;
+                }
+            }
+
             await Task.Run(() =>
             {
                 try
                 {
                     removeProgress = true;
-
-                    // Ref-counted uninstall: when uninstalling AND a manifest covers this source, remove
-                    // only the files it solely owns — shared modloader/engine files stay for any other
-                    // installed source (uninstalling TH from EN+TH leaves EN working). Falls back to the
-                    // release-tree removal when there's no manifest (e.g. installed before manifests).
-                    string[] currentFiles = null;
-                    bool refCounted = false;
-                    // Smart-clean: the install manifest is the source of truth for BOTH uninstall AND
-                    // update/reinstall — it records exactly what THIS source put on disk. Driving the
-                    // remove step from it (not the GitHub git-tree) means an update makes NO network call
-                    // here, so it can't fail on a 403/rate-limit or a Version.txt that doesn't match a git
-                    // tag; and files renamed/moved/deleted in the new version are still dropped (old
-                    // footprint removed via the manifest, new footprint written by the extract that follows).
-                    var plan = helper.ResolveManifestUninstall(priconnePath);
-                    if (plan != null) { currentFiles = plan.ToArray(); refCounted = true; }
-                    if (!refCounted)
-                    {
-                        // No manifest (installed before manifests existed / source not tracked) → fall back
-                        // to the source's git tree at the INSTALLED version's tag.
-                        currentFiles = ProcessTree(priconnePath, localVersion).GetAwaiter().GetResult();
-                        if (currentFiles == null)
-                        {
-                            removeSuccess = false;
-                            throw new Exception("Failed to get list of files to remove! Cannot continue.");
-                        }
-                    }
 
                     if (refCounted)
                         Log?.Invoke($"{(uninstall ? "Uninstalling" : "Refreshing")} {Helper.GetCurrentPatchSource().ShortName} (manifest, ref-counted): removing {currentFiles.Length} file(s) it solely owns; files shared with another installed source are kept{(uninstall ? "" : " (the extract re-applies this source's new version)")}.", "remove", true);
@@ -1011,10 +1028,26 @@ namespace InstallerFunctions
                 // Path guard (#22): only ever delete INSIDE the game folder — a hand-edited ignore
                 // entry with "..\" or an absolute path must never escape (parity with RemovePatchFiles).
                 string gameRoot = Path.GetFullPath(priconnePath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                // #10: for IGNORED files, scope to the ACTIVE source's language. The ignore globs
+                // (Translation/*/...) expand across EVERY language folder, so without this an
+                // "uninstall EN + Remove Ignored" would ALSO delete TH's user-edited XUnity data (data loss).
+                string activeLangPrefix = null;
+                if (type == "ignored")
+                {
+                    string[] vparts = (Helper.GetCurrentPatchSource().VersionFileRelPath ?? "").Replace('\\', '/').Split('/');
+                    if (vparts.Length >= 3 && vparts[0].Equals("BepInEx", StringComparison.OrdinalIgnoreCase) && vparts[1].Equals("Translation", StringComparison.OrdinalIgnoreCase))
+                        activeLangPrefix = "BepInEx/Translation/" + vparts[2] + "/";
+                }
                 foreach (var entry in collection)
                 {
                     foreach (string rel in ExpandIgnoreGlob(entry == null ? "" : entry.ToString()))   // glob (e.g. */) -> actual files
                     {
+                        string relNorm = rel.Replace('\\', '/');
+                        // #10: skip ANOTHER language's ignored data — only remove the active source's language
+                        if (activeLangPrefix != null
+                            && relNorm.StartsWith("BepInEx/Translation/", StringComparison.OrdinalIgnoreCase)
+                            && !relNorm.StartsWith(activeLangPrefix, StringComparison.OrdinalIgnoreCase))
+                            continue;
                         string fullPath = Path.Combine(priconnePath, rel.Replace('/', Path.DirectorySeparatorChar));
                         string full;
                         try { full = Path.GetFullPath(fullPath); } catch { continue; }

@@ -158,7 +158,10 @@ namespace PriconneReALLTLInstaller
                         return;
                     }
 
-                    if (relativePath == "BepInEx/Translation/en/Text/Version.txt")
+                    // #26: compare against the SELECTED source's version file, not a hardcoded en/ path
+                    // (otherwise a TH user could add th/.../Version.txt to the ignore list and lose it).
+                    string versionRel = HelperFunctions.Helper.GetCurrentPatchSource().VersionFileRelPath.Replace('\\', '/');
+                    if (string.Equals(relativePath, versionRel, StringComparison.OrdinalIgnoreCase))
                     {
                         MessageBox.Show("Invalid selection!\n\nThis file is the version file of the TL patch! You cannot add this to the list of ignored files!", "Invalid selection", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;

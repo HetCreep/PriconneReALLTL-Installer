@@ -2,7 +2,6 @@
 
 [![Latest release](https://img.shields.io/github/v/release/HetCreep/PriconneReALLTL-Installer?sort=semver&display_name=tag)](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest)
 [![Build](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml/badge.svg)](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml)
-[![Downloads](https://img.shields.io/github/downloads/HetCreep/PriconneReALLTL-Installer/total)](https://github.com/HetCreep/PriconneReALLTL-Installer/releases)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![.NET Framework 4.8](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4)
 
@@ -14,11 +13,11 @@ A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx trans
 
 ## 🌟 Features
 
-* **Selectable translation source (EN / TH)** — switch between [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) and [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) right from the main screen. Every patch URL derives from the selected source — adding another source is a single list entry.
+* **Selectable translation source (English / ไทย)** — switch between [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) and [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) right from the main screen. Every patch URL derives from the selected source — adding another source is a single list entry.
 * **Shortcut-wrapped launching** — the GUI focuses on patching. To play, "wrap" an existing launcher shortcut (DMM, [DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), or a [PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher) account shortcut). Pressing the wrapped shortcut updates the patch, then launches that exact target — one click, *update + play*, per account. Reversible (un-wrap restores the original).
 * **PriconneMultiAccountLauncher integration** — auto-detected via its Inno Setup uninstall key (HKCU/HKLM) with an `%APPDATA%` fallback.
 * **Modloader pinned to ImaterialC** — the BepInEx IL2CPP interop baseline always comes from the canonical ImaterialC release, independent of the chosen TL source.
-* **Safe installs & clean uninstalls** — the downloaded patch `.zip` is **SHA-256 verified** against GitHub's published digest before any file is touched; extraction is **zip-slip guarded**; uninstall is **ref-counted** (with both EN and TH installed, removing one keeps the other and the shared modloader working) and **path-guarded** to the game folder.
+* **Safe installs & clean uninstalls** — the downloaded patch `.zip` is **SHA-256 verified** against GitHub's published digest before any file is touched; extraction is **zip-slip guarded**; uninstall is **ref-counted** (with both English and ไทย installed, removing one keeps the other and the shared modloader working) and **path-guarded** to the game folder.
 * **Rate-limit friendly** — GitHub version checks are cached (~6 h; the installer self-update check ~7 days), so a GitHub API token is *optional*. If set, the token is stored encrypted (Windows DPAPI), masked on screen, and never logged.
 * **Verifiable cloud builds** — built **only** by GitHub Actions on a `v*` tag; each release attaches **`SHA256SUMS.txt`**. Strong-name signed (not yet Authenticode-signed — verify via SHA-256, see below).
 
@@ -44,7 +43,7 @@ Either is fine — the portable exe if you just want to run it, the setup if you
 Every release attaches **`SHA256SUMS.txt`** and lists the SHA-256 inline in the release notes. Verify the file you downloaded:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.1.exe
+Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.2.exe
 ```
 
 Compare the output against the hash in `SHA256SUMS.txt` / the release notes — they must match exactly.
@@ -83,5 +82,5 @@ MIT-licensed fork. Heartfelt thanks to:
 
 ### 🤖 Built with AI Co-Engineers
 
-- **Claude Code** (Anthropic) — C# rebrand + detachment, multi-source EN/TH, shortcut-wrap launch architecture, per-source version detection, rate-limit caching, build/CI.
+- **Claude Code** (Anthropic) — C# rebrand + detachment, multi-source English/ไทย, shortcut-wrap launch architecture, per-source version detection, rate-limit caching, build/CI.
 - **Antigravity** (Google DeepMind) — earlier native multi-launcher UI, ClickOnce deactivation, and GitHub Actions cloud compilation.

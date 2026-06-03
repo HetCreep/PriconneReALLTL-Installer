@@ -674,6 +674,17 @@ namespace HelperFunctions
             return long.TryParse(s.Substring(0, i), out num);
         }
 
+        /// <summary>Full path under the app's local data dir (%LOCALAPPDATA%\PriconneReALLTLInstaller)
+        /// for a log/data file — created on demand. Logs go HERE, not the install dir, so the Inno
+        /// uninstaller's [UninstallDelete] of this dir removes them on uninstall (no leftover log in
+        /// the program folder — #6). Same root as the version cache + zip cache.</summary>
+        public static string LogPath(string fileName)
+        {
+            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PriconneReALLTLInstaller");
+            try { Directory.CreateDirectory(dir); } catch { }
+            return Path.Combine(dir, fileName);
+        }
+
         /// <summary>The authoritative modloader source — ALWAYS ImaterialC (the main, widely-used
         /// patch), regardless of the selected TL source. Its bundled BepInEx interop is the baseline
         /// (a TL source like PeterkleCG may ship its own copy, but ImaterialC's is treated as canonical).</summary>
@@ -690,7 +701,12 @@ namespace HelperFunctions
         // a week → a launch hits GitHub for it at most ~once/7 days instead of every 6h. The manual
         // "Check for Updates Now" still bypasses this for a live read. Tune here if needed.
         public const double InstallerCheckTtlHours = 24.0 * 7;
-        public static bool BypassVersionCache = false;
+        // #23: AsyncLocal so each async UI flow's bypass intent is isolated — overlapping flows
+        // (a source-switch fetch + "Check for Updates Now") no longer race on a shared process-wide
+        // flag. The value set before an `await Task.Run(...)` flows INTO that Task.Run via the captured
+        // ExecutionContext, but stays invisible to a concurrent flow's context. Callers are unchanged.
+        private static readonly System.Threading.AsyncLocal<bool> _bypassVersionCache = new System.Threading.AsyncLocal<bool>();
+        public static bool BypassVersionCache { get => _bypassVersionCache.Value; set => _bypassVersionCache.Value = value; }
 
         private sealed class CacheEntry { public string Val { get; set; } public DateTime Ts { get; set; } }
 
@@ -836,7 +852,14 @@ namespace HelperFunctions
                         try { File.SetAttributes(manifestPath, FileAttributes.Hidden); } catch { }
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    // #27: if the manifest couldn't be updated, the on-disk manifest is now STALE vs the
+                    // delete plan — proceeding would let a later uninstall double-remove shared files.
+                    // Bail to the safe ProcessTree fallback (return null) instead of returning the plan.
+                    Log?.Invoke("Could not update the install manifest — falling back to full removal: " + ex.Message, "info", false);
+                    return null;
+                }
 
                 return toDelete;
             }
@@ -1134,7 +1157,10 @@ namespace HelperFunctions
             var stringCollection = new StringCollection();
             var serializer = new XmlSerializer(stringCollection.GetType());
 
-            using (var reader = new XmlTextReader(new System.IO.StringReader(serializedValue)))
+            // #30: harden XML deserialization against XXE — disable DTD + external-entity resolution
+            // (this is reachable from the user-chosen ImportSettings file).
+            var xmlSettings = new System.Xml.XmlReaderSettings { DtdProcessing = System.Xml.DtdProcessing.Prohibit, XmlResolver = null };
+            using (var reader = System.Xml.XmlReader.Create(new System.IO.StringReader(serializedValue), xmlSettings))
             {
                 if (serializer.CanDeserialize(reader))
                 {

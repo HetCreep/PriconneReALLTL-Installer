@@ -1,30 +1,37 @@
-**PriconneReALLTL Installer v3.0.1** — a bug-fix release hardening install integrity, version detection, and crash-safety. Everything from v3.0.0 still applies; this fixes defects found in a full-project review. A healthy install behaves the same — these fixes matter on the unhappy paths (interrupted downloads, a wrong system clock, double-digit version numbers, failed operations).
+**PriconneReALLTL Installer v3.0.2** — a hardening release from a full-project security + correctness review. Everything from v3.0.0 / v3.0.1 still applies; this fixes more defects on the unhappy paths (multi-language uninstall, a wrong system clock, interrupted state). A healthy install behaves the same.
 
 ## Fixes
 
-- **Numeric version comparison** — `2.1.10` is now correctly newer than `2.1.9` (and `3.0.10` newer than `3.0.9`). Previously versions were compared letter-by-letter, so once a segment reached two digits a genuinely newer patch or installer update could be silently *not* offered.
-- **Interrupted downloads can't corrupt a working install** — the ~330 MB patch zip downloads to a temporary file and is promoted to the reusable cache only after it passes verification, so a partial or aborted download is never reused and extracted over your game. The rate-limit cache fallback now also restores the expected SHA-256 so the integrity check stays correct.
-- **No launch after a failed operation** — "Launch Game" starts the game only when the install/uninstall actually succeeded, so a half-patched install can't auto-launch (and the 5-second auto-exit can't hide the error).
-- **Path-guarded config/ignored removal** — "Remove Config" / "Remove Ignored Patch Files" deletions are confined to the game folder, matching the existing extraction and main-removal guards.
-- **A backward system clock no longer freezes update checks** — if your PC clock was set behind the time a check was cached (a dead CMOS battery, a manual change), the app used to treat the cached result as permanently fresh and stop checking; it now re-fetches when the cached age is out of range. (Separately: if translations don't appear in-game, make sure your system date/time is correct — the game itself can misbehave on a wrong clock.)
-- **Crash-safety** — a download with no Content-Length no longer throws on the progress bar (clamped to 0–100%); a malformed DMM game-path entry is rejected instead of causing a null-path crash; the "open game folder" command quotes the path so folders with spaces open correctly.
+- **Per-language "Remove Ignored"** — uninstalling one source's ignored data no longer deletes another installed language's user-edited XUnity files (uninstalling English no longer touches ไทย's substitutions / pre/post-processors).
+- **Logs live in the app data folder** (`%LOCALAPPDATA%\PriconneReALLTLInstaller`), not the install folder — a Windows uninstall leaves no stray log behind.
+- **"Check for Updates Now"** logs its result and resets the status bar (no stuck "Checking…").
+- **Wrong-clock warning** — if your system clock is off by more than a day vs GitHub's time, the app warns once to correct it (a wrong clock breaks update checks and can stop translations from showing — see Known Issues).
+- **Per-flow version-cache bypass** (AsyncLocal) — no more stale-version flash when switching source and checking for updates together.
+- **Safe manifest-update fallback** on uninstall — a failed manifest write no longer risks a later double-removal of shared files.
+- **Validated wrapped-launch target** — must be an existing `.exe`/`.lnk`, otherwise it falls back to DMM Game Player.
+- **Hardened internals** — the release-tree fallback is awaited (no blocking-on-async); the release asset list is null-guarded; the self-update download won't stamp a `.exe` as a zip; **XXE-safe** settings import.
+
+## Changed
+
+- Old releases keep their **`SHA256SUMS.txt`** (only the heavy installer binaries are stripped) → an older build stays verifiable.
+- Language labels: full names use each language's native form (**English / ไทย**), abbreviations use ISO codes (**EN / TH**).
 
 ## Verification
 
-- Verify your download against **`SHA256SUMS.txt`** attached to this release:
-  `Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.1.exe`
+- Verify your download against **`SHA256SUMS.txt`**:
+  `Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.2.exe`
 - Authenticode: not signed this release (verify via SHA-256 above).
 
 ## Compatibility
 
-- Windows 10 / 11. Requires Princess Connect! Re:Dive installed via DMM Game Player.
-- Translation sources: EN ([ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL)), TH ([PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH)); modloader pinned to ImaterialC.
-- A GitHub token is optional — version checks are cached, so the app works fine unauthenticated.
+- Windows 10 (64-bit) / 11 — same as DMM Game Player's own requirement. Requires Princess Connect! Re:Dive installed via DMM Game Player. Runs on **.NET Framework 4.8** (preinstalled on Windows 10 1903+ and Windows 11).
+- Translation sources: English ([ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL)), ไทย ([PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH)); modloader pinned to ImaterialC.
 
 ## Upgrade Notes
 
-- Drop-in over v3.0.0 — settings, token, and your installed patch are unaffected. No reinstall of the translation patch is needed.
+- Drop-in over v3.0.0 / v3.0.1 — settings, token, and your installed patch are unaffected.
 
 ## Known Issues
 
-- Installing/uninstalling a source **manually** (by zip) is invisible to the app's tracked-install manifest, so a manual source can't be cleanly uninstalled by the app — install via the app for a clean per-source uninstall. (A 2-layer translation/modloader uninstall is planned.)
+- If translations don't appear in-game and the patch is installed, check that your **Windows date/time is correct** — the game itself can misbehave on a wrong clock (the app now warns about large skew).
+- Installing/uninstalling a source **manually** (by zip) is invisible to the tracked-install manifest — install via the app for a clean per-source uninstall.

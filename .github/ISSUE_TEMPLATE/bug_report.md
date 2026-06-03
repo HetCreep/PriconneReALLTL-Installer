@@ -18,10 +18,10 @@ Steps to reproduce:
 What you expected to happen.
 
 **Logs**
-Enable **Show Logs** in the app and paste the relevant lines. The log file is `ReALLTLInstaller.log` / `ReALLTLAutoUpdater.log` in the install folder. (Tokens are auto-redacted from logs, but double-check before pasting.)
+Enable **Show Logs** in the app and paste the relevant lines. The log file is `ReALLTLInstaller.log` / `ReALLTLAutoUpdater.log` in the app's local data folder (`%LOCALAPPDATA%\PriconneReALLTLInstaller`). (Tokens are auto-redacted from logs, but double-check before pasting.)
 
 **Environment**
-- Installer version: <e.g. v3.0.0 — shown bottom-right>
+- Installer version: <e.g. v3.0.1 — shown bottom-right>
 - Windows version:
 - Game install path (if relevant):
 - Launcher in use: <DMM / DMMGamePlayerFastLauncher / PriconneMultiAccountLauncher>
