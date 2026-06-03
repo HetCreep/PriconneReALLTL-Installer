@@ -1,0 +1,52 @@
+name: CodeQL
+
+# Static-analysis security scanning (CodeQL) for the C# code. Advanced setup (not "default")
+# because this is a .NET Framework 4.8 + packages.config (non-SDK) project — CodeQL's autobuild
+# can't handle it, so we build it exactly like release.yml (NuGet restore + MSBuild) and let CodeQL
+# trace that compile. Complements Dependabot (dependency CVEs) with code-level analysis.
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron: '23 5 * * 1'   # weekly (Monday) — catch newly-published CodeQL queries
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (C#)
+    runs-on: windows-latest   # .NET Framework needs Windows + MSBuild
+    permissions:
+      security-events: write   # upload scan results to the Security tab
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          build-mode: manual    # we provide the build below (autobuild can't do non-SDK packages.config)
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+
+      - name: Restore packages
+        run: nuget restore PriconneReALLTLInstaller.sln
+
+      - name: Build (Release)
+        run: msbuild PriconneReALLTLInstaller.sln /p:Configuration=Release
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"
