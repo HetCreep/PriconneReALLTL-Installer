@@ -33,6 +33,7 @@ jobs:
         with:
           languages: csharp
           build-mode: manual    # we provide the build below (autobuild can't do non-SDK packages.config)
+          queries: security-and-quality   # broader than the default security-only suite (more security + quality queries)
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v3

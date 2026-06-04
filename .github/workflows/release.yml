@@ -21,6 +21,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write        # OIDC for the build-provenance attestation (sigstore)
+  attestations: write    # write the provenance attestation
 
 jobs:
   build:
@@ -109,6 +111,28 @@ jobs:
           Get-ChildItem dist
           Get-Content dist/SHA256SUMS.txt
 
+      # World-class supply-chain extras for a distributed binary (best-effort — never block a release):
+      # an SBOM (what dependencies the build contains) + a signed build-provenance attestation (proof
+      # these exact artifacts were built by this workflow from this commit). See distribution-security.md.
+      - name: Generate SBOM (SPDX) — best-effort
+        if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
+        continue-on-error: true
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: dist/PriconneReALLTLInstaller-${{ steps.ver.outputs.tag }}.sbom.spdx.json
+          upload-artifact: false
+
+      - name: Attest build provenance — best-effort
+        if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/${{ steps.pkg.outputs.portable }}
+            dist/${{ steps.pkg.outputs.setup }}
+
       - name: Strip installer assets from old releases (keep source code only)
         if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
         shell: pwsh
@@ -160,3 +184,14 @@ jobs:
             "dist/SHA256SUMS.txt" `
             --title "${{ steps.ver.outputs.tag }} Release" `
             --notes-file RELEASE_BODY.md
+
+      - name: Attach SBOM to the release — best-effort
+        if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $sbom = "dist/PriconneReALLTLInstaller-${{ steps.ver.outputs.tag }}.sbom.spdx.json"
+          if (Test-Path $sbom) { gh release upload "${{ steps.ver.outputs.tag }}" $sbom --clobber }
+          else { Write-Host "SBOM not generated — skipping upload." }
