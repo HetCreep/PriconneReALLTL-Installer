@@ -19,15 +19,19 @@ on:
       - 'v*'
   workflow_dispatch:
 
+# Least-privilege (Scorecard Token-Permissions check / distribution-security rule): default the
+# whole workflow to read; the single build job below elevates only the write scopes it needs.
 permissions:
-  contents: write
-  id-token: write        # OIDC for the build-provenance attestation (sigstore)
-  attestations: write    # write the provenance attestation
+  contents: read
 
 jobs:
   build:
     name: Build and Release PriconneReALLTLInstaller
     runs-on: windows-latest
+    permissions:
+      contents: write        # create the GitHub Release + strip old releases' installer assets
+      id-token: write        # OIDC for the build-provenance attestation (sigstore)
+      attestations: write    # write the provenance attestation
 
     steps:
       # SECURITY NOTE (distribution-security): the `uses:` actions below are pinned to floating
