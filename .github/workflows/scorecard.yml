@@ -14,6 +14,15 @@ on:
     - cron: '17 4 * * 2'   # weekly (Tuesday)
   push:
     branches: [ master ]
+    # A docs/config-only push doesn't change the repo's security posture, so skip the audit.
+    # The weekly schedule + branch_protection_rule events still catch real posture changes,
+    # and a workflow change (not ignored below) still re-runs Scorecard.
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE*'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.gitignore'
+      - '.gitattributes'
 
 permissions: read-all
 

@@ -8,10 +8,25 @@ name: CodeQL
 on:
   push:
     branches: [ master ]
+    # Docs/config-only changes don't touch the C# code, so don't spend a Windows build
+    # + CodeQL run on them. A push that also changes code (any non-ignored path) still scans;
+    # the weekly schedule below always runs a full scan regardless.
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE*'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.gitignore'
+      - '.gitattributes'
   pull_request:
     branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE*'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.gitignore'
+      - '.gitattributes'
   schedule:
-    - cron: '23 5 * * 1'   # weekly (Monday) — catch newly-published CodeQL queries
+    - cron: '23 5 * * 1'   # weekly (Monday) — catch newly-published CodeQL queries (full scan, ignores paths-ignore)
 
 permissions:
   contents: read
