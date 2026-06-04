@@ -34,18 +34,18 @@ jobs:
       attestations: write    # write the provenance attestation
 
     steps:
-      # SECURITY NOTE (distribution-security): the `uses:` actions below are pinned to floating
-      # major tags (@v4/@v2) for readability. Pinning each to a full commit SHA is a tracked
-      # follow-up to do before wide public trust — deferred for now (same posture as the reference
-      # PriconneMultiAccountLauncher workflow). All are first-party (actions/microsoft/nuget).
+      # SECURITY (distribution-security): every `uses:` action is pinned to a full commit SHA
+      # (the trailing `# vX` is the human-readable version). Dependabot's github-actions updater
+      # bumps the SHA + the comment when a new version ships, so the pins stay current without
+      # losing the supply-chain protection — a moved or hijacked tag can't change what runs.
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10   # v6
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v3
+        uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57   # v3
 
       - name: Setup NuGet
-        uses: nuget/setup-nuget@v4
+        uses: nuget/setup-nuget@fd55a6f3b34392fa83fde1454582407d8c714123   # v4
 
       - name: Derive version from tag
         id: ver
@@ -121,7 +121,7 @@ jobs:
       - name: Generate SBOM (SPDX) — best-effort
         if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
         continue-on-error: true
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610   # v0
         with:
           path: .
           format: spdx-json
@@ -131,7 +131,7 @@ jobs:
       - name: Attest build provenance — best-effort
         if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
         continue-on-error: true
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32   # v4
         with:
           subject-path: |
             dist/${{ steps.pkg.outputs.portable }}
