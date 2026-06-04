@@ -168,7 +168,7 @@ namespace InstallerFunctions
                     return ("None", false);
                 }
                 string rawVersionFile = File.ReadAllText(modloaderVersionFilePath);
-                Match match = Regex.Match(rawVersionFile, @"\b\d{1,2}\.\d{1,2}\.\d{1,2}\b");
+                Match match = Regex.Match(rawVersionFile, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\b");   // #79: allow a 3-digit component (e.g. 6.0.100)
 
                 if (match == null || !match.Success)
                 {

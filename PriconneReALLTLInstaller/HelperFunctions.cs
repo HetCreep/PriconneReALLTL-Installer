@@ -825,6 +825,9 @@ namespace HelperFunctions
         // Returns null when there's no usable manifest for this source → caller falls back to the tree.
         public System.Collections.Generic.List<string> ResolveManifestUninstall(string priconnePath)
         {
+            // #76: clear any stash a prior call left uncommitted/uncleared (the current single caller always
+            // commits/clears, but this prevents a stale stash from ever being wrongly committed by a later op).
+            _pendingManifestPath = null; _pendingManifestRemaining = null;
             try
             {
                 if (string.IsNullOrEmpty(priconnePath)) return null;
@@ -1097,21 +1100,27 @@ namespace HelperFunctions
 
             if (result == DialogResult.OK)
             {
-                var wshShell = new IWshRuntimeLibrary.WshShell();
-                string shortcutPath = saveFileDialog.FileName;
-                IWshRuntimeLibrary.IWshShortcut shortcut = (IWshRuntimeLibrary.IWshShortcut)wshShell.CreateShortcut(shortcutPath);
+                IWshRuntimeLibrary.WshShell wshShell = null;
+                IWshRuntimeLibrary.IWshShortcut shortcut = null;
+                try
+                {
+                    wshShell = new IWshRuntimeLibrary.WshShell();
+                    string shortcutPath = saveFileDialog.FileName;
+                    shortcut = (IWshRuntimeLibrary.IWshShortcut)wshShell.CreateShortcut(shortcutPath);
 
-                shortcut.TargetPath = targetPath;
-                shortcut.Description = "PriconneReALLTL-Installer AutoUpdater";
-                shortcut.WorkingDirectory = currentDirectory;
-                shortcut.IconLocation = Path.Combine(priconnePath, "PrincessConnectReDive.exe");
-                shortcut.Arguments = "autoupdate";
+                    shortcut.TargetPath = targetPath;
+                    shortcut.Description = "PriconneReALLTL-Installer AutoUpdater";
+                    shortcut.WorkingDirectory = currentDirectory;
+                    shortcut.IconLocation = Path.Combine(priconnePath, "PrincessConnectReDive.exe");
+                    shortcut.Arguments = "autoupdate";
 
-                shortcut.Save();
+                    shortcut.Save();
 
-                System.Diagnostics.Debug.WriteLine("Shortcut created successfully!");
+                    System.Diagnostics.Debug.WriteLine("Shortcut created successfully!");
 
-                MessageBox.Show("Shortcut created!\n\nPlease note that the shortcut points to the PriconneReALLTL-Installer! If you move or remove the installer, you have to recreate the shortcut!", "Shortcut created!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Shortcut created!\n\nPlease note that the shortcut points to the PriconneReALLTL-Installer! If you move or remove the installer, you have to recreate the shortcut!", "Shortcut created!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                finally { ReleaseCom(shortcut); ReleaseCom(wshShell); }   // #75: completes #64 (this method was missed)
             }
             else
             {
@@ -1134,8 +1143,10 @@ namespace HelperFunctions
             folderPath = Path.GetFullPath(folderPath); // Ensure the folder path is full.
             filePath = Path.GetFullPath(filePath);     // Ensure the file path is full.
 
-            // Check if the file path starts with the folder path.
-            return filePath.StartsWith(folderPath, StringComparison.OrdinalIgnoreCase);
+            // #77: bound the prefix match to a folder boundary (trailing separator) so C:\Game is not
+            // treated as containing C:\GameOther\x.txt (a sibling-folder false positive).
+            string root = folderPath.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            return filePath.StartsWith(root, StringComparison.OrdinalIgnoreCase);
         }
         // Session cache for the last validated token (valid results only — failures aren't cached,
         // so a transient error is retried). Cuts the repeated /user calls that each GetLatest* and
@@ -1277,22 +1288,16 @@ namespace HelperFunctions
             fromPath = fromPath.Replace("\\", "/");
             toPath = toPath.Replace("\\", "/");
 
-            if (!toPath.StartsWith(fromPath, StringComparison.OrdinalIgnoreCase))
+            // #77: bound the prefix to a folder boundary (trailing '/') so a sibling folder (C:/GameOther)
+            // is not treated as being "under" C:/Game and returned with a wrong/absolute "relative" path.
+            string root = fromPath.TrimEnd('/') + "/";
+            if (!toPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
             {
                 // If toPath is not under fromPath, return the full toPath.
                 return toPath;
             }
-
-            int fromPathLength = fromPath.Length;
-            if (fromPathLength < toPath.Length)
-            {
-                // Exclude the common portion and the path separator if it exists
-                string relativePath = toPath.Substring(fromPathLength).TrimStart('/');
-                return relativePath;
-            }
-
-            // If fromPath is the same as toPath, return an empty string
-            return string.Empty;
+            // The part after the common root. Equal paths → empty string.
+            return toPath.Substring(root.Length);
         }
 
         public static void SetDefaultDMMConfigPath()

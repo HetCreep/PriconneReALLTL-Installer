@@ -8,6 +8,16 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 _Nothing yet._
 
+## [3.0.6] — 2026-06-04
+
+A small follow-up to v3.0.5: a second review pass over the v3.0.5 changes (no regressions found) plus a re-sweep of corners the first audit covered lightly. No behavioral change to a healthy install.
+
+### Fixed
+- Completed the COM-handle cleanup from v3.0.5 — the "Create AutoUpdater shortcut" action now releases its shell objects like the other shortcut operations do.
+- The "is this file inside the game folder?" check (used when adding an ignore-list entry) now respects a folder boundary, so a sibling folder with a similar name is no longer mistaken for being inside the game folder.
+- The installed-modloader version is read correctly when a component has three digits (e.g. `6.0.100`).
+- Internal hardening: the uninstall manifest's staged state is reset at the start of each removal (defensive), and a dead no-op handler was removed.
+
 ## [3.0.5] — 2026-06-04
 
 A large correctness, safety, and security release from a full-codebase deep audit (parallel reviewers across the install engine, the credential/network paths, and the WinForms/async surface) layered on top of the v3.0.4 test campaign. Most fixes matter on the unhappy paths — a locked file, a running instance, a corrupt manifest, a cold token — and several are leaks/races that manual testing can't surface. No behavioral change to a healthy install.

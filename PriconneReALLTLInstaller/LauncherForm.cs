@@ -232,8 +232,5 @@ namespace PriconneReALLTLInstaller
             shortcutRemoveButton.Enabled = shortcutListBox.Enabled && shortcutListBox.SelectedIndex >= 0;
         }
 
-        private void saveButton_Click(object sender, EventArgs e) { }
-
-        private void saveButton_EnabledChanged(object sender, EventArgs e) { }
     }
 }
