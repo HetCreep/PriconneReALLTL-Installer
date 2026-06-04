@@ -24,6 +24,8 @@ jobs:
     permissions:
       security-events: write   # upload the SARIF result to the Security tab
       id-token: write          # OIDC for the (optional) publish step
+      contents: read           # checkout + Scorecard reads the repo (job-level perms REPLACE workflow-level, so list it)
+      actions: read            # Scorecard reads workflow-run metadata
     steps:
       - name: Checkout
         uses: actions/checkout@v6
