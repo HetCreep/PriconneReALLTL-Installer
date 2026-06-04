@@ -4,11 +4,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.7...HEAD)
 
 _Nothing yet._
 
-## [3.0.7] — 2026-06-04
+## [3.0.7](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.7) — 2026-06-04
 
 A fix-led release: it corrects a v3.0.6 cosmetic regression (the window title bar) and rolls in two small conveniences — menu icons and resumable downloads. No change to how a healthy install behaves.
 
@@ -28,7 +28,7 @@ A fix-led release: it corrects a v3.0.6 cosmetic regression (the window title ba
 ### Security
 - **Logged file paths now mask your Windows username** (`%USERPROFILE%`) — less personal information ends up in a log you might paste into an issue. (The GitHub token was already redacted.)
 
-## [3.0.6] — 2026-06-04
+## [3.0.6](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.6) — 2026-06-04
 
 A small follow-up to v3.0.5: a second review pass over the v3.0.5 changes (no regressions found) plus a re-sweep of corners the first audit covered lightly. No behavioral change to a healthy install.
 
@@ -38,7 +38,7 @@ A small follow-up to v3.0.5: a second review pass over the v3.0.5 changes (no re
 - The installed-modloader version is read correctly when a component has three digits (e.g. `6.0.100`).
 - Internal hardening: the uninstall manifest's staged state is reset at the start of each removal (defensive), and a dead no-op handler was removed.
 
-## [3.0.5] — 2026-06-04
+## [3.0.5](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.5) — 2026-06-04
 
 A large correctness, safety, and security release from a full-codebase deep audit (parallel reviewers across the install engine, the credential/network paths, and the WinForms/async surface) layered on top of the v3.0.4 test campaign. Most fixes matter on the unhappy paths — a locked file, a running instance, a corrupt manifest, a cold token — and several are leaks/races that manual testing can't surface. No behavioral change to a healthy install.
 
@@ -63,7 +63,7 @@ A large correctness, safety, and security release from a full-codebase deep audi
 - The installer now shows a **license + acknowledgments page** during setup (MIT + credits to the upstream and the patch authors). The root `LICENSE.txt` stays pure MIT.
 - Internally, the install manifest is now written **after** a successful removal, so a locked-file abort can never leave it inconsistent.
 
-## [3.0.4] — 2026-06-03
+## [3.0.4](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.4) — 2026-06-03
 
 Security + a small UI polish. No behavioral change to a healthy install.
 
@@ -73,7 +73,7 @@ Security + a small UI polish. No behavioral change to a healthy install.
 ### Changed
 - **Language labels finalized** — the compact "TL Source" label shows the ISO code (**EN** / **TH**); the source picker shows each language's native full name (**English** / **ไทย**). Internal manifest keys are unchanged, so existing installs are unaffected.
 
-## [3.0.3] — 2026-06-03
+## [3.0.3](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.3) — 2026-06-03
 
 Security + robustness hardening. No behavioral change to a healthy install.
 
@@ -86,7 +86,7 @@ Security + robustness hardening. No behavioral change to a healthy install.
 - Diagnostic logging no longer uses `Console.WriteLine` (which bypassed the log redactor); debug traces are compiled out of release builds.
 - **CodeQL code scanning** added (C#) — static security analysis on every push/PR, complementing Dependabot.
 
-## [3.0.2] — 2026-06-03
+## [3.0.2](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.2) — 2026-06-03
 
 A hardening release from a full-project security + correctness review. No behavioral change to a
 healthy install — these fixes matter on the unhappy paths (multi-language, a wrong clock, interrupted state).
@@ -108,7 +108,7 @@ healthy install — these fixes matter on the unhappy paths (multi-language, a w
 ### Security
 - **XXE prevention** on settings import — XML is parsed with DTD and external-entity resolution disabled.
 
-## [3.0.1] — 2026-06-03
+## [3.0.1](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.1) — 2026-06-03
 
 Bug-fix release: correctness, install integrity, and crash-safety hardening from a full-project
 review. No behavioral change to a healthy install — all fixes matter on the unhappy paths.
@@ -123,7 +123,7 @@ review. No behavioral change to a healthy install — all fixes matter on the un
 - **A malformed game-path entry is rejected** instead of treated as valid (no more null-path crash).
 - **The "open game folder" command quotes the path** so folders with spaces open correctly.
 
-## [3.0.0] — 2026-06-03 (first public release)
+## [3.0.0](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.0) — 2026-06-03 (first public release)
 
 PriconneReALLTL-Installer is a rebranded, fully detached fork of
 [tynave/PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer)
@@ -181,12 +181,3 @@ installers never collide. This is the first version published as a GitHub Releas
 ### Attribution
 - MIT-licensed fork of tynave/PriconneReTL-Installer; original inspiration touanu/PriconeTL_Updater. Translation patches by ImaterialC (English) and PeterkleCG (ไทย).
 
-[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.7...HEAD
-[3.0.7]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.7
-[3.0.6]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.6
-[3.0.5]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.5
-[3.0.4]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.4
-[3.0.3]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.3
-[3.0.2]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.2
-[3.0.1]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.1
-[3.0.0]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.0
