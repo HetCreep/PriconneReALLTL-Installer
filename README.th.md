@@ -46,7 +46,7 @@
 ทุก release แนบ **`SHA256SUMS.txt`** และระบุค่า SHA-256 ไว้ใน release notes ด้วย ตรวจไฟล์ที่โหลดมา:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.6.exe
+Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-*.exe
 ```
 
 เทียบผลกับค่าใน `SHA256SUMS.txt` / release notes — ต้องตรงกันเป๊ะ
