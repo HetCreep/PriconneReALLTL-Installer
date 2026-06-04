@@ -163,7 +163,7 @@
             this.Controls.Add(this.ignoreFilesLabel);
             this.Controls.Add(this.fileListbox);
             this.Controls.Add(this.backButton);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;   // custom-chrome (no OS title bar). NOT FixedSingle: with a non-empty this.Text it shows the caption — the v3.0.6 blue-bar regression.
             this.Name = "IgnoreForm";
             this.Text = "Priconne Re:ALLTL Installer - Ignored Files";   // #45: window caption
             this.Load += new System.EventHandler(this.SettingsForm_Load);

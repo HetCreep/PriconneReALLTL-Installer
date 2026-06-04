@@ -96,13 +96,13 @@ namespace InstallerFunctions
                         }
                     }
                 }
-                ErrorLog?.Invoke("Cannot find the game path! Did you install Princess Connect Re:Dive from DMMGamePlayer?");
+                ErrorLog?.Invoke("Cannot find the game path. Did you install Princess Connect Re:Dive from DMMGamePlayer?");
                 DisableStart?.Invoke();
                 return (priconnePath = "Not found", priconnePathValid = false, gameVersion = "Not found");
             }
             catch (FileNotFoundException)
             {
-                ErrorLog?.Invoke("Cannot find the DMMGamePlayer config file! Do you have DMMGamePlayer installed?");
+                ErrorLog?.Invoke("Cannot find the DMMGamePlayer config file. Do you have DMMGamePlayer installed?");
                 DisableStart?.Invoke();
                 return (priconnePath = "Not found", priconnePathValid = false, gameVersion = "Not found");
             }
@@ -120,7 +120,7 @@ namespace InstallerFunctions
 
                 if (!priconnePathValid)
                 {
-                    ErrorLog?.Invoke("Game path not valid, cannot determine installed patch version!");
+                    ErrorLog?.Invoke("Game path not valid; cannot determine the installed patch version.");
                     return (localVersion = "N/A", localVersionValid = false);
                 }
 
@@ -157,7 +157,7 @@ namespace InstallerFunctions
 
                 if (!priconnePathValid)
                 {
-                    ErrorLog?.Invoke("Game path not valid, cannot determine installed modloader version!");
+                    ErrorLog?.Invoke("Game path not valid; cannot determine the installed modloader version.");
                     return ("N/A", false);
                 }
 
@@ -284,12 +284,12 @@ namespace InstallerFunctions
                 }
                 HttpWebResponse resp = webEx.Response as HttpWebResponse;
                 string detail = resp != null ? $"HTTP {(int)resp.StatusCode}" : webEx.Message;
-                Log?.Invoke($"Could not check latest patch version ({detail}). Set a GitHub token to avoid rate limits.", "info", false);
+                Log?.Invoke($"Could not check the latest patch version ({detail}). Set a GitHub token to avoid rate limits.", "info", false);
                 return (latestVersion = null, false, null);
             }
             catch (Exception ex)
             {
-                Log?.Invoke("Could not check latest patch version: " + ex.Message, "info", false);
+                Log?.Invoke("Could not check the latest patch version: " + ex.Message, "info", false);
                 return (latestVersion = null, false, null);
             }
         }
@@ -355,7 +355,7 @@ namespace InstallerFunctions
             }
             catch (Exception ex)
             {
-                Log?.Invoke("Could not check latest modloader version: " + ex.Message, "info", false);
+                Log?.Invoke("Could not check the latest modloader version: " + ex.Message, "info", false);
                 return (null, null);
             }
 
@@ -509,6 +509,10 @@ namespace InstallerFunctions
                 Helper.PatchSource src = Helper.GetCurrentPatchSource();
                 foreach (string f in Directory.GetFiles(ZipCacheDir, src.Owner + "_*.zip"))
                     if (!string.Equals(f, keepPath, StringComparison.OrdinalIgnoreCase)) File.Delete(f);
+                // Also drop stale partial downloads from older versions, but KEEP the current target's
+                // .part so an interrupted download of THIS version can still resume.
+                foreach (string f in Directory.GetFiles(ZipCacheDir, src.Owner + "_*.part"))
+                    if (!string.Equals(f, keepPath + ".part", StringComparison.OrdinalIgnoreCase)) File.Delete(f);
             }
             catch { }
         }
@@ -585,39 +589,101 @@ namespace InstallerFunctions
                 // verifies — so an interrupted/partial download can never masquerade as a complete cached
                 // zip that a later run would reuse + extract over the install.
                 string downloadTmp = target + ".part";
-                try { if (File.Exists(downloadTmp)) File.Delete(downloadTmp); } catch { }
 
                 Log?.Invoke("Downloading compressed files...", "info", true);
                 ProgressPictureChange?.Invoke(Resources.pecorun);
 
-                using (HttpClient client = new HttpClient())
+                long resumeFrom = 0;
+                try { if (File.Exists(downloadTmp)) resumeFrom = new FileInfo(downloadTmp).Length; } catch { }
+                if (resumeFrom > 0) Log?.Invoke($"Resuming a previous download from {resumeFrom / (1024 * 1024)} MB...", "info", true);
+
+                // Resumable download: KEEP the .part across attempts and resume via an HTTP Range request
+                // (GitHub's asset host supports it), so a slow or flaky connection no longer restarts the
+                // ~330MB download from zero on every drop. Integrity is still gated by the SHA-256 verify
+                // below — a mis-resumed/corrupt .part fails the hash and is discarded, so resume never
+                // weakens "verify before touch". A per-read stall guard + linear-backoff retry recover from
+                // brief drops automatically; only a verify mismatch deletes the .part (forces a clean re-download).
+                const int maxAttempts = 4;
+                const int stallTimeoutMs = 60000;          // no bytes for 60s -> cancel this attempt, then retry/resume
+                bool downloaded = false;
+                Exception lastError = null;
+                for (int attempt = 1; attempt <= maxAttempts && !downloaded; attempt++)
                 {
-                    client.DefaultRequestHeaders.UserAgent.ParseAdd("PriconneReALLTLInstaller");
-                    // #74: no Authorization header on the asset download (see the note at the top of this method).
-
-                    using (var response = await client.GetAsync(assetLink, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
+                    long existing = 0;
+                    try { if (File.Exists(downloadTmp)) existing = new FileInfo(downloadTmp).Length; } catch { existing = 0; }
+                    try
                     {
-                        response.EnsureSuccessStatusCode();
-
-                        long? totalBytesResponse = response.Content.Headers.ContentLength;
-                        long totalBytes = totalBytesResponse ?? -1;
-
-                        using (var contentStream = await response.Content.ReadAsStreamAsync())
-                        using (var fileStream = new FileStream(downloadTmp, FileMode.Create, FileAccess.Write))
+                        using (HttpClient client = new HttpClient())
+                        using (var cts = new CancellationTokenSource())
                         {
-                            var buffer = new byte[4096];
-                            long downloadedBytes = 0;
-                            int bytesRead;
+                            client.Timeout = Timeout.InfiniteTimeSpan;   // the stall guard (cts) bounds time, not the 100s default
+                            client.DefaultRequestHeaders.UserAgent.ParseAdd("PriconneReALLTLInstaller");
+                            // #74: no Authorization header on the asset download (see the note at the top of this method).
+                            HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Get, assetLink);
+                            if (existing > 0) req.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(existing, null);
 
-                            while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                            cts.CancelAfter(stallTimeoutMs);
+                            using (var response = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false))
                             {
-                                await fileStream.WriteAsync(buffer, 0, bytesRead);
+                                FileMode mode;
+                                if (existing > 0 && response.StatusCode == HttpStatusCode.PartialContent)
+                                {
+                                    mode = FileMode.Append;                       // 206 — server honored the Range; continue the file
+                                }
+                                else if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
+                                {
+                                    try { File.Delete(downloadTmp); } catch { }   // 416 — our .part is stale/too long; discard and restart
+                                    throw new IOException("Stale partial download discarded; restarting from zero.");
+                                }
+                                else
+                                {
+                                    response.EnsureSuccessStatusCode();           // 200 (Range ignored) / other 2xx — start over
+                                    existing = 0;
+                                    mode = FileMode.Create;
+                                }
 
-                                downloadedBytes += bytesRead;
-                                DownloadProgress?.Invoke(downloadedBytes, totalBytes);
+                                long? len = response.Content.Headers.ContentLength;   // on a 206 this is the REMAINING byte count
+                                long totalBytes = len.HasValue ? len.Value + existing : -1;
+
+                                using (var contentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                                using (var fileStream = new FileStream(downloadTmp, mode, FileAccess.Write))
+                                {
+                                    byte[] buffer = new byte[81920];
+                                    long downloadedBytes = existing;
+                                    int bytesRead;
+                                    while (true)
+                                    {
+                                        cts.CancelAfter(stallTimeoutMs);          // reset the stall window on every read
+                                        bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length, cts.Token).ConfigureAwait(false);
+                                        if (bytesRead <= 0) break;
+                                        await fileStream.WriteAsync(buffer, 0, bytesRead, cts.Token).ConfigureAwait(false);
+                                        downloadedBytes += bytesRead;
+                                        DownloadProgress?.Invoke(downloadedBytes, totalBytes);
+                                    }
+                                }
                             }
                         }
+                        downloaded = true;
                     }
+                    catch (Exception ex)
+                    {
+                        lastError = ex;   // a drop / reset / stall — keep the .part so the next attempt resumes from where it stopped
+                        if (attempt < maxAttempts)
+                        {
+                            Log?.Invoke($"Download interrupted — retrying ({attempt}/{maxAttempts - 1}), resuming where it left off...", "info", true);
+                            await Task.Delay(1500 * attempt).ConfigureAwait(false);   // linear backoff
+                        }
+                    }
+                }
+
+                if (!downloaded)
+                {
+                    // Every attempt failed on the network. KEEP the .part (no delete) so running it again
+                    // resumes from here — the whole point of resume. The install is left untouched.
+                    ErrorLog?.Invoke("Download failed after several attempts (network unreachable or unstable). Your install was left untouched — run it again to resume where it stopped." + (lastError != null ? " (" + lastError.Message + ")" : ""));
+                    downloadSuccess = false;
+                    ProgressPictureChange?.Invoke(null);
+                    return;
                 }
 
                 if (!VerifyZipDigest(downloadTmp))
@@ -631,7 +697,7 @@ namespace InstallerFunctions
                 // Verified → promote the temp file to the real target (replace any stale file there).
                 try { if (File.Exists(target)) File.Delete(target); } catch { }
                 File.Move(downloadTmp, target);
-                Log?.Invoke("Download completed + verified.", "info", true);
+                Log?.Invoke("Download completed and verified.", "info", true);
                 downloadSuccess = true;
                 if (fileToSave == null) StampZipSourceDate(target);   // #34: zips only — never open a downloaded .exe (self-update) as a zip
                 if (cachePath != null) tempFile = cachePath;   // extract from (and keep) the cached zip
@@ -656,7 +722,7 @@ namespace InstallerFunctions
                 bool extractHadError = false;               // any per-file extract failure -> not a clean success (audit B10)
                 using (var zip = ZipFile.OpenRead(tempFile))
                 {
-                    Log?.Invoke("Extracting files to game folder...", "add", true);
+                    Log?.Invoke("Extracting files to the game folder...", "add", true);
                     ProgressPictureChange?.Invoke(Resources.kokorun);
 
                     // Keep config files if Reinstall is selected or config files already present
@@ -1278,7 +1344,7 @@ namespace InstallerFunctions
                     if (result == DialogResult.No) 
                     {
                         cancelledByUser = true;
-                        Log?.Invoke($"Operation cancelled!", "remove", true);
+                        Log?.Invoke("Operation cancelled!", "remove", true);
                         return;
                     };
                 }
@@ -1339,7 +1405,7 @@ namespace InstallerFunctions
 
                 if (processName != null) 
                 {
-                    if (!processSuccess) ErrorLog?.Invoke($"{processName} failed"); 
+                    if (!processSuccess) ErrorLog?.Invoke($"{processName} failed.");
                     else Log?.Invoke($"{processName} complete!", "success", true);
                 }
                 ProcessFinish?.Invoke();
@@ -1385,7 +1451,7 @@ namespace InstallerFunctions
 
                 if (!processSuccess)
                 {
-                    ErrorLog?.Invoke(install ? "Install failed!" : "Update failed!");
+                    ErrorLog?.Invoke(install ? "Install failed." : "Update failed.");
                     ProcessError?.Invoke();
                 }
                 else
@@ -1407,7 +1473,7 @@ namespace InstallerFunctions
                 if (result == DialogResult.OK)
                 {
                     string selectedFile = saveFileDialog.FileName;
-                    Log?.Invoke("Downloading latest PriconneReALLTLInstaller version..", "info", true);
+                    Log?.Invoke("Downloading the latest PriconneReALLTLInstaller version...", "info", true);
                     await DownloadPatchFiles(installerAssetLink, selectedFile);
 
                     if (downloadSuccess)
@@ -1433,7 +1499,7 @@ namespace InstallerFunctions
         {
             try
             {
-                Log?.Invoke("Starting game via DMMGamePlayer.", "info", true);
+                Log?.Invoke("Starting the game via DMMGamePlayer.", "info", true);
                 Process.Start("dmmgameplayer://play/GCL/priconner/cl/win");
                 return true;
             }

@@ -901,7 +901,7 @@
             this.Controls.Add(this.startButton);
             this.DoubleBuffered = true;
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;   // custom-chrome (no OS title bar). NOT FixedSingle: with a non-empty this.Text it shows the caption — the v3.0.6 blue-bar regression.
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = "Priconne Re:ALLTL Installer";   // #45: window caption (Task Manager / Alt-Tab)

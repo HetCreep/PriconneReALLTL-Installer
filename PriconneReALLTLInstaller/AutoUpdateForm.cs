@@ -279,7 +279,7 @@ namespace PriconneReALLTLInstaller
                 UpdateUI();
                 if (modLoaderOutdated)
                 {
-                    logger.Log($"{modLoaderTooltip}", "error", true);
+                    logger.Log(modLoaderTooltip.Replace("\n", " "), "error", true);
                     await Task.Delay(4000);
                 }
             }
@@ -313,12 +313,12 @@ namespace PriconneReALLTLInstaller
                 {
                     if (modLoaderOutdated)
                     {
-                        logger.Log($"{modLoaderTooltip}", "error", true);
+                        logger.Log(modLoaderTooltip.Replace("\n", " "), "error", true);
                         await Task.Delay(4000);
                     }
                     else
                     {
-                        logger.Log("You already have the latest translation patch version installed! Starting game..", "success", true);
+                        logger.Log("You already have the latest translation patch version installed! Starting the game...", "success", true);
                         await Task.Delay(2000);
                     }
                     StartGame();
@@ -332,14 +332,14 @@ namespace PriconneReALLTLInstaller
                     return;
                 }
 
-                logger.Log("TL Patch not found! Starting installation...", "info", true);
+                logger.Log("TL patch not found! Starting installation...", "info", true);
                 CountDownToProcess(true);
                 return;
 
             }
             else
             {
-                logger.Log("An error has occured! Cannot continue!", "error", true);
+                logger.Log("An error has occurred. Cannot continue.", "error", true);   // spelling: occured -> occurred
                 OnProcessError();
             }
         }
@@ -361,7 +361,7 @@ namespace PriconneReALLTLInstaller
             timer1.Stop();
             cancelButton.Text = "Cancelled";
             cancelButton.Enabled = false;
-            logger.Log("Cancelled.. Starting game..", "info", true);
+            logger.Log("Cancelled. Starting the game...", "info", true);
             StartGame();
         }
 

@@ -361,7 +361,7 @@
             this.Controls.Add(this.statusLabel);
             this.Controls.Add(this.progressLabel);
             this.DoubleBuffered = true;
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;   // custom-chrome (no OS title bar). NOT FixedSingle: with a non-empty this.Text it shows the caption — the v3.0.6 blue-bar regression.
             this.Name = "AutoUpdateForm";
             this.Text = "Priconne Re:ALLTL Installer - Auto-Update";   // #45: window caption
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AutoUpdateForm_FormClosing);

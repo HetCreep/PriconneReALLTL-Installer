@@ -275,8 +275,55 @@ namespace PriconneReALLTLInstaller
             int toggleIdx = helpMenuStrip.Items.IndexOf(checkForInstallerUpdatesToolStripMenuItem);
             helpMenuStrip.Items.Insert(toggleIdx + 1, checkNowMenuItem);                       // right under the startup toggle
 
+            ApplyMenuIcons(clearCacheMenuItem, reclaimMenuItem, checkNowMenuItem);              // glyph icons for the Settings / Help menus
+
             installer.LogCacheStatus();   // show what's in the zip cache this session
             await LoadLatestVersionInfoAsync(bypassCache: false);
+        }
+
+        // Menu glyph icons rendered from the Windows-shipped "Segoe MDL2 Assets" font — no external or
+        // third-party art, so the icon set stays license-clean (#58). Silently skipped if the font is
+        // unavailable (very rare on Windows 10/11), leaving the menus text-only.
+        private void ApplyMenuIcons(ToolStripMenuItem clearCache, ToolStripMenuItem reclaim, ToolStripMenuItem checkNow)
+        {
+            bool hasMdl2 = false;
+            foreach (System.Drawing.FontFamily ff in System.Drawing.FontFamily.Families)
+                if (ff.Name == "Segoe MDL2 Assets") { hasMdl2 = true; break; }
+            if (!hasMdl2) return;
+
+            if (settingsMenuStrip is ToolStripDropDownMenu sdm) { sdm.ShowImageMargin = true; sdm.ImageScalingSize = new System.Drawing.Size(20, 20); }
+            if (helpMenuStrip is ToolStripDropDownMenu hdm) { hdm.ShowImageMargin = true; hdm.ImageScalingSize = new System.Drawing.Size(20, 20); }
+
+            Color sc = settingsMenuStrip.Items.Count > 0 ? settingsMenuStrip.Items[0].ForeColor : System.Drawing.SystemColors.MenuText;
+            editIgnoredFilesToolStripMenuItem.Image     = MakeMenuIcon("\uE70F", sc);   // Edit
+            setLauncherToolStripMenuItem.Image          = MakeMenuIcon("\uE768", sc);   // Play / launch
+            importExportSettingsToolStripMenuItem.Image = MakeMenuIcon("\uE895", sc);   // Sync (import / export)
+            gitHubAPISettingsToolStripMenuItem.Image    = MakeMenuIcon("\uE72E", sc);   // Lock (API token)
+            clearCache.Image = MakeMenuIcon("\uE74D", sc);   // Delete
+            reclaim.Image    = MakeMenuIcon("\uE8B7", sc);   // Folder
+
+            Color hc = helpMenuStrip.Items.Count > 0 ? helpMenuStrip.Items[0].ForeColor : System.Drawing.SystemColors.MenuText;
+            checkForInstallerUpdatesToolStripMenuItem.Image = MakeMenuIcon("\uE72C", hc);   // Refresh
+            checkNow.Image = MakeMenuIcon("\uE896", hc);   // Download
+            githubAPIRateLimitInfoToolStripMenuItem.Image = MakeMenuIcon("\uE946", hc);     // Info
+            wikiMenuItem.Image  = MakeMenuIcon("\uE774", hc);   // Globe (web page)
+            aboutMenuItem.Image = MakeMenuIcon("\uE946", hc);   // Info
+        }
+
+        // Renders one Segoe MDL2 Assets glyph into a 16x16 image tinted to match the menu text colour.
+        private static Image MakeMenuIcon(string glyph, Color color)
+        {
+            const int sz = 20;
+            Bitmap bmp = new Bitmap(sz, sz);
+            using (Graphics g = Graphics.FromImage(bmp))
+            using (Font f = new Font("Segoe MDL2 Assets", 16f, FontStyle.Regular, GraphicsUnit.Pixel))
+            using (SolidBrush br = new SolidBrush(color))
+            using (StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+            {
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+                g.DrawString(glyph, f, br, new RectangleF(0, 0, sz, sz), sf);
+            }
+            return bmp;
         }
 
         // Fetches latest patch + modloader versions OFF the UI thread, then refreshes the version
@@ -334,7 +381,7 @@ namespace PriconneReALLTLInstaller
         {
             string githubAPIToken = Helper.DecryptString(Settings.Default.GithubAPIKey);
             (bool tokenvalid, _) = Helper.ValidateGitHubToken(githubAPIToken);
-            if (!string.IsNullOrEmpty(githubAPIToken) && !tokenvalid) logger.Log("Github API token invalid or expired! Please check and reset it!", "error");
+            if (!string.IsNullOrEmpty(githubAPIToken) && !tokenvalid) logger.Log("GitHub API token is invalid or expired. Please check and reset it.", "error");
 
             (localVersion, localVersionValid) = installer.GetInstalledPatchVersion();
             (localModLoaderVersion, localModLoaderVersionValid)= installer.GetInstalledModloaderVersion();
@@ -358,8 +405,8 @@ namespace PriconneReALLTLInstaller
                 if (latestModLoaderVersion != null) (modLoaderOutdated, modLoaderTooltip) = helper.CompareGameandModloaderVersions(gameVersion, localModLoaderVersion, latestModLoaderVersion);
                 if (modLoaderOutdated)
                 {
-                    logger.Log($"Modloader check failed!", "error", true);
-                    logger.Log($"{modLoaderTooltip}", "error", false);
+                    logger.Log("Modloader check failed.", "error", true);
+                    logger.Log(modLoaderTooltip.Replace("\n", " "), "error", false);   // log single-line: LogRedactor.Scrub escapes a real newline to a literal \n; the tooltip (below) keeps the multi-line form
                     // Per-source modloader fallback (warn + switch): the authoritative modloader is
                     // ImaterialC's. If the selected source ships a stale one, point the user at the
                     // lightweight fix — switch to English, Update, switch back — instead of forcing a
@@ -742,7 +789,7 @@ namespace PriconneReALLTLInstaller
                 var r = MessageBox.Show("Reclaim disk space in the game folder?\n\nRemoves only regenerable files — BepInEx's LogOutput.log and assembly cache (re-created on the next game launch) — and prunes leftover empty folders. Your translation patch, settings, and any user files are NOT affected.", "Reclaim space", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (r != DialogResult.Yes) return;
                 long freed = await Task.Run(() => installer.ReclaimGameFolder());   // off the UI thread (recursive cache + tree walk)
-                logger.Log($"Reclaimed {freed / (1024 * 1024)} MB from the game folder (regenerable BepInEx files + empty folders).", "success", true);
+                logger.Log($"Reclaimed {freed / (1024 * 1024)} MB from the game folder (regenerable BepInEx files and empty folders).", "success", true);
             }
             catch (Exception ex) { logger.Error("Reclaim failed: " + ex.Message); }   // #20: an async void handler must not throw into the message loop
         }

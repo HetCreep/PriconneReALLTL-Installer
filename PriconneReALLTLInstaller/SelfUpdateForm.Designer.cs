@@ -198,7 +198,7 @@
             this.Controls.Add(this.latestVersionLabel);
             this.Controls.Add(this.currentVersionLabel);
             this.Controls.Add(this.newVersionLabel);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;   // custom-chrome (no OS title bar). NOT FixedSingle: with a non-empty this.Text it shows the caption — the v3.0.6 blue-bar regression.
             this.Name = "SelfUpdateForm";
             this.Text = "Priconne Re:ALLTL Installer - Update";   // #45: window caption
             this.Load += new System.EventHandler(this.SelfUpdateForm_Load);

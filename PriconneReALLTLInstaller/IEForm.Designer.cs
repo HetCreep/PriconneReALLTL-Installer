@@ -172,7 +172,7 @@
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.backButton);
             this.Cursor = System.Windows.Forms.Cursors.Default;
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;   // custom-chrome (no OS title bar). NOT FixedSingle: with a non-empty this.Text it shows the caption — the v3.0.6 blue-bar regression.
             this.Name = "IEForm";
             this.Text = "Priconne Re:ALLTL Installer - Import / Export";   // #45: window caption
             this.statusStrip1.ResumeLayout(false);

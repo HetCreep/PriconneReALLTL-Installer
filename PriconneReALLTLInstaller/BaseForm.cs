@@ -123,5 +123,19 @@ namespace PriconneReALLTLInstaller
             try { priconnefont?.Dispose(); } catch { }
             base.OnFormClosed(e);
         }
+
+        // A FormBorderStyle.None window drops WS_MINIMIZEBOX, so clicking the taskbar button no longer
+        // minimizes it. Re-add the style so these borderless custom-chrome forms still support taskbar
+        // minimize/restore (they are moved via the BaseForm mouse-drag handlers, not an OS title bar).
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                const int WS_MINIMIZEBOX = 0x00020000;
+                CreateParams cp = base.CreateParams;
+                cp.Style |= WS_MINIMIZEBOX;
+                return cp;
+            }
+        }
     }
 }

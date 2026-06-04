@@ -1,11 +1,24 @@
-**PriconneReALLTL Installer v3.0.6** — a small follow-up to v3.0.5: a second review pass over the v3.0.5 changes (no regressions found) plus a re-sweep of corners the first audit covered lightly. A healthy install behaves the same.
+**PriconneReALLTL Installer v3.0.7** — fixes the v3.0.6 title-bar regression and rolls in menu icons + resumable downloads. A healthy install behaves the same.
+
+## Added
+
+- **Menu icons** — the Settings and Help menus now show a small icon beside each item, rendered from a Windows system icon font (no new artwork, no extra download).
+- **Resumable patch downloads** — if a download is interrupted (a slow or flaky connection), running it again **resumes from where it stopped** instead of re-downloading the ~330 MB from zero, with automatic retry and backoff. The file is still SHA-256-verified before anything touches your install, so an incomplete or mismatched download can never overwrite a working patch.
 
 ## Fixed
 
-- **Completed the COM-handle cleanup from v3.0.5** — the "Create AutoUpdater shortcut" action now releases its shell objects like the other shortcut operations.
-- **Folder-boundary check** — "is this file inside the game folder?" (used when adding an ignore-list entry) now respects a folder boundary, so a sibling folder with a similar name is no longer mistaken for being inside the game folder.
-- **Modloader version parsing** — the installed-modloader version reads correctly when a component has three digits (e.g. `6.0.100`).
-- **Internal hardening** — the uninstall manifest's staged state is reset at the start of each removal (defensive), and a dead no-op handler was removed.
+- **The blue Windows title bar is gone** — v3.0.5/v3.0.6 accidentally resurfaced the OS caption on every window (and clipped the bottom status row when logs were collapsed). All windows are borderless custom-chrome again.
+- **Minimizing from the taskbar works again.**
+- **Cleaner log messages** — no literal `\n` in the "modloader outdated" notice, no stray `$` in the export/import lines, a routine "found config file(s)" message no longer shows as a red error, and consistent international-English wording (including an "occurred" spelling fix).
+
+## Changed
+
+- **The bug-report template is now a guided form** — dropdowns for translation source / operation / launcher plus required fields.
+- **CONTRIBUTING's coding-conventions** now document the project's real standards (logging style, install-safety invariants, the borderless-form rule).
+
+## Security
+
+- **Logged file paths now mask your Windows username** (`%USERPROFILE%`) — less personal information ends up in a log you might paste into an issue. (The GitHub token was already redacted.)
 
 <!-- NOTE: do NOT add a "## Verification" section here — release.yml auto-appends one with the
      build-computed SHA-256 hashes + the Authenticode note. A manual one here duplicates it. -->

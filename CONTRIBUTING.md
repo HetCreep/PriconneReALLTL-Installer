@@ -48,9 +48,47 @@ A clean build produces a small number of pre-existing warnings (`CS0108`, `CS041
 
 ## Coding conventions
 
-- Match the surrounding style; small, cohesive files.
-- **WinForms Designer files (`*.Designer.cs`):** avoid manual *layout* edits — prefer creating controls in code (see how the "TL Source" selector is built in `MainForm`). Namespace / string-literal edits are fine.
-- Validate input at boundaries; handle errors explicitly (no silent swallowing).
+These mirror the standards the codebase already follows — match them so a change reads like the surrounding code.
+
+**Style & structure**
+
+- Match the surrounding style; keep files small and cohesive (≈200–400 lines, 800 max — extract when larger).
+- Prefer early returns over deep nesting; give a meaningful number a named constant.
+- Explicit access modifiers; `async`/`await` end-to-end — never block on `.Result` / `.Wait()`.
+- Don't mutate an input to produce new state — return a new value; prefer `record` for value-like models.
+
+**Error handling**
+
+- Validate external input at boundaries: GitHub JSON, zip/file contents, version strings, user-entered paths, and the token.
+- Handle errors explicitly — never swallow silently.
+- A partial extract or remove is a **failure**, not a success — surface it and point the user at Reinstall.
+
+**Logging**
+
+- Always log through `Logger` — it routes every line through `LogRedactor.Scrub`, which redacts the GitHub token and escapes CR/LF/tab. Never `Console.WriteLine` / `Debug.WriteLine` a secret, and never build a message string that contains the token.
+- Log multi-line text on one line (`text.Replace("\n", " ")`) — `Scrub` escapes a real newline to a literal `\n`.
+- Message style: end an error with a period (not `!`); keep `!` only for a genuine success (`Install complete!`); write "and", not "+"; use `...` for an ongoing action; keep articles (`the game folder`, `the latest version`).
+
+**Install / file safety (non-negotiable)**
+
+- **Verify before you touch:** SHA-256-verify a downloaded zip *before* any remove or extract — a failed verify must leave the install untouched.
+- **Path-guard every write and delete:** resolve to a full path and confirm it stays inside the game folder (zip-slip on extract; tamper-safe removal).
+- **Whitelist removal:** only remove files recorded in the ref-counted manifest (`BepInEx\.priconnerealltl-manifest.json`) — never blind-delete a folder. Uninstall drops only files the selected source *solely* owns.
+- Never modify the game's own binaries — every change stays under `BepInEx\`.
+
+**Secrets, network & native API**
+
+- The GitHub token is the only secret: stored with DPAPI (`CurrentUser` scope), decrypted only at the point of use straight into the `Authorization` header — never a long-lived field, a log line, or a process/shortcut argument.
+- Network egress is a GitHub-only allow-list (see [PRIVACY.md](PRIVACY.md)); run network calls off the UI thread so a slow or rate-limited response never freezes the window.
+- Registry access is read-only (minimum rights, wrapped in `using`); `Process.Start` takes a separate FileName + Arguments — never a concatenated shell string.
+
+**WinForms**
+
+- `*.Designer.cs`: avoid manual *layout* edits — build controls in code (see how the "TL Source" selector is built in `MainForm`). Namespace / string-literal edits are fine.
+- Custom-chrome forms use `FormBorderStyle.None` — **not** `FixedSingle`, where a non-empty `Text` makes Windows draw the OS title bar.
+
+**Project specifics**
+
 - Never hardcode a translation patch repo — sources live in the `Helper.PatchSource` registry and every URL derives from `Helper.GetCurrentPatchSource()`. Adding a language = one list entry.
 - Keep the public docs (`README.md`, this file, `CHANGELOG.md`) in sync with behavior changes.
 

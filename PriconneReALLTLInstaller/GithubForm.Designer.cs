@@ -118,7 +118,7 @@
             this.Controls.Add(this.apiKeyTextbox);
             this.Controls.Add(this.gitHubApiKeyLabel);
             this.Controls.Add(this.backButton);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;   // custom-chrome (no OS title bar). NOT FixedSingle: with a non-empty this.Text it shows the caption — the v3.0.6 blue-bar regression.
             this.Name = "GithubForm";
             this.Text = "Priconne Re:ALLTL Installer - GitHub Token";   // #45: window caption
             this.Load += new System.EventHandler(this.GithubForm_Load);

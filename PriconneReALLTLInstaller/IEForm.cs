@@ -53,7 +53,7 @@ namespace PriconneReALLTLInstaller
                     string selectedFile = saveFileDialog1.FileName;
                     helper.ExportSettings(selectedFile);
                     ielogger.Log("Export Successful!", "success", true);
-                    ielogger.Log($"Settings successfully exported to ${selectedFile}", "info", false);
+                    ielogger.Log($"Settings successfully exported to {selectedFile}", "info", false);   // was ${...} — a literal $ leaked into the log (C# uses {...})
                     MessageBox.Show("Settings successfully exported", "Export Successful!", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -75,7 +75,7 @@ namespace PriconneReALLTLInstaller
                     string selectedFile = openFileDialog1.FileName;
                     helper.ImportSettings(selectedFile);
                     ielogger.Log("Import Successful!", "success", true);
-                    ielogger.Log($"Settings successfully imported from ${selectedFile}", "info", false);
+                    ielogger.Log($"Settings successfully imported from {selectedFile}", "info", false);   // was ${...} — a literal $ leaked into the log (C# uses {...})
                     MessageBox.Show("Settings successfully imported!\n\nThe application will now restart.", "Import Successful!", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     Application.Restart();
                 }

@@ -155,7 +155,7 @@ namespace HelperFunctions
                 }
             }
 
-            if (isConfigPresent) Log?.Invoke("Found config file(s). Adding them to the list of ignored/excluded files.", "error", false);
+            if (isConfigPresent) Log?.Invoke("Found config file(s). Adding them to the list of ignored/excluded files.", "info", false);   // was "error" (red) — this is a normal informational event, not a failure
             return isConfigPresent;
         }
         public void CannotExitNotification(FormClosingEventArgs e, string type)
@@ -348,8 +348,8 @@ namespace HelperFunctions
         public void LogFastLauncherShortcut()
         {
             var links = GetFastLauncherLinks();
-            if (links.Count == 0) Log?.Invoke("No launch shortcut set yet — wrap a launcher shortcut to enable one-click update + play.", "info", false);
-            else Log?.Invoke("Launch shortcuts (update + play): " + string.Join(", ", links), "info", false);
+            if (links.Count == 0) Log?.Invoke("No launch shortcut set yet — wrap a launcher shortcut to enable one-click update and play.", "info", false);
+            else Log?.Invoke("Launch shortcuts (update and play): " + string.Join(", ", links), "info", false);
         }
         /// <summary>Returns the full list of configured shortcut paths (merging legacy single-link if needed).</summary>
         public System.Collections.Generic.List<string> GetFastLauncherLinks()
@@ -994,7 +994,7 @@ namespace HelperFunctions
                              + (string.IsNullOrEmpty(origDir) ? "" : $" --tdir {B64(origDir)}");
                 // IconLocation left untouched -> the shortcut still looks the same.
                 sc.Save();
-                Log?.Invoke($"Wrapped shortcut (update+launch): {Path.GetFileName(lnkPath)} → {Path.GetFileName(origTarget)}", "success", false);
+                Log?.Invoke($"Wrapped shortcut (update and launch): {Path.GetFileName(lnkPath)} → {Path.GetFileName(origTarget)}", "success", false);
                 return true;
             }
             catch (Exception ex)

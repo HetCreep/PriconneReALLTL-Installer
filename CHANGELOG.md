@@ -8,6 +8,26 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 _Nothing yet._
 
+## [3.0.7] — 2026-06-04
+
+A fix-led release: it corrects a v3.0.6 cosmetic regression (the window title bar) and rolls in two small conveniences — menu icons and resumable downloads. No change to how a healthy install behaves.
+
+### Added
+- **Menu icons** — the Settings and Help menus now show a small icon beside each item, rendered from a Windows system icon font (no new artwork, no extra download).
+- **Resumable patch downloads** — if a download is interrupted (a slow or flaky connection), running it again **resumes from where it stopped** instead of re-downloading the ~330 MB from zero, with automatic retry and backoff. Integrity is unchanged: the file is still SHA-256-verified before anything touches your install, so an incomplete or mismatched download can never overwrite a working patch.
+
+### Fixed
+- **The blue Windows title bar is gone** — v3.0.5/v3.0.6 accidentally resurfaced the OS caption on every window (and it clipped the bottom status row when logs were collapsed). All windows are borderless custom-chrome again, as before.
+- **Minimizing from the taskbar works again** — the borderless windows once more respond to the taskbar button (minimize/restore).
+- **Cleaner log messages** — the "modloader outdated" notice no longer shows a literal `\n`; the settings export/import lines no longer print a stray `$`; a routine "found config file(s)" message is no longer styled as a red error; and the log wording is normalized to consistent international English (including an "occurred" spelling fix).
+
+### Changed
+- **The bug-report template is now a guided form** — dropdowns for translation source / operation / launcher plus required fields, so a report is faster to file and easier to act on.
+- **CONTRIBUTING's coding-conventions** section now documents the project's real standards (logging style, install-safety invariants, the borderless-form rule).
+
+### Security
+- **Logged file paths now mask your Windows username** (`%USERPROFILE%`) — less personal information ends up in a log you might paste into an issue. (The GitHub token was already redacted.)
+
 ## [3.0.6] — 2026-06-04
 
 A small follow-up to v3.0.5: a second review pass over the v3.0.5 changes (no regressions found) plus a re-sweep of corners the first audit covered lightly. No behavioral change to a healthy install.
@@ -161,7 +181,8 @@ installers never collide. This is the first version published as a GitHub Releas
 ### Attribution
 - MIT-licensed fork of tynave/PriconneReTL-Installer; original inspiration touanu/PriconeTL_Updater. Translation patches by ImaterialC (English) and PeterkleCG (ไทย).
 
-[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.6...HEAD
+[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.7...HEAD
+[3.0.7]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.7
 [3.0.6]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.6
 [3.0.5]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.5
 [3.0.4]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.4

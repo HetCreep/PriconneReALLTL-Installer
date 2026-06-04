@@ -15,6 +15,21 @@ namespace LoggerFunctions
             new System.Text.RegularExpressions.Regex(@"gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}", System.Text.RegularExpressions.RegexOptions.Compiled);
         private static readonly System.Text.RegularExpressions.Regex AuthHeader =
             new System.Text.RegularExpressions.Regex(@"(?i)\b(bearer|token)\s+[A-Za-z0-9_\-\.]{8,}", System.Text.RegularExpressions.RegexOptions.Compiled);
+        // Mask the Windows user-profile path so a pasted/synced log can't leak the username (PII). The token
+        // redaction above is the hard requirement; this username masking is the recommended add-on
+        // (log-sanitization.md). Precompiled once; null if the profile can't be resolved.
+        private static readonly System.Text.RegularExpressions.Regex UserProfilePath = BuildUserProfileRegex();
+        private static System.Text.RegularExpressions.Regex BuildUserProfileRegex()
+        {
+            try
+            {
+                string up = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                if (string.IsNullOrEmpty(up)) return null;
+                return new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape(up),
+                    System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            }
+            catch { return null; }
+        }
 
         public static string Scrub(string message)
         {
@@ -27,6 +42,7 @@ namespace LoggerFunctions
                 string s = message.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
                 s = GithubToken.Replace(s, "[REDACTED_TOKEN]");
                 s = AuthHeader.Replace(s, m => m.Groups[1].Value + " [REDACTED]");
+                if (UserProfilePath != null) s = UserProfilePath.Replace(s, "%USERPROFILE%");   // mask C:\Users\<name> -> %USERPROFILE% (PII)
                 return s;
             }
             catch { return "[REDACTED]"; }   // if redaction itself throws, drop the content rather than risk a leak
@@ -100,7 +116,7 @@ namespace LoggerFunctions
             {
                 using (StreamWriter writer = new StreamWriter(logFilePath, true)) writer.WriteLine($"[{DateTime.Now}] - ERROR: {message}");
 
-                if (outputTextBox != null && !outputTextBox.IsDisposed) outputTextBox.AppendText($"[{DateTime.Now}] - ERROR:" + Environment.NewLine + message + Environment.NewLine, colors["error"]);
+                if (outputTextBox != null && !outputTextBox.IsDisposed) outputTextBox.AppendText($"[{DateTime.Now}] - ERROR: {message}" + Environment.NewLine, colors["error"]);   // inline (no orphan "ERROR:" line) — matches the file log + info lines; red already signals error
 
                 toolStripStatusLabel1.ForeColor = colors["error"];
                 toolStripStatusLabel1.Text = $"ERROR! - See log for details.";
