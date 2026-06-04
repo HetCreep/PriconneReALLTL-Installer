@@ -127,7 +127,7 @@ jobs:
       - name: Attest build provenance — best-effort
         if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
         continue-on-error: true
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             dist/${{ steps.pkg.outputs.portable }}
