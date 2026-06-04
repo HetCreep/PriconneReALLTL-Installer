@@ -19,6 +19,11 @@ permissions:
 jobs:
   analyze:
     name: Analyze (C#)
+    # Dependabot PRs run with a read-only GITHUB_TOKEN, so `security-events: write` is downgraded
+    # and CodeQL's SARIF upload fails (exit 1). Skip Dependabot PRs — the bumped dependency is still
+    # CodeQL-scanned when it merges to master (the push trigger runs with a full token). Human PRs,
+    # master pushes, and the weekly schedule are unaffected.
+    if: ${{ github.event_name != 'pull_request' || github.actor != 'dependabot[bot]' }}
     runs-on: windows-latest   # .NET Framework needs Windows + MSBuild
     permissions:
       security-events: write   # upload scan results to the Security tab
