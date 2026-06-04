@@ -161,7 +161,9 @@ installers never collide. This is the first version published as a GitHub Releas
 ### Attribution
 - MIT-licensed fork of tynave/PriconneReTL-Installer; original inspiration touanu/PriconeTL_Updater. Translation patches by ImaterialC (English) and PeterkleCG (ไทย).
 
-[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.4...HEAD
+[Unreleased]: https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.6...HEAD
+[3.0.6]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.6
+[3.0.5]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.5
 [3.0.4]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.4
 [3.0.3]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.3
 [3.0.2]: https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.2

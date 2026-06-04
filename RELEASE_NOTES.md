@@ -7,11 +7,8 @@
 - **Modloader version parsing** — the installed-modloader version reads correctly when a component has three digits (e.g. `6.0.100`).
 - **Internal hardening** — the uninstall manifest's staged state is reset at the start of each removal (defensive), and a dead no-op handler was removed.
 
-## Verification
-
-- Verify your download against **`SHA256SUMS.txt`**:
-  `Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v3.0.6.exe`
-- Authenticode: not signed this release (verify via SHA-256 above).
+<!-- NOTE: do NOT add a "## Verification" section here — release.yml auto-appends one with the
+     build-computed SHA-256 hashes + the Authenticode note. A manual one here duplicates it. -->
 
 ## Compatibility
 
