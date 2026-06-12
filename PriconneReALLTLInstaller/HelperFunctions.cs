@@ -1,4 +1,4 @@
-using InstallerFunctions;
+﻿using InstallerFunctions;
 using LoggerFunctions;
 using Microsoft.Win32;
 using Newtonsoft.Json;

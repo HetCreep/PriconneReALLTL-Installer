@@ -1,4 +1,4 @@
-using HelperFunctions;
+﻿using HelperFunctions;
 using InstallerFunctions;
 using LoggerFunctions;
 using PriconneReALLTLInstaller.Properties;
@@ -914,6 +914,9 @@ namespace PriconneReALLTLInstaller
                 item.Click += (s, ev) => SelectPatchSource(index);
                 menu.Items.Add(item);
             }
+            // Transient menu: dispose after close, deferred one message-loop pass so the
+            // clicked item's handler still dispatches before disposal.
+            menu.Closed += (s, ev) => BeginInvoke((Action)(() => menu.Dispose()));
             menu.Show(patchSourceLinkLabel, new System.Drawing.Point(0, patchSourceLinkLabel.Height));
         }
 
