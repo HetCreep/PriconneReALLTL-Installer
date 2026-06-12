@@ -460,11 +460,12 @@ namespace HelperFunctions
                     pluginDownloads: new[] { new PluginDownload("HetCreep", "PriconneALLTLFixup", "PriconneALLTLFixup.dll") }),
                 // VN (NTP335) — Gemini-AI translation on the ImaterialC text layout; the author asked
                 // for the quality notice below to be shown before install (issue NTP335/PriconneRe-VN#1).
-                // All fixup DLLs disabled pending the author's answer on which (if any) the VN text
-                // needs — conservative default: vanilla XUnity AutoTranslator + VN text only.
+                // EN fixups ENABLED per the author's own test (2026-06-12, same issue): without
+                // PriconneTLFixup/PriconneSkillTLFixup the VN text renders with broken font sizes.
                 new PatchSource("Tiếng Việt  (NTP335 / PriconneRe-VN)", "Vietnamese", "VN", "NTP335", "PriconneRe-VN",
                     @"BepInEx\Translation\vi\Text\Version.txt", @"v?\d+\.\d+(?:\.\d+)?",
-                    disablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll", "PriconneALLTLFixup.dll" },
+                    enablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll" },
+                    disablePlugins: new[] { "PriconneALLTLFixup.dll" },
                     notice: "Đây là bản dịch bằng Gemini AI — sẽ có vài lỗi nhỏ và cách xưng hô chưa đúng. Cân nhắc trước khi tải.\n\n(This translation is AI-generated with Gemini — expect minor errors and awkward pronouns.)"),
             };
 
