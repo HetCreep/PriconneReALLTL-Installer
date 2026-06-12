@@ -25,6 +25,7 @@ body:
       options:
         - English (ImaterialC)
         - ไทย / Thai (PeterkleCG)
+        - Tiếng Việt / Vietnamese (NTP335)
         - Not applicable / not sure
     validations:
       required: true

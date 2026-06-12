@@ -6,9 +6,9 @@
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![.NET Framework 4.8](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4)
 
-**📖 Read this in:** English · [ไทย](README.th.md)
+**📖 Read this in:** English · [ไทย](README.th.md) · [Tiếng Việt](README.vi.md)
 
-A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx translation patches — supporting **multiple, user-selectable translation sources (English / ไทย)** and one-click *update + play* launch shortcuts.
+A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx translation patches — supporting **multiple, user-selectable translation sources (English / ไทย / Tiếng Việt)** and one-click *update + play* launch shortcuts.
 
 **"ReALLTL"** = supports **all** translation patches. A rebranded, fully detached fork of [tynave/PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) with its own identity (name, GUIDs, strong-name key, self-update URL) so the two installers never collide.
 
@@ -20,7 +20,7 @@ A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx trans
 * **Shortcut-wrapped launching** — the GUI focuses on patching; the in-app **Launch Game** button opens the game via DMM. For *per-account* play or one-click *update + play*, **wrap** a launcher shortcut that points at the game ([DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), or a [PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher) account shortcut): pressing it updates the patch, then launches that exact target. Reversible (un-wrap restores the original). *Launching via plain DMM? Use the **AutoUpdater shortcut** (see below) — wrapping a bare DMM shortcut would only re-open the DMM launcher, not the game.*
 * **PriconneMultiAccountLauncher integration** — auto-detected via its Inno Setup uninstall key (HKCU/HKLM) with an `%APPDATA%` fallback.
 * **Modloader source pinned to ImaterialC** — the BepInEx IL2CPP interop always comes from ImaterialC's canonical repo (its latest release), independent of the chosen TL source.
-* **Safe installs & clean uninstalls** — the downloaded patch `.zip` is **SHA-256 verified** against GitHub's published digest before any file is touched; extraction is **zip-slip guarded**; uninstall is **ref-counted** (with both English and ไทย installed **through this app**, removing one keeps the other and the shared modloader working) and **path-guarded** to the game folder.
+* **Safe installs & clean uninstalls** — the downloaded patch `.zip` is **SHA-256 verified** against GitHub's published digest before any file is touched; extraction is **zip-slip guarded**; uninstall is **ref-counted** (with two sources installed **through this app**, removing one keeps the other and the shared modloader working) and **path-guarded** to the game folder.
 * **Rate-limit friendly** — patch/modloader version checks are cached ~6 h (the installer's own self-update check ~7 days), so a GitHub API token is *optional*. If set, the token is stored encrypted (Windows DPAPI), masked on screen, and never logged.
 * **Verifiable cloud builds** — built **only** by GitHub Actions on a `v*` tag; each release attaches **`SHA256SUMS.txt`**. Strong-name signed (not yet Authenticode-signed — verify via SHA-256, see below).
 
@@ -91,5 +91,5 @@ MIT-licensed fork. Heartfelt thanks to:
 
 ### 🤖 Built with AI Co-Engineers
 
-- **Claude Code** (Anthropic) — C# rebrand + detachment, multi-source English/ไทย, shortcut-wrap launch architecture, per-source version detection, rate-limit caching, build/CI.
+- **Claude Code** (Anthropic) — C# rebrand + detachment, multi-source English/ไทย/Tiếng Việt, shortcut-wrap launch architecture, per-source version detection, rate-limit caching, build/CI.
 - **Antigravity** (Google DeepMind) — earlier native multi-launcher UI, ClickOnce deactivation, and GitHub Actions cloud compilation.

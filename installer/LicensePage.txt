@@ -37,6 +37,7 @@ With thanks to:
   * ImaterialC -- PriconneRe-TL (English translation patch) and the BepInEx
     mod loader build this installer pins to
   * PeterkleCG -- PriconneTH (Thai translation patch)
+  * NTP335 -- PriconneRe-VN (Vietnamese translation patch)
   * BepInEx -- the Unity mod loader the patches run on
   * XUnity.AutoTranslator -- the in-game translation framework
   * Newtonsoft.Json (James Newton-King) -- JSON library embedded in this tool

@@ -1,4 +1,4 @@
-# <img src="PriconneReALLTLInstaller/Resources/jewel.ico" width="28"> PriconneReALLTL Installer
+﻿# <img src="PriconneReALLTLInstaller/Resources/jewel.ico" width="28"> PriconneReALLTL Installer
 
 [![Latest release](https://img.shields.io/github/v/release/HetCreep/PriconneReALLTL-Installer?sort=semver&display_name=tag)](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest)
 [![Build](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml/badge.svg)](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml)
@@ -6,9 +6,9 @@
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![.NET Framework 4.8](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4)
 
-**📖 อ่านเป็นภาษา:** [English](README.md) · ไทย
+**📖 อ่านเป็นภาษา:** [English](README.md) · ไทย · [Tiếng Việt](README.vi.md)
 
-โปรแกรม GUI (WinForms) สำหรับติดตั้ง/อัปเดตแพตช์แปลภาษา BepInEx ของเกม **Princess Connect! Re:Dive** — รองรับ **แหล่งแปลหลายภาษาที่ผู้ใช้เลือกเองได้ (English / ไทย)** พร้อมช็อตคัต *อัปเดต + เล่น* ในคลิกเดียว
+โปรแกรม GUI (WinForms) สำหรับติดตั้ง/อัปเดตแพตช์แปลภาษา BepInEx ของเกม **Princess Connect! Re:Dive** — รองรับ **แหล่งแปลหลายภาษาที่ผู้ใช้เลือกเองได้ (English / ไทย / Tiếng Việt)** พร้อมช็อตคัต *อัปเดต + เล่น* ในคลิกเดียว
 
 **"ReALLTL"** = รองรับแพตช์แปล **ทุกภาษา** เป็น fork ที่แยกขาดสมบูรณ์และรีแบรนด์มาจาก [tynave/PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) โดยมีอัตลักษณ์ของตัวเอง (ชื่อ, GUID, strong-name key, URL self-update) เพื่อไม่ให้ตัวติดตั้งทั้งสองชนกัน
 
@@ -91,5 +91,5 @@ Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-*.exe
 
 ### 🤖 สร้างด้วย AI Co-Engineers
 
-- **Claude Code** (Anthropic) — รีแบรนด์ + แยกขาดโค้ด C#, ระบบ multi-source English/ไทย, สถาปัตยกรรม shortcut-wrap launch, การตรวจเวอร์ชั่นต่อแหล่ง, rate-limit caching, build/CI
+- **Claude Code** (Anthropic) — รีแบรนด์ + แยกขาดโค้ด C#, ระบบ multi-source English/ไทย/Tiếng Việt, สถาปัตยกรรม shortcut-wrap launch, การตรวจเวอร์ชั่นต่อแหล่ง, rate-limit caching, build/CI
 - **Antigravity** (Google DeepMind) — UI multi-launcher แบบ native ในยุคแรก, การปิด ClickOnce, และการคอมไพล์บนคลาวด์ด้วย GitHub Actions
