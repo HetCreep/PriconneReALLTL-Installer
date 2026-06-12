@@ -408,8 +408,14 @@ namespace HelperFunctions
             // before the choice persists — e.g. VN's AI-translation quality notice, requested
             // by its author. null/empty = no notice.
             public string Notice { get; }
+            // True for a TEXT-ONLY source (zip carries just Translation\<lang>\, no BepInEx
+            // engine). Install/update/reinstall then chain the pinned ModloaderSource's full
+            // zip as the engine base FIRST — otherwise a fresh install would have no modloader,
+            // no XUnity AutoTranslator, and no fixup DLLs at all. EN/TH bundle the engine
+            // themselves (~330MB zips) and leave this false.
+            public bool RequiresEngineBase { get; }
             public PatchSource(string displayName, string shortName, string shortCode, string owner, string repo, string versionFileRelPath, string versionRegex,
-                string[] enablePlugins = null, string[] disablePlugins = null, PluginDownload[] pluginDownloads = null, string notice = null)
+                string[] enablePlugins = null, string[] disablePlugins = null, PluginDownload[] pluginDownloads = null, string notice = null, bool requiresEngineBase = false)
             {
                 DisplayName = displayName;
                 ShortName = shortName;
@@ -422,6 +428,7 @@ namespace HelperFunctions
                 DisablePlugins = disablePlugins ?? new string[0];
                 PluginDownloads = pluginDownloads ?? new PluginDownload[0];
                 Notice = notice;
+                RequiresEngineBase = requiresEngineBase;
             }
             public string ApiBase => $"https://api.github.com/repos/{Owner}/{Repo}";
             public string RawBase => $"https://raw.githubusercontent.com/{Owner}/{Repo}";
@@ -466,7 +473,8 @@ namespace HelperFunctions
                     @"BepInEx\Translation\vi\Text\Version.txt", @"v?\d+\.\d+(?:\.\d+)?",
                     enablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll" },
                     disablePlugins: new[] { "PriconneALLTLFixup.dll" },
-                    notice: "Đây là bản dịch bằng Gemini AI — sẽ có vài lỗi nhỏ và cách xưng hô chưa đúng. Cân nhắc trước khi tải.\n\n(This translation is AI-generated with Gemini — expect minor errors and awkward pronouns.)"),
+                    notice: "Đây là bản dịch bằng Gemini AI — sẽ có vài lỗi nhỏ và cách xưng hô chưa đúng. Cân nhắc trước khi tải.\n\n(This translation is AI-generated with Gemini — expect minor errors and awkward pronouns.)",
+                    requiresEngineBase: true),   // VN zip is text-only (~15MB): chain the ImaterialC engine base on install
             };
 
         /// <summary>Currently selected translation patch source (falls back to index 0 / English).</summary>
@@ -563,6 +571,10 @@ namespace HelperFunctions
                         if (want.Contains(k) && !values.ContainsKey(k)) values[k] = raw.Substring(e + 1).TrimEnd('\r');
                     }
                 }
+                // A text-only source (e.g. VN) ships no AutoTranslatorConfig.ini, so its zip can't
+                // supply Language=. Fall back to the source's own lang code — without this the key
+                // would stay at the engine base's value (en) and the source's text would never load.
+                if (!values.ContainsKey("Language")) values["Language"] = GetCurrentPatchSource().Lang;
                 // Fall back to the bundled texture list only if the source's config didn't carry it.
                 if (!values.ContainsKey("DuplicateTextureNames")) values["DuplicateTextureNames"] = DuplicateTextureNamesValue;
                 if (values.Count == 0) return;

@@ -46,6 +46,7 @@ namespace InstallerFunctions
         private static bool _clockSkewWarned = false;   // #16: warn at most once per session about a wrong system clock
         private string latestAssetDigest;      // GitHub asset SHA256 ("sha256:…") for verify-before-touch
         private string tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());   // no file created (GetTempFileName throws when %TEMP% is full) — audit B3
+        private string stagedBaseZip;          // verified engine-base zip staged for the current operation (text-only sources); null = none
         private bool removeSuccess = true;
         private bool downloadSuccess = true;
         private bool extractSuccess = true;
@@ -487,12 +488,15 @@ namespace InstallerFunctions
             return freed;
         }
 
-        private string GetCachedZipPath()
+        // cacheSource: identity for the cache file name — defaults to the selected source; the
+        // engine-base download passes the ModloaderSource so the base zip caches under ITS owner
+        // (and is therefore shared with a plain EN install — same artifact, same file name).
+        private string GetCachedZipPath(Helper.PatchSource cacheSource = null)
         {
             try
             {
                 if (string.IsNullOrEmpty(latestVersion)) return null;
-                Helper.PatchSource src = Helper.GetCurrentPatchSource();
+                Helper.PatchSource src = cacheSource ?? Helper.GetCurrentPatchSource();
                 Directory.CreateDirectory(ZipCacheDir);
                 string ver = Helper.NormalizeVersion(latestVersion);
                 foreach (char ch in Path.GetInvalidFileNameChars()) ver = ver.Replace(ch, '_');
@@ -501,12 +505,12 @@ namespace InstallerFunctions
             catch { return null; }
         }
 
-        private void PurgeStaleCachedZips(string keepPath)
+        private void PurgeStaleCachedZips(string keepPath, Helper.PatchSource cacheSource = null)
         {
             try
             {
                 if (!Directory.Exists(ZipCacheDir)) return;
-                Helper.PatchSource src = Helper.GetCurrentPatchSource();
+                Helper.PatchSource src = cacheSource ?? Helper.GetCurrentPatchSource();
                 foreach (string f in Directory.GetFiles(ZipCacheDir, src.Owner + "_*.zip"))
                     if (!string.Equals(f, keepPath, StringComparison.OrdinalIgnoreCase)) File.Delete(f);
                 // Also drop stale partial downloads from older versions, but KEEP the current target's
@@ -559,7 +563,7 @@ namespace InstallerFunctions
             catch { }
         }
 
-        public async Task DownloadPatchFiles(string assetLink, string fileToSave = null)
+        public async Task DownloadPatchFiles(string assetLink, string fileToSave = null, Helper.PatchSource cacheSource = null)
         {
             // #74: the release ASSET download (objects.githubusercontent.com, public repos) needs NO
             // token, and setting Authorization on the HttpClient would forward the token to whatever host
@@ -569,7 +573,7 @@ namespace InstallerFunctions
             {
                 // Reuse the cached zip for this source+version if present (no re-download); otherwise
                 // purge stale versions and download into the cache. fileToSave != null bypasses caching.
-                string cachePath = (fileToSave == null) ? GetCachedZipPath() : null;
+                string cachePath = (fileToSave == null) ? GetCachedZipPath(cacheSource) : null;
                 if (cachePath != null && File.Exists(cachePath))
                 {
                     if (VerifyZipDigest(cachePath))
@@ -583,7 +587,7 @@ namespace InstallerFunctions
                     Log?.Invoke("Cached download failed the integrity check — re-downloading.", "info", true);
                     try { File.Delete(cachePath); } catch { }
                 }
-                if (cachePath != null) PurgeStaleCachedZips(cachePath);
+                if (cachePath != null) PurgeStaleCachedZips(cachePath, cacheSource);
                 string target = cachePath ?? (fileToSave ?? tempFile);
                 // #18: download to a temp ".part" file and promote it to the real target ONLY after it
                 // verifies — so an interrupted/partial download can never masquerade as a complete cached
@@ -712,7 +716,9 @@ namespace InstallerFunctions
         public async Task ExtractPatchFiles()
 
         {
-            if (!removeSuccess || !downloadSuccess) return;
+            // extractSuccess included: an engine-base extract failure must skip the text layer
+            // (and keep the operation reported as failed), not be overwritten by a clean second pass.
+            if (!removeSuccess || !downloadSuccess || !extractSuccess) return;
 
             try
             {
@@ -768,7 +774,7 @@ namespace InstallerFunctions
                         }
                     }
                 }
-                extractSuccess = !extractHadError;
+                extractSuccess = extractSuccess && !extractHadError;   // sticky across chained extracts (engine base + text layer)
                 if (extractHadError) ErrorLog?.Invoke("Some files failed to extract — the install may be incomplete. Please run Reinstall.");
                 Log?.Invoke($"Extracted {extractedFiles.Count} file(s).", "add", false);
 
@@ -796,6 +802,59 @@ namespace InstallerFunctions
                 extractSuccess = false;
             }
         }
+        // ─── Engine-base chaining (text-only sources, e.g. VN) ──────────────────────
+        // A RequiresEngineBase source ships ONLY Translation\<lang>\ in its zip, so install/
+        // update/reinstall first deploy the pinned ModloaderSource's full zip (BepInEx core,
+        // interop, fixup plugins, config) as the engine base, then the text layer on top.
+        // Both zips are downloaded + SHA-256-verified BEFORE any remove/extract touches the
+        // install (verify-before-touch), and both extracts record into the manifest under the
+        // SELECTED source's name — so uninstalling it removes the base too (ref-counted: files
+        // shared with an installed EN stay).
+
+        /// <summary>Download + verify the engine-base zip and stage it for extraction. Restores the
+        /// selected source's release fields afterwards (the base fetch overwrites the shared
+        /// version/digest/date fields; the version-check cache makes the re-read free). Returns
+        /// false — with downloadSuccess=false — when the base can't be resolved or downloaded.</summary>
+        private async Task<bool> PrepareEngineBase()
+        {
+            stagedBaseZip = null;
+            Helper.PatchSource ml = Helper.ModloaderSource;
+            Log?.Invoke($"This source is text-only — fetching the modloader base from {ml.Owner}/{ml.Repo} first...", "info", true);
+            (string _, bool baseOk, string baseLink) = await Task.Run(() => GetLatestPatchRelease(ml.ApiBase));
+            if (!baseOk || string.IsNullOrEmpty(baseLink))
+            {
+                ErrorLog?.Invoke("Could not resolve the modloader base release — aborting before touching the install.");
+                downloadSuccess = false;
+                return false;
+            }
+            await DownloadPatchFiles(baseLink, cacheSource: ml);
+            if (!downloadSuccess) return false;
+            stagedBaseZip = tempFile;
+            // Restore the selected source's release info for the text-layer download/stamps.
+            await Task.Run(() => GetLatestPatchRelease(Helper.GetCurrentPatchSource().ApiBase));
+            return true;
+        }
+
+        /// <summary>Extract the staged engine-base zip (no-op when none is staged or an earlier
+        /// step already failed), then restore tempFile to the selected source's zip.</summary>
+        private async Task ExtractEngineBase()
+        {
+            if (stagedBaseZip == null) return;
+            string selectedZip = tempFile;
+            try
+            {
+                if (!removeSuccess || !downloadSuccess || !extractSuccess) return;
+                tempFile = stagedBaseZip;
+                Log?.Invoke("Installing the modloader base first...", "add", true);
+                await ExtractPatchFiles();
+            }
+            finally
+            {
+                tempFile = selectedZip;
+                stagedBaseZip = null;
+            }
+        }
+
         // Sets each extracted FOLDER to the newest timestamp among the files it contains — a source-
         // accurate per-folder date (not the extraction moment, and not one uniform date for everything).
         // Files keep their own timestamps (ExtractToFile preserved the zip entry time = the real source
@@ -1363,8 +1422,10 @@ namespace InstallerFunctions
                 {
                     processName = "Reinstall";
                     Log?.Invoke("Reinstalling translation patch...", "info", true);
+                    if (Helper.GetCurrentPatchSource().RequiresEngineBase && !await PrepareEngineBase()) return;
                     await DownloadPatchFiles(assetLink);
                     await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored, ignoredList: ignoredFilesSelected);
+                    await ExtractEngineBase();
                     await ExtractPatchFiles();
                     return;
                 }
@@ -1380,15 +1441,21 @@ namespace InstallerFunctions
                     {
                         processName = "Update";
                         Log?.Invoke("Updating translation patch...", "info", true);
+                        // The refresh-remove deletes every file this source owns — for a text-only
+                        // source that includes its engine base, so the base must be staged too.
+                        if (Helper.GetCurrentPatchSource().RequiresEngineBase && !await PrepareEngineBase()) return;
                         await DownloadPatchFiles(assetLink);
                         await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored, ignoredList: ignoredFilesSelected);
+                        await ExtractEngineBase();
                         await ExtractPatchFiles();
                         return;
                     }
 
                     processName = "Install";
                     Log?.Invoke("Downloading and installing translation patch...", "info", true);
+                    if (Helper.GetCurrentPatchSource().RequiresEngineBase && !await PrepareEngineBase()) return;
                     await DownloadPatchFiles(assetLink);
+                    await ExtractEngineBase();
                     await ExtractPatchFiles();
                     return;
                 }
