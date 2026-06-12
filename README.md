@@ -16,7 +16,7 @@ A WinForms installer/updater GUI for **Princess Connect! Re:Dive** BepInEx trans
 
 ## 🌟 Features
 
-* **Selectable translation source (English / ไทย)** — switch between [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) and [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) right from the main screen. Every patch URL derives from the selected source — adding another source is a single list entry.
+* **Selectable translation source (English / ไทย / Tiếng Việt)** — switch between [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English), [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) and [NTP335/PriconneRe-VN](https://github.com/NTP335/PriconneRe-VN) (Tiếng Việt) right from the main screen. Every patch URL derives from the selected source — adding another source is a single list entry. *Note: the Vietnamese translation is Gemini-AI-generated (per its author) — a quality notice is shown before selecting it.*
 * **Shortcut-wrapped launching** — the GUI focuses on patching; the in-app **Launch Game** button opens the game via DMM. For *per-account* play or one-click *update + play*, **wrap** a launcher shortcut that points at the game ([DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), or a [PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher) account shortcut): pressing it updates the patch, then launches that exact target. Reversible (un-wrap restores the original). *Launching via plain DMM? Use the **AutoUpdater shortcut** (see below) — wrapping a bare DMM shortcut would only re-open the DMM launcher, not the game.*
 * **PriconneMultiAccountLauncher integration** — auto-detected via its Inno Setup uninstall key (HKCU/HKLM) with an `%APPDATA%` fallback.
 * **Modloader source pinned to ImaterialC** — the BepInEx IL2CPP interop always comes from ImaterialC's canonical repo (its latest release), independent of the chosen TL source.
@@ -86,7 +86,7 @@ MIT-licensed fork. Heartfelt thanks to:
 
 * [PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) by [tynave](https://github.com/tynave) — the upstream installer this is forked from
 * [PriconeTL_Updater](https://github.com/touanu/PriconeTL_Updater) by [touanu](https://github.com/touanu) — original inspiration
-* Translation patches: [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) · [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย)
+* Translation patches: [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) · [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) · [NTP335/PriconneRe-VN](https://github.com/NTP335/PriconneRe-VN) (Tiếng Việt)
 * All in-game assets are the property of CyberAgent, Inc. / Cygames, Inc. and their respective creators.
 
 ### 🤖 Built with AI Co-Engineers

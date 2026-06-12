@@ -364,7 +364,7 @@ namespace HelperFunctions
                 list.Add(legacy);
             return list;
         }
-        // ─── Translation patch source selection (EN/TH) ──────────────────────────
+        // ─── Translation patch source selection (EN/TH/VN) ───────────────────────
         // The installer can target multiple translation repositories. The chosen
         // index is persisted in Settings.selectedPatchSource (user-scoped). Every
         // patch URL (release API, modloader ref/raw, releases page) derives from
@@ -404,8 +404,12 @@ namespace HelperFunctions
             // EN declares none — its fixups (PriconneSkillTLFixup/PriconneTLFixup) ship inside the
             // ImaterialC patch. A repo with no release yet is skipped softly (wired ahead of release).
             public System.Collections.Generic.IReadOnlyList<PluginDownload> PluginDownloads { get; }
+            // Optional per-source disclaimer shown (Yes/No) when the user SELECTS the source,
+            // before the choice persists — e.g. VN's AI-translation quality notice, requested
+            // by its author. null/empty = no notice.
+            public string Notice { get; }
             public PatchSource(string displayName, string shortName, string shortCode, string owner, string repo, string versionFileRelPath, string versionRegex,
-                string[] enablePlugins = null, string[] disablePlugins = null, PluginDownload[] pluginDownloads = null)
+                string[] enablePlugins = null, string[] disablePlugins = null, PluginDownload[] pluginDownloads = null, string notice = null)
             {
                 DisplayName = displayName;
                 ShortName = shortName;
@@ -417,6 +421,7 @@ namespace HelperFunctions
                 EnablePlugins = enablePlugins ?? new string[0];
                 DisablePlugins = disablePlugins ?? new string[0];
                 PluginDownloads = pluginDownloads ?? new PluginDownload[0];
+                Notice = notice;
             }
             public string ApiBase => $"https://api.github.com/repos/{Owner}/{Repo}";
             public string RawBase => $"https://raw.githubusercontent.com/{Owner}/{Repo}";
@@ -453,6 +458,14 @@ namespace HelperFunctions
                     enablePlugins: new[] { "PriconneALLTLFixup.dll" },
                     disablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll" },
                     pluginDownloads: new[] { new PluginDownload("HetCreep", "PriconneALLTLFixup", "PriconneALLTLFixup.dll") }),
+                // VN (NTP335) — Gemini-AI translation on the ImaterialC text layout; the author asked
+                // for the quality notice below to be shown before install (issue NTP335/PriconneRe-VN#1).
+                // All fixup DLLs disabled pending the author's answer on which (if any) the VN text
+                // needs — conservative default: vanilla XUnity AutoTranslator + VN text only.
+                new PatchSource("Tiếng Việt  (NTP335 / PriconneRe-VN)", "Vietnamese", "VN", "NTP335", "PriconneRe-VN",
+                    @"BepInEx\Translation\vi\Text\Version.txt", @"v?\d+\.\d+(?:\.\d+)?",
+                    disablePlugins: new[] { "PriconneSkillTLFixup.dll", "PriconneTLFixup.dll", "PriconneALLTLFixup.dll" },
+                    notice: "Đây là bản dịch bằng Gemini AI — sẽ có vài lỗi nhỏ và cách xưng hô chưa đúng. Cân nhắc trước khi tải.\n\n(This translation is AI-generated with Gemini — expect minor errors and awkward pronouns.)"),
             };
 
         /// <summary>Currently selected translation patch source (falls back to index 0 / English).</summary>
@@ -1467,7 +1480,7 @@ public class UserSettings
     // ignores the now-unknown elements).
     public bool launchState { get; set; }
     public System.Collections.Specialized.StringCollection ignoreFiles { get; set; }
-    public int selectedPatchSource { get; set; }   // EN=0 / TH=1 — a meaningful portable language choice
+    public int selectedPatchSource { get; set; }   // EN=0 / TH=1 / VN=2 — a meaningful portable language choice
     public bool checkForInstallerUpdates { get; set; }
     public bool showLogChecked { get; set; }
 }

@@ -16,7 +16,7 @@
 
 ## 🌟 ฟีเจอร์
 
-* **เลือกแหล่งแปลได้ (English / ไทย)** — สลับระหว่าง [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) กับ [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) ได้จากหน้าหลักเลย ทุก URL ของแพตช์อิงตามแหล่งที่เลือก — เพิ่มภาษาใหม่ = เพิ่มรายการเดียวในลิสต์
+* **เลือกแหล่งแปลได้ (English / ไทย / Tiếng Việt)** — สลับระหว่าง [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English), [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) และ [NTP335/PriconneRe-VN](https://github.com/NTP335/PriconneRe-VN) (Tiếng Việt) ได้จากหน้าหลักเลย ทุก URL ของแพตช์อิงตามแหล่งที่เลือก — เพิ่มภาษาใหม่ = เพิ่มรายการเดียวในลิสต์ *หมายเหตุ: คำแปลเวียดนามสร้างด้วย Gemini AI (ตามที่ผู้ทำแจ้ง) — มีกล่องแจ้งเตือนคุณภาพก่อนเลือกใช้*
 * **เปิดเกมผ่านช็อตคัตแบบ wrap** — ตัว GUI เน้นที่การแพตช์; ปุ่ม **Launch Game** ในแอปเปิดเกมผ่าน DMM ถ้าต้องการเล่น *แยกตามบัญชี* หรือ *อัปเดต + เล่น* คลิกเดียว ให้ **wrap** ช็อตคัต launcher ที่**ชี้ไปที่ตัวเกม** ([DMMGamePlayerFastLauncher](https://github.com/fa0311/DMMGamePlayerFastLauncher), หรือช็อตคัตบัญชีของ [PriconneMultiAccountLauncher](https://github.com/HetCreep/PriconneMultiAccountLauncher)) กดช็อตคัตที่ wrap แล้ว → อัปเดตแพตช์ก่อน แล้วเปิดเป้าหมายนั้นทันที — แยกตามบัญชี ย้อนกลับได้ (un-wrap คืนค่าเดิม) *ถ้าเปิดผ่าน DMM ธรรมดา ให้ใช้ **AutoUpdater shortcut** แทน (ดูด้านล่าง) — การ wrap ช็อตคัต DMM เปล่า ๆ จะแค่เปิดตัว DMM launcher ซ้ำ ไม่ได้เข้าเกมตรง*
 * **รองรับ PriconneMultiAccountLauncher** — ตรวจจับอัตโนมัติผ่าน Inno Setup uninstall key (HKCU/HKLM) พร้อม fallback ที่ `%APPDATA%`
 * **Modloader ปักหมุด source ที่ ImaterialC** — BepInEx IL2CPP interop มาจาก repo canonical ของ ImaterialC (release ล่าสุด) เสมอ ไม่ขึ้นกับแหล่งแปลที่เลือก
@@ -86,7 +86,7 @@ Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-*.exe
 
 * [PriconneReTL-Installer](https://github.com/tynave/PriconneReTL-Installer) โดย [tynave](https://github.com/tynave) — ตัวติดตั้งต้นทางที่ fork มา
 * [PriconeTL_Updater](https://github.com/touanu/PriconeTL_Updater) โดย [touanu](https://github.com/touanu) — แรงบันดาลใจดั้งเดิม
-* แพตช์แปล: [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) · [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย)
+* แพตช์แปล: [ImaterialC/PriconneRe-TL](https://github.com/ImaterialC/PriconneRe-TL) (English) · [PeterkleCG/PriconneTH](https://github.com/PeterkleCG/PriconneTH) (ไทย) · [NTP335/PriconneRe-VN](https://github.com/NTP335/PriconneRe-VN) (Tiếng Việt)
 * ทรัพย์สินภายในเกมทั้งหมดเป็นของ CyberAgent, Inc. / Cygames, Inc. และผู้สร้างนั้น ๆ
 
 ### 🤖 สร้างด้วย AI Co-Engineers

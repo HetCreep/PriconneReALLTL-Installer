@@ -924,6 +924,21 @@ namespace PriconneReALLTLInstaller
                 RefreshPatchSourceLabel();
                 return;
             }
+            // Per-source disclaimer (e.g. VN's AI-translation notice, requested by its author):
+            // shown BEFORE the switch persists, so declining leaves the previous source untouched.
+            Helper.PatchSource target = Helper.PatchSources[index];
+            if (!string.IsNullOrEmpty(target.Notice))
+            {
+                DialogResult notice = MessageBox.Show(
+                    target.Notice + "\n\nContinue with this translation source?",
+                    "Source notice — " + target.ShortCode,
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                if (notice != DialogResult.Yes)
+                {
+                    RefreshPatchSourceLabel();
+                    return;
+                }
+            }
             Settings.Default.selectedPatchSource = index;
             Settings.Default.Save();
             RefreshPatchSourceLabel();
