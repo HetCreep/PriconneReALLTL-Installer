@@ -4,9 +4,28 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.0.7...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.0...HEAD)
 
 _Nothing yet._
+
+## [3.1.0](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.0) — 2026-06-13
+
+A feature release: Vietnamese joins English and ไทย as a third translation source, with the install machinery extended for text-only patches.
+
+### Added
+- **Vietnamese translation source** — [NTP335/PriconneRe-VN](https://github.com/NTP335/PriconneRe-VN) is selectable from the main screen alongside English and ไทย. Per its author's request, a quality notice ("translated with Gemini AI — expect minor errors") is shown when you select it; declining keeps your previous source. Coordinated with the author in [NTP335/PriconneRe-VN#1](https://github.com/NTP335/PriconneRe-VN/issues/1).
+- **Engine-base chaining for text-only sources** — the VN patch ships only its translation text (~15 MB), so installing it now automatically fetches the ImaterialC modloader engine (~330 MB) first as the base layer, then applies the Vietnamese text on top. Both downloads are SHA-256-verified **before** anything touches your install, the engine zip is cached and shared with a plain English install, and uninstalling Vietnamese removes the base too unless English still owns it (ref-counted, as always).
+- **Per-source notice dialog** — sources can now declare a one-line disclaimer that appears before the selection persists (used by VN's AI-translation notice).
+
+### Fixed
+- **Text-only sources now get the right `Language=`** — a source whose zip ships no `AutoTranslatorConfig.ini` (VN) now falls back to its own language code; previously the setting would have stayed on the engine base's `en` and the translation would never load.
+- **A failed engine-base extract can no longer report success** — the extract-success flag is now sticky across the chained base + text extractions, and the text layer is skipped when the base failed (the operation reports as failed and Reinstall repairs it).
+- **The translation-source menu no longer leaks** — the transient context menu is now disposed after it closes.
+- **VN's fixup plugins** — per the author's own test, the Vietnamese text needs the English fixup DLLs (`PriconneTLFixup` / `PriconneSkillTLFixup`) for correct font sizing, so VN enables them (the ไทย-only fixup stays shelved).
+
+### Changed
+- **Ignore-list defaults are now language-agnostic** — the default protected rule files (`_Substitutions` / `_Preprocessors` / `_Postprocessors`) use a `*` language glob out of the box, matching what the startup migration already produced for existing installs; a fresh install is now protected under `vi`/`th` from the first run, and "reset to defaults" no longer briefly reverts to the `en`-only list.
+- Source files with non-ASCII literals (`HelperFunctions.cs` / `MainForm.cs`) now carry an explicit UTF-8 BOM instead of relying on compiler encoding detection.
 
 ## [3.0.7](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.0.7) — 2026-06-04
 

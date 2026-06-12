@@ -27,9 +27,9 @@ namespace PriconneReALLTLInstaller.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
 <ArrayOfString xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
-  <string>BepInEx/Translation/en/Text/_Postprocessors.txt</string>
-  <string>BepInEx/Translation/en/Text/_Preprocessors.txt</string>
-  <string>BepInEx/Translation/en/Text/_Substitutions.txt</string>
+  <string>BepInEx/Translation/*/Text/_Postprocessors.txt</string>
+  <string>BepInEx/Translation/*/Text/_Preprocessors.txt</string>
+  <string>BepInEx/Translation/*/Text/_Substitutions.txt</string>
 </ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection ignoreFiles {
             get {
