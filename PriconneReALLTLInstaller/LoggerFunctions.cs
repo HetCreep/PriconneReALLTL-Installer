@@ -82,7 +82,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error clearing log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error clearing log file: {LogRedactor.Scrub(ex.Message)}");
             }
         }
 
@@ -105,7 +105,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {LogRedactor.Scrub(ex.Message)}");
             }
         }
 
@@ -125,7 +125,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {LogRedactor.Scrub(ex.Message)}");
             }
         }
 
@@ -161,7 +161,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error clearing log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error clearing log file: {LogRedactor.Scrub(ex.Message)}");
             }
         }
 
@@ -180,7 +180,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {LogRedactor.Scrub(ex.Message)}");
             }
         }
 
@@ -197,7 +197,7 @@ namespace LoggerFunctions
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error writing to log file: {LogRedactor.Scrub(ex.Message)}");
             }
         }
 

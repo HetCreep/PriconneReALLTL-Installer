@@ -21,7 +21,7 @@ A feature release: Vietnamese joins English and ไทย as a third translation
 - **Text-only sources now get the right `Language=`** — a source whose zip ships no `AutoTranslatorConfig.ini` (VN) now falls back to its own language code; previously the setting would have stayed on the engine base's `en` and the translation would never load.
 - **A failed engine-base extract can no longer report success** — the extract-success flag is now sticky across the chained base + text extractions, and the text layer is skipped when the base failed (the operation reports as failed and Reinstall repairs it).
 - **The translation-source menu no longer leaks** — the transient context menu is now disposed after it closes.
-- **VN's fixup plugins** — per the author's own test, the Vietnamese text needs the English fixup DLLs (`PriconneTLFixup` / `PriconneSkillTLFixup`) for correct font sizing, so VN enables them (the ไทย-only fixup stays shelved).
+- **VN's fixup plugins** — per the author's own test, the Vietnamese text needs the English fixup DLLs (`PriconneTLFixup` / `PriconneSkillTLFixup`) for correct font sizing. VN installs on the ImaterialC engine base, which ships those DLLs active, so they load for VN as-is.
 
 ### Changed
 - **Ignore-list defaults are now language-agnostic** — the default protected rule files (`_Substitutions` / `_Preprocessors` / `_Postprocessors`) use a `*` language glob out of the box, matching what the startup migration already produced for existing installs; a fresh install is now protected under `vi`/`th` from the first run, and "reset to defaults" no longer briefly reverts to the `en`-only list.

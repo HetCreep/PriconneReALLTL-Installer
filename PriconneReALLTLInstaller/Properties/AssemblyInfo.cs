@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("PriconneReALLTLInstaller")]
-[assembly: AssemblyDescription("An installer GUI for Princess Connect Re:Dive translation patches (EN/TH)")]
+[assembly: AssemblyDescription("An installer GUI for Princess Connect Re:Dive translation patches (EN/TH/VN)")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PriconneReALLTLInstaller")]

@@ -76,7 +76,7 @@ namespace PriconneReALLTLInstaller
         {
             Icon = Resources.jewel;
 
-            // #3: show the active TL source (EN/TH) in the patch header — a bare version like "2.1.5"
+            // #3: show the active TL source (EN/TH/VN) in the patch header — a bare version like "2.1.5"
             // doesn't say which language, and the main window already shows it. Mirrors MainForm.
             patchLabel.Text = $"TL Patch Versions ({Helper.GetCurrentPatchSource().ShortCode}):";
 

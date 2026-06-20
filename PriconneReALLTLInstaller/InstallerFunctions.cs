@@ -1502,8 +1502,15 @@ namespace InstallerFunctions
             {
                 ProcessStart?.Invoke();
 
+                // A text-only source (RequiresEngineBase, e.g. VN) ships no modloader, and the
+                // update-path remove below deletes every file it owns — including its engine base.
+                // Mirror ProcessOperation: stage + verify the engine base BEFORE the remove, then
+                // re-extract it before the text layer. Without this, the AutoUpdater shortcut would
+                // strip the BepInEx engine from a VN install and never restore it.
+                if (Helper.GetCurrentPatchSource().RequiresEngineBase && !await PrepareEngineBase()) return;
                 await DownloadPatchFiles(assetLink);
                 if (!install) await RemovePatchFiles(uninstall: false, removeConfig: false, configList: Settings.Default.configFiles, removeIgnored: false, ignoredList: new StringCollection());
+                await ExtractEngineBase();
                 await ExtractPatchFiles();
                 return;
             }
