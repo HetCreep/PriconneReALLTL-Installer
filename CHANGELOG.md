@@ -4,9 +4,20 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.0...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.1...HEAD)
 
 _Nothing yet._
+
+## [3.1.1](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.1) — 2026-06-21
+
+A patch release fixing a v3.1.0 defect in the Vietnamese install path, found by a closeout audit.
+
+### Fixed
+- **The AutoUpdater shortcut no longer breaks a Vietnamese install.** The auto-update path (the "update + play" shortcut) did not chain the modloader engine base for a text-only source, so a Vietnamese-only install updated this way had its BepInEx engine removed and not restored. The auto-update path now stages and re-applies the engine base exactly like the main-window Install/Update, with the same verify-before-touch ordering. (The main-window operations were already correct and unaffected.)
+- **Logging hardening** — the logger's internal fallback messages now also pass through the credential redactor (defense-in-depth; no token was ever exposed by these paths).
+
+### Changed
+- The installer's file-properties description now reads `(EN/TH/VN)`, and the v3.1.0 release notes' wording on the Vietnamese fixup plugins was corrected to describe how they actually load (they ship active in the ImaterialC engine base).
 
 ## [3.1.0](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.0) — 2026-06-13
 
