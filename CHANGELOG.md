@@ -4,9 +4,16 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.1...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.2...HEAD)
 
 _Nothing yet._
+
+## [3.1.2](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.2) — 2026-08-31
+
+A patch release fixing a stuck download-integrity error.
+
+### Fixed
+- **A "Downloaded file failed the SHA256 integrity check" error that repeated on every retry.** The digest a fresh download is checked against comes from the 6-hour version-check cache; if a source re-uploads its release asset under the same tag, that cached digest goes stale and every subsequent download (even a fully clean one) failed the same comparison until the cache naturally expired. The installer now drops the stale cache entry the moment a fresh download fails its digest check, so the next attempt re-fetches live release metadata instead of repeating the same failing comparison. The digest check itself is unchanged — a genuinely corrupted or tampered download still stops before touching your install.
 
 ## [3.1.1](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.1) — 2026-06-21
 

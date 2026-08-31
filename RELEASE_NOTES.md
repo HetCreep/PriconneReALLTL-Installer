@@ -1,14 +1,8 @@
-**PriconneReALLTL Installer v3.1.1** — a patch release fixing a v3.1.0 defect in the Vietnamese install path, found by a closeout audit. If you use the Vietnamese source with the AutoUpdater shortcut, please update.
+**PriconneReALLTL Installer v3.1.2** — a patch release fixing a download-integrity error that could get stuck repeating on every retry.
 
 ## Fixed
 
-- **The AutoUpdater shortcut no longer breaks a Vietnamese install.** v3.1.0's auto-update path (the "update + play" shortcut) did not chain the modloader engine base for a text-only source like Vietnamese, so a Vietnamese-only install updated this way would have its BepInEx engine removed and never restored — leaving the game unmodded. The auto-update path now stages and re-applies the ImaterialC engine base before the text layer, with the same SHA-256 verify-before-touch ordering as the main-window operations. (The main-window Install / Update / Reinstall were already correct in v3.1.0 and are unaffected.)
-- **Logging hardening (defense-in-depth)** — the logger's own fallback diagnostic messages now also pass through the credential redactor. No token was ever exposed by these paths; this closes the gap structurally.
-
-## Changed
-
-- The installer's file-properties description now reads `(EN/TH/VN)`.
-- Corrected the wording (from v3.1.0) describing the Vietnamese fixup plugins — they load because the ImaterialC engine base ships them active, not via a per-source toggle.
+- **"Downloaded file failed the SHA256 integrity check" repeating on every retry.** A fresh download is checked against a digest pulled from the 6-hour version-check cache. If a source re-uploads its release asset under the same tag, that cached digest goes stale — every following download attempt (even a fully clean one) failed the same comparison until the cache expired on its own, up to 6 hours later. The installer now drops the stale cache entry the moment a fresh download fails its digest check, so the next attempt re-fetches live release metadata instead of repeating the same failing comparison. The digest check itself is unchanged — a genuinely corrupted or tampered download still stops before touching your install.
 
 <!-- NOTE: do NOT add a "## Verification" section here — release.yml auto-appends one with the
      build-computed SHA-256 hashes + the Authenticode note. A manual one here duplicates it. -->
@@ -20,8 +14,8 @@
 
 ## Upgrade Notes
 
-- Drop-in over v3.1.0 — settings, token, and your installed patch are unaffected.
-- Vietnamese users who set up an AutoUpdater shortcut on v3.1.0: after updating to v3.1.1, run **Reinstall** once in the app to restore the engine base if your install was already affected.
+- Drop-in over v3.1.1 — settings, token, and your installed patch are unaffected.
+- If you previously hit the stuck SHA256 error, this release fixes it going forward with no manual cache-clearing needed.
 
 ## Known Issues
 
