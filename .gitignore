@@ -370,3 +370,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Local clone of the GitHub wiki repo (separate .git; edited/pushed independently)
+_wiki/

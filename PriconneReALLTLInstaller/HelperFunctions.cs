@@ -766,6 +766,23 @@ namespace HelperFunctions
             return null;
         }
 
+        // Drops one cached entry (e.g. after a fresh download fails its digest check — the cached
+        // "d" digest may be stale against a since-replaced GitHub asset) so the next check re-fetches
+        // live metadata instead of repeating the same comparison until the TTL naturally expires.
+        public static void InvalidateCachedVersion(string key)
+        {
+            try
+            {
+                var dict = JsonConvert.DeserializeObject<Dictionary<string, CacheEntry>>(Settings.Default.versionCacheJson ?? "");
+                if (dict != null && dict.Remove(key))
+                {
+                    Settings.Default.versionCacheJson = JsonConvert.SerializeObject(dict);
+                    Settings.Default.Save();
+                }
+            }
+            catch { }
+        }
+
         public static void SetCachedVersion(string key, string value)
         {
             try

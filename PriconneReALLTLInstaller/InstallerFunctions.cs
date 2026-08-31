@@ -692,6 +692,11 @@ namespace InstallerFunctions
 
                 if (!VerifyZipDigest(downloadTmp))
                 {
+                    // A fully-downloaded file mismatching a FRESH network fetch usually means the cached
+                    // release digest is stale (the source replaced the asset under the same tag/URL) —
+                    // not a real corruption. Drop the cached check so a retry re-fetches live metadata
+                    // instead of repeating this exact same comparison until the 6h TTL expires.
+                    Helper.InvalidateCachedVersion("patch:" + (cacheSource ?? Helper.GetCurrentPatchSource()).ApiBase);
                     ErrorLog?.Invoke("Downloaded file failed the SHA256 integrity check — aborting before touching the install. Please try again.");
                     try { File.Delete(downloadTmp); } catch { }
                     downloadSuccess = false;
