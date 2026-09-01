@@ -39,7 +39,7 @@ jobs:
       # bumps the SHA + the comment when a new version ships, so the pins stay current without
       # losing the supply-chain protection — a moved or hijacked tag can't change what runs.
       - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0   # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57   # v3
@@ -121,7 +121,7 @@ jobs:
       - name: Generate SBOM (SPDX) — best-effort
         if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
         continue-on-error: true
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610   # v0
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26   # v0.24.2
         with:
           path: .
           format: spdx-json
@@ -131,7 +131,7 @@ jobs:
       - name: Attest build provenance — best-effort
         if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
         continue-on-error: true
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373   # v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8   # v4
         with:
           subject-path: |
             dist/${{ steps.pkg.outputs.portable }}
