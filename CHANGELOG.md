@@ -4,9 +4,16 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.2...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.3...HEAD)
 
 _Nothing yet._
+
+## [3.1.3](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.3) — 2026-09-09
+
+A patch release fixing the real cause of the recurring SHA256 integrity error, for any engine-base-chained source (Vietnamese).
+
+### Fixed
+- **"Downloaded file failed the SHA256 integrity check" on Install / Update / Reinstall / AutoUpdate for a text-only source (Vietnamese).** `PrepareEngineBase()` re-fetches the selected source's release info (link + digest) after staging the modloader base, so it stays correct even if the source published a newer version in the meantime — but the four call sites (`ProcessOperation`'s Install/Update/Reinstall, `ProcessAutoUpdateOperation`) kept downloading from the *original* asset link passed in by the caller, a C# parameter-shadowing bug that let a stale link get checked against a freshly-refetched digest. Whenever the Vietnamese source published a new version between the caller's last version check and the moment of download — routine given how often it ships — every install/update attempt failed the same way until the app was restarted or the version cache happened to line back up. v3.1.2's cache-invalidation fix didn't touch this: the mismatch was never a stale on-disk cache, it was two in-memory values (the link and the digest) drifting apart mid-operation. All four call sites now re-read the refreshed link after `PrepareEngineBase()` runs.
 
 ## [3.1.2](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.2) — 2026-08-31
 

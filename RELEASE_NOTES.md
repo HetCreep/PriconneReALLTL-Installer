@@ -1,8 +1,8 @@
-**PriconneReALLTL Installer v3.1.2** — a patch release fixing a download-integrity error that could get stuck repeating on every retry.
+**PriconneReALLTL Installer v3.1.3** — a patch release fixing the real cause of the recurring SHA256 integrity error for the Vietnamese source.
 
 ## Fixed
 
-- **"Downloaded file failed the SHA256 integrity check" repeating on every retry.** A fresh download is checked against a digest pulled from the 6-hour version-check cache. If a source re-uploads its release asset under the same tag, that cached digest goes stale — every following download attempt (even a fully clean one) failed the same comparison until the cache expired on its own, up to 6 hours later. The installer now drops the stale cache entry the moment a fresh download fails its digest check, so the next attempt re-fetches live release metadata instead of repeating the same failing comparison. The digest check itself is unchanged — a genuinely corrupted or tampered download still stops before touching your install.
+- **"Downloaded file failed the SHA256 integrity check" on Install / Update / Reinstall / AutoUpdate for Vietnamese.** Vietnamese ships text-only, so every operation first stages the ImaterialC modloader base, then re-fetches the Vietnamese release's own link + digest before downloading it. A parameter-shadowing bug meant the actual download kept using the *original* link the caller had passed in, while the integrity check compared it against the freshly re-fetched digest. If Vietnamese published a newer version between your last version check and the moment you clicked Install/Update — routine, since it ships often — every attempt failed the same way until the app restarted. v3.1.2 didn't fix this: that release addressed a stale on-disk cache, but this mismatch was two in-memory values drifting apart mid-operation, not a cache problem. All four affected call sites now use the refreshed link.
 
 <!-- NOTE: do NOT add a "## Verification" section here — release.yml auto-appends one with the
      build-computed SHA-256 hashes + the Authenticode note. A manual one here duplicates it. -->
@@ -14,8 +14,8 @@
 
 ## Upgrade Notes
 
-- Drop-in over v3.1.1 — settings, token, and your installed patch are unaffected.
-- If you previously hit the stuck SHA256 error, this release fixes it going forward with no manual cache-clearing needed.
+- Drop-in over v3.1.2 — settings, token, and your installed patch are unaffected.
+- If Vietnamese install/update was stuck failing, this release fixes it — no manual workaround needed.
 
 ## Known Issues
 
