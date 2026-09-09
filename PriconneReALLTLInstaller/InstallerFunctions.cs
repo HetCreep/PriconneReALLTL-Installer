@@ -1427,7 +1427,11 @@ namespace InstallerFunctions
                 {
                     processName = "Reinstall";
                     Log?.Invoke("Reinstalling translation patch...", "info", true);
-                    if (Helper.GetCurrentPatchSource().RequiresEngineBase && !await PrepareEngineBase()) return;
+                    if (Helper.GetCurrentPatchSource().RequiresEngineBase)
+                    {
+                        if (!await PrepareEngineBase()) return;
+                        assetLink = this.assetLink;   // PrepareEngineBase() re-fetched this source's release — the caller's link may now be stale
+                    }
                     await DownloadPatchFiles(assetLink);
                     await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored, ignoredList: ignoredFilesSelected);
                     await ExtractEngineBase();
@@ -1448,7 +1452,11 @@ namespace InstallerFunctions
                         Log?.Invoke("Updating translation patch...", "info", true);
                         // The refresh-remove deletes every file this source owns — for a text-only
                         // source that includes its engine base, so the base must be staged too.
-                        if (Helper.GetCurrentPatchSource().RequiresEngineBase && !await PrepareEngineBase()) return;
+                        if (Helper.GetCurrentPatchSource().RequiresEngineBase)
+                        {
+                            if (!await PrepareEngineBase()) return;
+                            assetLink = this.assetLink;   // PrepareEngineBase() re-fetched this source's release — the caller's link may now be stale
+                        }
                         await DownloadPatchFiles(assetLink);
                         await RemovePatchFiles(uninstall: uninstall, removeConfig: removeConfig, configList: configFilesSelected, removeIgnored: removeIgnored, ignoredList: ignoredFilesSelected);
                         await ExtractEngineBase();
@@ -1458,7 +1466,11 @@ namespace InstallerFunctions
 
                     processName = "Install";
                     Log?.Invoke("Downloading and installing translation patch...", "info", true);
-                    if (Helper.GetCurrentPatchSource().RequiresEngineBase && !await PrepareEngineBase()) return;
+                    if (Helper.GetCurrentPatchSource().RequiresEngineBase)
+                    {
+                        if (!await PrepareEngineBase()) return;
+                        assetLink = this.assetLink;   // PrepareEngineBase() re-fetched this source's release — the caller's link may now be stale
+                    }
                     await DownloadPatchFiles(assetLink);
                     await ExtractEngineBase();
                     await ExtractPatchFiles();
@@ -1512,7 +1524,11 @@ namespace InstallerFunctions
                 // Mirror ProcessOperation: stage + verify the engine base BEFORE the remove, then
                 // re-extract it before the text layer. Without this, the AutoUpdater shortcut would
                 // strip the BepInEx engine from a VN install and never restore it.
-                if (Helper.GetCurrentPatchSource().RequiresEngineBase && !await PrepareEngineBase()) return;
+                if (Helper.GetCurrentPatchSource().RequiresEngineBase)
+                {
+                    if (!await PrepareEngineBase()) return;
+                    assetLink = this.assetLink;   // PrepareEngineBase() re-fetched this source's release — the caller's link may now be stale
+                }
                 await DownloadPatchFiles(assetLink);
                 if (!install) await RemovePatchFiles(uninstall: false, removeConfig: false, configList: Settings.Default.configFiles, removeIgnored: false, ignoredList: new StringCollection());
                 await ExtractEngineBase();
