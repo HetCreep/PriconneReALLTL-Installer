@@ -4,9 +4,19 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.3...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.4...HEAD)
 
 _Nothing yet._
+
+## [3.1.4](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.4) — 2026-09-17
+
+A diagnostics release for a SHA256 integrity error that recurred after v3.1.2 and v3.1.3 — this release doesn't claim to have found the definitive cause; it adds evidence-gathering and one more resilience fix so the next report is conclusive.
+
+### Fixed
+- **A stuck partial download could poison every retry.** On a digest mismatch the `.part` temp file is deleted so the next attempt starts clean — but a silently-failed delete (e.g. a file briefly locked by antivirus) left the `.part` in place, and the resumable-download logic would then append new bytes onto that same bad partial file on every subsequent attempt, forever. The app now checks the delete actually succeeded and tells you to use Settings → Clear Download Cache if it didn't, instead of a "try again" that could never succeed on its own.
+
+### Added
+- **Digest-mismatch diagnostics.** When a download fails its SHA-256 check, the log now records the source, version, file size, expected vs. actual hash, and the asset URL — so a report of this error can be root-caused directly instead of guessed at.
 
 ## [3.1.3](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.3) — 2026-09-09
 
