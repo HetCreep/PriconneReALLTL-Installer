@@ -537,7 +537,13 @@ namespace InstallerFunctions
                 using (var fs = File.OpenRead(path))
                 {
                     string actual = BitConverter.ToString(sha.ComputeHash(fs)).Replace("-", "");
-                    return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
+                    bool match = string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
+                    // Diagnostic detail for a mismatch (not shown to the user — file-log only): pins down
+                    // WHICH release/asset diverged without needing to reproduce, since a mismatch here has
+                    // had more than one distinct root cause across releases (stale cached digest, a
+                    // stale asset link paired with a freshly-refetched digest, a poisoned resumed .part).
+                    if (!match) Log?.Invoke($"Digest mismatch detail — source: {Helper.GetCurrentPatchSource().ShortCode}, version: {latestVersion}, file size: {new FileInfo(path).Length} bytes, expected: {expected}, actual: {actual}, url: {assetLink}", "info", false);
+                    return match;
                 }
             }
             catch (Exception ex) { Log?.Invoke("Could not verify the download hash: " + ex.Message, "info", false); return true; }
@@ -699,6 +705,11 @@ namespace InstallerFunctions
                     Helper.InvalidateCachedVersion("patch:" + (cacheSource ?? Helper.GetCurrentPatchSource()).ApiBase);
                     ErrorLog?.Invoke("Downloaded file failed the SHA256 integrity check — aborting before touching the install. Please try again.");
                     try { File.Delete(downloadTmp); } catch { }
+                    // A leftover .part gets resumed (appended to, not replaced) on the next attempt — if the
+                    // delete above silently failed (e.g. a locked/in-use file), that would keep failing the
+                    // same way forever. Surface it so the user has an actionable next step instead of a
+                    // "try again" that can never succeed on its own.
+                    if (File.Exists(downloadTmp)) ErrorLog?.Invoke("Could not remove the partial download — please use Settings → Clear Download Cache, then try again.");
                     downloadSuccess = false;
                     ProgressPictureChange?.Invoke(null);
                     return;
