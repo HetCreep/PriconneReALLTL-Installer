@@ -1,4 +1,4 @@
-# <img src="PriconneReALLTLInstaller/Resources/jewel.ico" width="28"> PriconneReALLTL Installer
+# <img src="PriconneReALLTLInstaller/Resources/jewel.ico" width="28" alt="PriconneReALLTL Installer icon"> PriconneReALLTL Installer
 
 [![Latest release](https://img.shields.io/github/v/release/HetCreep/PriconneReALLTL-Installer?sort=semver&display_name=tag)](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/latest)
 [![Build](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml/badge.svg)](https://github.com/HetCreep/PriconneReALLTL-Installer/actions/workflows/release.yml)

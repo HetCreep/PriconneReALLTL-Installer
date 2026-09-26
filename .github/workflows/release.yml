@@ -40,6 +40,8 @@ jobs:
       # losing the supply-chain protection — a moved or hijacked tag can't change what runs.
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          persist-credentials: false   # no later step needs git credentials (gh uses GH_TOKEN); keeps the write token out of .git/config
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57   # v3
@@ -71,7 +73,7 @@ jobs:
           $cur = ToVer $tag
           $skip = $false
           if ($null -ne $cur) {
-            $all = gh api "repos/${{ github.repository }}/tags?per_page=100" --jq '.[].name'
+            $all = gh api "repos/${{ github.repository }}/tags?per_page=100" --paginate --jq '.[].name'
             foreach ($t in $all) { $v = ToVer $t; if ($v -and $v -gt $cur) { Write-Host "Newer tag exists: $t (> $tag)"; $skip = $true; break } }
           }
           if ($skip) { Write-Host "::warning::$tag is not the newest tag — skipping publish." }
@@ -147,7 +149,7 @@ jobs:
           # installer/portable binaries. Older releases keep their "Source code" archive AND
           # SHA256SUMS.txt — so anyone still holding an old build can verify it (distribution-security).
           $current = "${{ steps.ver.outputs.tag }}"
-          $existing = gh release list --json tagName --jq '.[].tagName'
+          $existing = gh release list --limit 1000 --json tagName --jq '.[].tagName'
           foreach ($r in $existing) {
             if ($r -and ($r -ne $current)) {
               Write-Host "Stripping installer binaries from old release: $r (keeping SHA256SUMS.txt)"

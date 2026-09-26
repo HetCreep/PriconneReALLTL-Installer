@@ -296,6 +296,20 @@ namespace PriconneReALLTLInstaller
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
+            // async void: nothing may escape into the message loop (it would surface as an unhandled crash).
+            try
+            {
+                await MainForm_LoadCore();
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Auto-update could not start: " + ex.Message);
+                OnProcessError();   // show the Exit button so the window isn't stuck
+            }
+        }
+
+        private async Task MainForm_LoadCore()
+        {
             this.Activate();
             await InitializeUI();
 

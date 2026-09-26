@@ -44,7 +44,8 @@ VersionInfoVersion={#AppVersion}
 VersionInfoProductName={#AppName}
 VersionInfoProductVersion={#AppVersion}
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+; No PrivilegesRequiredOverridesAllowed: "dialog" would offer an all-users (admin) install under
+; Program Files, which a non-elevated app can't self-update in place (distribution-security: per-user only).
 DefaultDirName={autopf}\PriconneReALLTLInstaller
 ; Let power users change the install location; suppress the re-install "folder exists" warning.
 DisableDirPage=auto

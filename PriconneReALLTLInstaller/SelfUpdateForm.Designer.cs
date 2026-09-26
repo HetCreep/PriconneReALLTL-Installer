@@ -180,8 +180,9 @@
             // 
             // saveFileDialog1
             // 
-            this.saveFileDialog1.FileName = "PriconneReALLTLInstaller.zip";
-            this.saveFileDialog1.Filter = "ZIP files (*.zip)|*.zip";
+            this.saveFileDialog1.DefaultExt = "exe";
+            this.saveFileDialog1.FileName = "PriconneReALLTLInstaller.exe";
+            this.saveFileDialog1.Filter = "Executable files (*.exe)|*.exe";
             // 
             // SelfUpdateForm
             // 

@@ -6,7 +6,28 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.4...HEAD)
 
-_Nothing yet._
+Fixes from an AI code review (CodeRabbit) of the whole repository; every finding was verified against the code before being fixed.
+
+### Security
+- **The GitHub token is no longer sent to `raw.githubusercontent.com`.** The modloader-version check reused its authenticated client for the raw-file request, contradicting the privacy policy (token to `api.github.com` only). The raw request now uses its own client with no `Authorization` header.
+- **The installer self-update exe is now SHA-256-verified** against the digest GitHub publishes for it (previously the check was skipped and the log still said "verified"). A stale `.part` from an older self-update is discarded instead of resumed, so an old exe's head can no longer be glued to a newer exe's tail. When GitHub publishes no digest the log now says so instead of claiming verification.
+- Release workflow: `persist-credentials: false` on checkout, `--paginate` on the newest-tag guard and `--limit 1000` on the old-release strip so neither silently stops at 30/100 items.
+- Setup no longer offers an all-users (admin) install (`PrivilegesRequiredOverridesAllowed=dialog` removed) — per-user only, so in-app self-update keeps working.
+
+### Fixed
+- **Bogus "SHA256 integrity check" failures from mismatched release info.** A download link, its release version and its digest are separate values that can come from different fetches (a fast TL-source switch, a caller holding an older link). The download now re-pairs them at the single choke point before downloading, and aborts safely if it cannot.
+- **The TL-source selector is locked while an operation runs** — switching mid-install re-pointed the manifest owner, `Language=` and digest at the wrong source.
+- **Update/Reinstall no longer deletes a patch file you added to the ignore list after installing it** (the ref-counted removal plan now honours the ignore list).
+- **The saved "Launch Game" preference is no longer wiped** by every operation / failed version check (it is saved from a real click only, and restored when the box is re-enabled).
+- **Settings migration runs for every entry point** (`autoupdate` shortcuts and the uninstaller's `--unwrap-all`), not only the main window — after an update they could previously read empty defaults.
+- **A saved token is no longer deleted when GitHub is merely unreachable** — only a definitive "Bad credentials" clears it; a rejected token is cached so it costs one request, not a UI-thread stall per refresh.
+- The Nunito UI font stays allocated for the life of the process (GDI+ does not copy it) and is registered once instead of on every form.
+- Messages logged by the installer's internal helper (corrupt-manifest backup, `Language=` sync failures, …) are no longer silently dropped.
+- Self-update dialog: saves a `.exe` (was proposing `.zip`), tolerates a release with no notes, and logs safely from worker threads.
+- Startup / auto-update / source-switch handlers can no longer throw into the message loop.
+
+### Docs
+- Issue templates and `PRIVACY.md` no longer describe the public privacy-issue link as private, and the erasure statement no longer claims nothing ever leaves the machine. README title icons got alt text.
 
 ## [3.1.4](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.4) — 2026-09-17
 

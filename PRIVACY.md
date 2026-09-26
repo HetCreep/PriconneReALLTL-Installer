@@ -136,8 +136,12 @@ To remove everything:
   itself first via the app's **Uninstall** operation (it follows the install manifest), *before*
   uninstalling the app.
 
-Because no data ever leaves your machine, deleting these local files is a complete erasure — there
-is no server-side copy of anything.
+Deleting these local files erases everything the app itself stores — the app has no server of its own
+and keeps no server-side copy of anything. The only things that ever leave your machine are the
+ordinary HTTPS requests to the GitHub hosts listed above (and, if you set one, your token as an
+`Authorization` header to `api.github.com`); those requests are governed by
+[GitHub's own privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement),
+not by this app, so this app cannot erase them.
 
 ---
 

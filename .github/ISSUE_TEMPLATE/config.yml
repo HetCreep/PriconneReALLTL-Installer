@@ -3,9 +3,9 @@ contact_links:
   - name: 🔒 Report a security vulnerability (private)
     url: https://github.com/HetCreep/PriconneReALLTL-Installer/security/advisories/new
     about: Please report security issues privately via GitHub Security Advisories — do NOT open a public issue. See SECURITY.md.
-  - name: 🔐 Privacy concern
+  - name: 🔐 Privacy concern (public issue)
     url: https://github.com/HetCreep/PriconneReALLTL-Installer/issues/new?labels=privacy
-    about: Report unexpected network activity or a data-handling concern. See PRIVACY.md for the outbound allow-list.
+    about: PUBLIC issue — for unexpected network activity or a non-sensitive data-handling concern; never post tokens or personal data. Anything sensitive (e.g. token leakage) goes to the private security-advisory link above. See PRIVACY.md for the outbound allow-list.
   - name: 💬 Questions & discussion
     url: https://github.com/HetCreep/PriconneReALLTL-Installer/discussions
     about: For usage questions and general discussion (not bug reports).
