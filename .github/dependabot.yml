@@ -1,0 +1,33 @@
+# Dependabot config — keeps dependencies and CI actions current.
+# Pairs with the repo's enabled Dependabot security alerts + automated fixes.
+version: 2
+updates:
+  # NuGet packages (packages.config under the project folder).
+  - package-ecosystem: "nuget"
+    directory: "/PriconneReALLTLInstaller"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    # Batch minor + patch bumps into ONE PR (a single build verifies them, less noise);
+    # major bumps stay individual so each gets its own review (API-break risk on net48).
+    groups:
+      nuget-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # GitHub Actions used by the release + CodeQL workflows (addresses the SHA-pinning
+  # follow-up tracked in distribution-security: Dependabot surfaces action updates so
+  # they can be reviewed and pinned).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci(deps)"
+    # One PR for all action updates — the release + CodeQL CI verify them together.
+    groups:
+      github-actions:
+        patterns: ["*"]

@@ -1,0 +1,202 @@
+name: Build and Release Patcher Installer
+
+# Build + publish the Windows release whenever a version tag (v*) is pushed.
+# Local builds are NOT distributed — every user-facing artifact comes from here.
+#
+# Usage:
+#   1. Bump the version in PriconneReALLTLInstaller/Properties/AssemblyInfo.cs
+#      and installer/PriconneReALLTLInstaller.iss (the #define AppVersion default).
+#   2. Update RELEASE_NOTES.md (Highlights & Fixes for this version).
+#   3. git tag v3.0.0 && git push myfork v3.0.0
+#
+# Each release ships the portable exe (assets[0] — what self-update downloads),
+# the per-user Inno installer, and SHA256SUMS.txt. Older releases keep only their
+# source code — their installer assets are stripped automatically.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+# Least-privilege (Scorecard Token-Permissions check / distribution-security rule): default the
+# whole workflow to read; the single build job below elevates only the write scopes it needs.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and Release PriconneReALLTLInstaller
+    runs-on: windows-latest
+    permissions:
+      contents: write        # create the GitHub Release + strip old releases' installer assets
+      id-token: write        # OIDC for the build-provenance attestation (sigstore)
+      attestations: write    # write the provenance attestation
+
+    steps:
+      # SECURITY (distribution-security): every `uses:` action is pinned to a full commit SHA
+      # (the trailing `# vX` is the human-readable version). Dependabot's github-actions updater
+      # bumps the SHA + the comment when a new version ships, so the pins stay current without
+      # losing the supply-chain protection — a moved or hijacked tag can't change what runs.
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57   # v3
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@fd55a6f3b34392fa83fde1454582407d8c714123   # v4
+
+      - name: Derive version from tag
+        id: ver
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ("${{ github.ref_type }}" -ne "tag") { $tag = "v0.0.0" }   # workflow_dispatch: build-only, never published
+          $ver = $tag.TrimStart('v')
+          "tag=$tag"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Building $tag (version $ver)"
+
+      - name: Guard — only publish the newest version tag
+        id: guard
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Re-pushing an OLD tag also triggers this workflow. Publish (strip old + create release)
+          # only when this tag is the highest semver among all tags — never republish/strip otherwise.
+          $tag = "${{ steps.ver.outputs.tag }}"
+          function ToVer($t) { if ($t -match '^v(\d+)\.(\d+)\.(\d+)$') { return [version]("{0}.{1}.{2}" -f $matches[1],$matches[2],$matches[3]) }; return $null }
+          $cur = ToVer $tag
+          $skip = $false
+          if ($null -ne $cur) {
+            $all = gh api "repos/${{ github.repository }}/tags?per_page=100" --jq '.[].name'
+            foreach ($t in $all) { $v = ToVer $t; if ($v -and $v -gt $cur) { Write-Host "Newer tag exists: $t (> $tag)"; $skip = $true; break } }
+          }
+          if ($skip) { Write-Host "::warning::$tag is not the newest tag — skipping publish." }
+          "skip=$($skip.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Restore NuGet Packages
+        run: nuget restore PriconneReALLTLInstaller.sln
+
+      - name: Build C# Solution
+        run: msbuild PriconneReALLTLInstaller.sln /p:Configuration=Release
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Package — portable exe, installer, checksums
+        id: pkg
+        shell: pwsh
+        run: |
+          $tag = "${{ steps.ver.outputs.tag }}"
+          $ver = "${{ steps.ver.outputs.version }}"
+          New-Item -ItemType Directory -Force dist | Out-Null
+          # Portable single-file exe — listed FIRST below so it is assets[0] (self-update downloads this).
+          $portable = "PriconneReALLTLInstaller-$tag.exe"
+          Copy-Item PriconneReALLTLInstaller/bin/Release/PriconneReALLTLInstaller.exe "dist/$portable" -Force
+          # Per-user Inno installer.
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "${env:ProgramFiles}\Inno Setup 6\ISCC.exe" }
+          & $iscc /DAppVersion=$ver /DTag=$tag installer\PriconneReALLTLInstaller.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+          $setup = "PriconneReALLTLInstaller-$tag-Setup.exe"
+          # SHA256SUMS.txt — lets users verify either download.
+          $h1 = (Get-FileHash "dist/$portable" -Algorithm SHA256).Hash.ToLower()
+          $h2 = (Get-FileHash "dist/$setup"    -Algorithm SHA256).Hash.ToLower()
+          "$h1  $portable" | Out-File dist/SHA256SUMS.txt -Encoding ascii
+          "$h2  $setup"    | Out-File dist/SHA256SUMS.txt -Append -Encoding ascii
+          "portable=$portable" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "setup=$setup"       | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "portable_sha=$h1"   | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "setup_sha=$h2"      | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Get-ChildItem dist
+          Get-Content dist/SHA256SUMS.txt
+
+      # World-class supply-chain extras for a distributed binary (best-effort — never block a release):
+      # an SBOM (what dependencies the build contains) + a signed build-provenance attestation (proof
+      # these exact artifacts were built by this workflow from this commit). See distribution-security.md.
+      - name: Generate SBOM (SPDX) — best-effort
+        if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
+        continue-on-error: true
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26   # v0.24.2
+        with:
+          path: .
+          format: spdx-json
+          output-file: dist/PriconneReALLTLInstaller-${{ steps.ver.outputs.tag }}.sbom.spdx.json
+          upload-artifact: false
+
+      - name: Attest build provenance — best-effort
+        if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
+        continue-on-error: true
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8   # v4
+        with:
+          subject-path: |
+            dist/${{ steps.pkg.outputs.portable }}
+            dist/${{ steps.pkg.outputs.setup }}
+
+      - name: Strip installer assets from old releases (keep source code only)
+        if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Keep every release + tag for history, but only the LATEST release offers the heavy
+          # installer/portable binaries. Older releases keep their "Source code" archive AND
+          # SHA256SUMS.txt — so anyone still holding an old build can verify it (distribution-security).
+          $current = "${{ steps.ver.outputs.tag }}"
+          $existing = gh release list --json tagName --jq '.[].tagName'
+          foreach ($r in $existing) {
+            if ($r -and ($r -ne $current)) {
+              Write-Host "Stripping installer binaries from old release: $r (keeping SHA256SUMS.txt)"
+              $assets = gh release view $r --json assets --jq '.assets[].name'
+              foreach ($a in $assets) { if ($a -and $a -ne 'SHA256SUMS.txt') { Write-Host "  deleting asset: $a"; gh release delete-asset $r "$a" --yes } }
+            }
+          }
+
+      - name: Assemble release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $ver  = "${{ steps.ver.outputs.version }}"
+          $psha = "${{ steps.pkg.outputs.portable_sha }}"
+          $ssha = "${{ steps.pkg.outputs.setup_sha }}"
+          $body = ""
+          if (Test-Path RELEASE_NOTES.md) { $body = Get-Content RELEASE_NOTES.md -Raw }
+          $nl = [char]10
+          $lines = @()
+          $lines += ""
+          $lines += "## Verification"
+          $lines += ""
+          $lines += ("- Portable SHA-256: ``"  + $psha + "``")
+          $lines += ("- Installer SHA-256: ``" + $ssha + "``")
+          $lines += "- Or compare against the attached ``SHA256SUMS.txt``:"
+          $lines += ("  ``Get-FileHash -Algorithm SHA256 .\PriconneReALLTLInstaller-v" + $ver + ".exe``")
+          $lines += "- Authenticode: not signed this release (verify via SHA-256 above)."
+          ($body + $nl + ($lines -join $nl)) | Out-File RELEASE_BODY.md -Encoding utf8
+
+      - name: Create release
+        if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.ver.outputs.tag }}" `
+            "dist/${{ steps.pkg.outputs.portable }}" `
+            "dist/${{ steps.pkg.outputs.setup }}" `
+            "dist/SHA256SUMS.txt" `
+            --title "${{ steps.ver.outputs.tag }} Release" `
+            --notes-file RELEASE_BODY.md
+
+      - name: Attach SBOM to the release — best-effort
+        if: github.ref_type == 'tag' && steps.guard.outputs.skip != 'true'
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $sbom = "dist/PriconneReALLTLInstaller-${{ steps.ver.outputs.tag }}.sbom.spdx.json"
+          if (Test-Path $sbom) { gh release upload "${{ steps.ver.outputs.tag }}" $sbom --clobber }
+          else { Write-Host "SBOM not generated — skipping upload." }
