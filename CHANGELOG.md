@@ -4,7 +4,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.4...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.5...HEAD)
+
+_Nothing yet._
+
+## [3.1.5](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.5) — 2026-09-26
 
 Fixes from an AI code review (CodeRabbit) of the whole repository; every finding was verified against the code before being fixed.
 
