@@ -23,7 +23,8 @@ namespace PriconneReALLTLInstaller
             // migrate the previous version's settings BEFORE reading any — not just the main window. Otherwise a
             // wrapped-shortcut `autoupdate` run (or the uninstaller's --unwrap-all) started before the UI was ever
             // opened would read empty defaults: no game path, source 0 (EN), no token, no wrapped-shortcut list.
-            MigrateSettings();
+            try { MigrateSettings(); }
+            catch (Exception) when (args.Length > 0 && args[0] == "--unwrap-all") { return; }   // uninstall step: an unreadable user.config must not pop an error dialog (nothing to unwrap without it)
 
             // #52/#8: headless un-wrap of every managed shortcut, invoked by the Inno uninstaller
             // (--unwrap-all) BEFORE the exe is deleted, so wrapped .lnks don't end up pointing at a
