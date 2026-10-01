@@ -4,7 +4,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.5...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.6...HEAD)
+
+_Nothing yet._
+
+## [3.1.6](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.6) — 2026-10-01
+
+A performance patch: downloads, extraction and removal no longer crawl.
 
 ### Fixed
 - **Downloads (and extract / remove) crawled at a fraction of the available speed.** The progress callback was raised for every 80 KB chunk / every file and each call blocked the worker on the UI thread (`Invoke`) — thousands of synchronous UI round-trips per phase. Measured on the same machine: the identical download loop with no UI ran at ~22 MB/s (a ~370 MB patch in ~17 s), while the app managed ~70 KB/s. The windows now update the bar only when the whole percent changes (≤100 updates per phase) and post it without blocking the worker.
