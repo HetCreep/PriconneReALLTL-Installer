@@ -235,12 +235,20 @@ namespace PriconneReALLTLInstaller
             }));
         }
 
+        private int _lastProgressPct = -1;
+
         public void OnDownloadProgress(double currentValue, double maxValue)
         {
-           
+
             // #24: guard a missing Content-Length (maxValue <= 0 → NaN) so the label/positions stay sane.
             double percentage = maxValue > 0 ? Math.Min(100, Math.Max(0, currentValue / maxValue * 100)) : 0;
-            statusLabel.Invoke((Action)(() =>
+            // Raised once per download chunk: skip repeats of the same whole percent and never make the
+            // worker wait on the UI thread (a synchronous Invoke per chunk throttled the download to ~70 KB/s).
+            int whole = (int)Math.Truncate(percentage);
+            if (whole == _lastProgressPct) return;
+            _lastProgressPct = whole;
+            if (statusLabel.IsDisposed || !statusLabel.IsHandleCreated) return;
+            statusLabel.BeginInvoke((Action)(() =>
             {
                 progressPicture.Left = 30 + (int)(percentage * 5);
                 progressLabel.Text = $" {Math.Truncate(percentage)}%";

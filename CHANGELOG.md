@@ -6,7 +6,8 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.5...HEAD)
 
-_Nothing yet._
+### Fixed
+- **Downloads (and extract / remove) crawled at a fraction of the available speed.** The progress callback was raised for every 80 KB chunk / every file and each call blocked the worker on the UI thread (`Invoke`) — thousands of synchronous UI round-trips per phase. Measured on the same machine: the identical download loop with no UI ran at ~22 MB/s (a ~370 MB patch in ~17 s), while the app managed ~70 KB/s. The windows now update the bar only when the whole percent changes (≤100 updates per phase) and post it without blocking the worker.
 
 ## [3.1.5](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.5) — 2026-09-26
 
