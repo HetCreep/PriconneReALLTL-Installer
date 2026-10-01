@@ -4,7 +4,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.7...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.8...HEAD)
+
+_Nothing yet._
+
+## [3.1.8](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.8) — 2026-10-01
+
+Follow-up fixes from the CodeRabbit review of the v3.1.7 code.
 
 ### Fixed
 - **A token check that could not complete no longer blocks the window repeatedly.** When GitHub was unreachable or rate-limited the check was retried on the UI thread right after the background one failed the same way; a failed check is now remembered for 60 s (the explicit **Validate** button always re-checks).
