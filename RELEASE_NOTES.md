@@ -1,8 +1,18 @@
-**PriconneReALLTL Installer v3.1.6** — a performance patch: the patch download (and the extract / remove steps) no longer crawl. If a ~370 MB download was taking tens of minutes for you, this is the fix.
+**PriconneReALLTL Installer v3.1.7** — fixes from a second AI code review (CodeRabbit) round; every finding was checked against the code before being fixed. The important one affects Vietnamese / text-only installs, so please update.
 
 ## Fixed
 
-- **Downloads, extraction and removal were throttled by the progress bar.** The progress callback fired for every 80 KB chunk (and for every extracted / removed file), and each call made the worker thread wait for the window to redraw — thousands of synchronous round-trips per step. Measured on one machine: the same download loop with no window ran at ~22 MB/s (a ~370 MB patch in ~17 seconds), while the app managed ~70 KB/s (199 MB in 47 minutes). The windows now update the bar only when the whole percent changes (at most 100 updates per step) and post it without making the download wait. Applies to the main window, the auto-update window and the self-update window.
+- **A failed release re-read could install the wrong layer yet report success (Vietnamese / text-only sources).** After staging the modloader base, the installer re-read the selected source's release info and ignored the result. If that read failed (rate limit, offline), the engine base was downloaded and "verified" a second time, the translation text was never installed and — on Update / Reinstall, after the old files were removed — the operation still said "complete". The result is now checked and the operation stops before touching your install.
+- **Hash verification now fails closed.** An error while hashing a download used to count as "verified"; it is now treated as unverified. Only a release with no GitHub-published digest at all (very old releases) is let through, and the log says so. The README's SHA-256 statement (English / ไทย / Tiếng Việt) was narrowed to match.
+- **Wrapped-shortcut copies can no longer clobber or be confused with your own files.** The Desktop "(TL update)" copy gets a unique name and is never created over an existing file; whether the installer created a copy is recorded in the shortcut itself instead of guessed from its name, so a shortcut of yours that merely ends in "(TL update)" is restored, never deleted; and Remove keeps the entry (and tells you) when the delete or restore fails, instead of forgetting a shortcut that is still wrapped.
+
+## Security
+
+- Release workflow: the tag name now reaches the shell through the environment and must be a plain version (`v1.2.3`, `v1.2.3-rc.1`) before the privileged job uses it, and the manual-trigger path was removed so a release build runs from a `v*` tag only.
+
+## CI
+
+- Dependabot patch / minor bumps now auto-merge once the required checks pass (a new PR `build` check + dependency review); major bumps still wait for a human.
 
 <!-- NOTE: do NOT add a "## Verification" section here — release.yml auto-appends one with the
      build-computed SHA-256 hashes + the Authenticode note. A manual one here duplicates it. -->
@@ -14,8 +24,8 @@
 
 ## Upgrade Notes
 
-- Drop-in over v3.1.5 — settings, token, and your installed patch are unaffected.
-- An interrupted download keeps its partial file and resumes where it stopped, so you can close a slow v3.1.5 or older download, update, and carry on.
+- Drop-in over v3.1.6 — settings, token, and your installed patch are unaffected.
+- Desktop "(TL update)" shortcut copies created by v3.1.6 or older carry no ownership marker, so **Remove** now restores them to their original launcher instead of deleting them — delete those leftover Desktop copies by hand if you don't want them. Copies made from this version on are deleted automatically.
 
 ## Known Issues
 

@@ -4,7 +4,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.6...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.7...HEAD)
+
+_Nothing yet._
+
+## [3.1.7](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.7) — 2026-10-01
+
+Fixes from a second AI code review (CodeRabbit) round; every finding was verified against the code first.
 
 ### Fixed
 - **A failed release re-read could install the wrong layer yet report success (Vietnamese / text-only sources).** After staging the modloader base, `PrepareEngineBase` re-read the selected source's release info and ignored the result; if that read failed (rate limit, offline) the shared link/digest still held the engine base's values, so the base was downloaded and "verified" a second time, the text layer was never installed, and — on Update/Reinstall, after the old files were removed — the operation still said "complete". The result is now checked and the operation aborts before touching anything; the same check guards the link/digest re-pairing in the download.
