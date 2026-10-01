@@ -20,7 +20,7 @@
 ; Overridable on the ISCC command line. AppVersion must be numeric (Inno [Setup]);
 ; Tag is the release tag used only in the output filename (defaults to "v"+AppVersion).
 #ifndef AppVersion
-  #define AppVersion "3.1.4"
+  #define AppVersion "3.1.7"
 #endif
 #ifndef Tag
   #define Tag "v" + AppVersion
@@ -44,7 +44,8 @@ VersionInfoVersion={#AppVersion}
 VersionInfoProductName={#AppName}
 VersionInfoProductVersion={#AppVersion}
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+; No PrivilegesRequiredOverridesAllowed: "dialog" would offer an all-users (admin) install under
+; Program Files, which a non-elevated app can't self-update in place (distribution-security: per-user only).
 DefaultDirName={autopf}\PriconneReALLTLInstaller
 ; Let power users change the install location; suppress the re-install "folder exists" warning.
 DisableDirPage=auto

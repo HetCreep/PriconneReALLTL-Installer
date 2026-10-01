@@ -4,9 +4,56 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.4...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.7...HEAD)
 
 _Nothing yet._
+
+## [3.1.7](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.7) — 2026-10-01
+
+Fixes from a second AI code review (CodeRabbit) round; every finding was verified against the code first.
+
+### Fixed
+- **A failed release re-read could install the wrong layer yet report success (Vietnamese / text-only sources).** After staging the modloader base, `PrepareEngineBase` re-read the selected source's release info and ignored the result; if that read failed (rate limit, offline) the shared link/digest still held the engine base's values, so the base was downloaded and "verified" a second time, the text layer was never installed, and — on Update/Reinstall, after the old files were removed — the operation still said "complete". The result is now checked and the operation aborts before touching anything; the same check guards the link/digest re-pairing in the download.
+- **Hash verification now fails closed.** An error while hashing a download used to count as "verified"; it is now treated as unverified. Only an absent digest (very old releases) is allowed through, and the log says so. The README's SHA-256 statement (EN/TH/VI) was narrowed to match.
+- **Wrapped-shortcut copies can no longer clobber or be confused with your own files.** The Desktop "(TL update)" copy now gets a unique name and is created without overwriting; "did the installer create this copy?" is recorded in the shortcut itself instead of guessed from its file name, so a shortcut of yours that merely ends in "(TL update)" is restored, never deleted; and Remove keeps the entry (and tells you) when the delete or restore fails instead of forgetting a still-wrapped shortcut.
+
+### Security
+- Release workflow: the tag name now reaches the shell through `env` and must be a plain version (`v1.2.3`, `v1.2.3-rc.1`) before the privileged job uses it, and the `workflow_dispatch` trigger was removed so a release build runs from a `v*` tag only (ad-hoc builds are `ci.yml`).
+
+### CI
+- **Dependabot patch/minor bumps now auto-merge** once the required checks pass (`dependabot-auto-merge.yml` + the `master-required-checks` ruleset: `build` and `dependency-review`, owner-bypassable so tag releases still push straight to master). Major bumps — and any major in a grouped PR — still wait for a human. New `ci.yml` `build` job compiles every PR, because CodeQL skips Dependabot PRs and `release.yml` is tag-only, so a bump (a NuGet package especially) was never compiled before merging. Dependabot PRs are assigned to the maintainer for notification.
+
+## [3.1.6](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.6) — 2026-10-01
+
+A performance patch: downloads, extraction and removal no longer crawl.
+
+### Fixed
+- **Downloads (and extract / remove) crawled at a fraction of the available speed.** The progress callback was raised for every 80 KB chunk / every file and each call blocked the worker on the UI thread (`Invoke`) — thousands of synchronous UI round-trips per phase. Measured on the same machine: the identical download loop with no UI ran at ~22 MB/s (a ~370 MB patch in ~17 s), while the app managed ~70 KB/s. The windows now update the bar only when the whole percent changes (≤100 updates per phase) and post it without blocking the worker.
+
+## [3.1.5](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.5) — 2026-09-26
+
+Fixes from an AI code review (CodeRabbit) of the whole repository; every finding was verified against the code before being fixed.
+
+### Security
+- **The GitHub token is no longer sent to `raw.githubusercontent.com`.** The modloader-version check reused its authenticated client for the raw-file request, contradicting the privacy policy (token to `api.github.com` only). The raw request now uses its own client with no `Authorization` header.
+- **The installer self-update exe is now SHA-256-verified** against the digest GitHub publishes for it (previously the check was skipped and the log still said "verified"). A stale `.part` from an older self-update is discarded instead of resumed, so an old exe's head can no longer be glued to a newer exe's tail. When GitHub publishes no digest the log now says so instead of claiming verification.
+- Release workflow: `persist-credentials: false` on checkout, `--paginate` on the newest-tag guard and `--limit 1000` on the old-release strip so neither silently stops at 30/100 items.
+- Setup no longer offers an all-users (admin) install (`PrivilegesRequiredOverridesAllowed=dialog` removed) — per-user only, so in-app self-update keeps working.
+
+### Fixed
+- **Bogus "SHA256 integrity check" failures from mismatched release info.** A download link, its release version and its digest are separate values that can come from different fetches (a fast TL-source switch, a caller holding an older link). The download now re-pairs them at the single choke point before downloading, and aborts safely if it cannot.
+- **The TL-source selector is locked while an operation runs** — switching mid-install re-pointed the manifest owner, `Language=` and digest at the wrong source.
+- **Update/Reinstall no longer deletes a patch file you added to the ignore list after installing it** (the ref-counted removal plan now honours the ignore list).
+- **The saved "Launch Game" preference is no longer wiped** by every operation / failed version check (it is saved from a real click only, and restored when the box is re-enabled).
+- **Settings migration runs for every entry point** (`autoupdate` shortcuts and the uninstaller's `--unwrap-all`), not only the main window — after an update they could previously read empty defaults.
+- **A saved token is no longer deleted when GitHub is merely unreachable** — only a definitive "Bad credentials" clears it; a rejected token is cached so it costs one request, not a UI-thread stall per refresh.
+- The Nunito UI font stays allocated for the life of the process (GDI+ does not copy it) and is registered once instead of on every form.
+- Messages logged by the installer's internal helper (corrupt-manifest backup, `Language=` sync failures, …) are no longer silently dropped.
+- Self-update dialog: saves a `.exe` (was proposing `.zip`), tolerates a release with no notes, and logs safely from worker threads.
+- Startup / auto-update / source-switch handlers can no longer throw into the message loop.
+
+### Docs
+- Issue templates and `PRIVACY.md` no longer describe the public privacy-issue link as private, and the erasure statement no longer claims nothing ever leaves the machine. README title icons got alt text.
 
 ## [3.1.4](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.4) — 2026-09-17
 

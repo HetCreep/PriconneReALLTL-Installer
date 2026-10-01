@@ -77,7 +77,7 @@ The installer's purpose is to deploy **BepInEx** — a third-party mod loader th
 
 ## Auto-update
 
-The installer self-update is **notify-and-manual-apply**, never a silent in-place swap: when a newer release exists you choose a save location and run the new exe yourself. The startup check can be disabled (Settings → *Check for Installer Updates on Startup*). Because the release ships `SHA256SUMS.txt`, you can verify the downloaded exe before running it. (Authenticode verification will be added once the binary is signed.)
+The installer self-update is **notify-and-manual-apply**, never a silent in-place swap: when a newer release exists you choose a save location and run the new exe yourself. The startup check can be disabled (Settings → *Check for Installer Updates on Startup*). The downloaded exe is checked against the SHA-256 digest GitHub publishes for that release asset (when GitHub provides one — the log says so honestly if not), and the release also ships `SHA256SUMS.txt` so you can verify it yourself before running it. (Authenticode verification will be added once the binary is signed.)
 
 ## Out of scope
 

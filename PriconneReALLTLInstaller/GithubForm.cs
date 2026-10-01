@@ -90,8 +90,13 @@ namespace PriconneReALLTLInstaller
             try
             {
                 validateButton.Enabled = false;
-                var (tokenvalid, username) = await Task.Run(() => Helper.ValidateGitHubToken(Helper.DecryptString(Settings.Default.GithubAPIKey)));
+                var (tokenvalid, username, rejected) = await Task.Run(() => Helper.ValidateGitHubTokenDetailed(Helper.DecryptString(Settings.Default.GithubAPIKey)));
                 if (tokenvalid) MessageBox.Show($"Token valid!\n\nUsername: {username}", "Token validation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                else if (!rejected)
+                {
+                    // Could not reach GitHub (offline, timeout, rate limit, outage) — that says nothing about the token.
+                    MessageBox.Show("Could not check the token right now (GitHub unreachable or rate-limited).\n\nYour saved token was kept. Try again later.", "Token validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
                 else
                 {
                     Settings.Default.GithubAPIKey = "";

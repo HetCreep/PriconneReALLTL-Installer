@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for taking the time to report a bug — the guided fields below help us reproduce it quickly.
 
-        For a **security vulnerability** or a **privacy concern**, please use the private links on the previous screen instead of this form.
+        For a **security vulnerability** (including token leakage), please use the private security-advisory link on the previous screen instead of this form. Ordinary privacy questions use the public privacy link there — never post secrets in it.
   - type: textarea
     id: what-happened
     attributes:

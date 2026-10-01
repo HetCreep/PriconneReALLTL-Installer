@@ -45,6 +45,9 @@ namespace InstallerFunctions
         private DateTime? latestReleaseDate;   // selected source's release published_at — stamped onto installed files/dirs
         private static bool _clockSkewWarned = false;   // #16: warn at most once per session about a wrong system clock
         private string latestAssetDigest;      // GitHub asset SHA256 ("sha256:…") for verify-before-touch
+        private string latestAssetDigestLink;  // the asset link latestAssetDigest/latestVersion belong to — DownloadPatchFiles re-pairs them if the link it is given differs
+        private string installerAssetDigest;   // digest of the installer's own self-update exe (kept apart from the patch fields above)
+        private string installerAssetDigestLink;   // the exe link installerAssetDigest belongs to
         private string tempFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());   // no file created (GetTempFileName throws when %TEMP% is full) — audit B3
         private string stagedBaseZip;          // verified engine-base zip staged for the current operation (text-only sources); null = none
         private bool removeSuccess = true;
@@ -60,6 +63,15 @@ namespace InstallerFunctions
         public event Action ProcessStart;
         public event Action ProcessFinish;
         public event Action ProcessError;
+
+        // This Installer owns its own Helper (a different instance from BaseForm.helper), and no form
+        // subscribes to it — so what Helper logs during an operation (manifest write/backup failures,
+        // the Language= sync, ...) was silently dropped. Forward it through this Installer's own events.
+        public Installer()
+        {
+            helper.Log += (m, c, w) => Log?.Invoke(m, c, w);
+            helper.ErrorLog += m => ErrorLog?.Invoke(m);
+        }
 
         public (string priconnePath, bool priconnePathValid, string gameVersion) GetGamePath()
         {
@@ -208,6 +220,7 @@ namespace InstallerFunctions
                         if (!string.IsNullOrEmpty(d) && !string.IsNullOrEmpty(pStr))   // trust the cache only when it carries BOTH the digest + published date; else re-fetch to capture them
                         {
                             latestAssetDigest = d;
+                            latestAssetDigestLink = (string)cj["a"];
                             if (DateTime.TryParse(pStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime cpub)) latestReleaseDate = cpub;
                             return (latestVersion = (string)cj["v"], true, assetLink = (string)cj["a"]);
                         }
@@ -248,6 +261,7 @@ namespace InstallerFunctions
                     // in the same release); fall back to the first asset if none match.
                     assetLink = null;
                     latestAssetDigest = null;
+                    latestAssetDigestLink = null;
                     if (releaseJson.assets != null)   // #35: guard before iterating so a release with no assets array reaches the graceful "no asset yet" path below instead of throwing
                     foreach (var asset in releaseJson.assets)
                     {
@@ -268,6 +282,7 @@ namespace InstallerFunctions
                         }
                         assetLink = releaseJson.assets[0].browser_download_url;
                     }
+                    latestAssetDigestLink = assetLink;
                     Helper.SetCachedVersion(cacheKey, new JObject { ["v"] = version, ["a"] = assetLink, ["d"] = latestAssetDigest ?? "", ["p"] = latestReleaseDate.HasValue ? latestReleaseDate.Value.ToString("o") : "" }.ToString(Newtonsoft.Json.Formatting.None));
                     return (latestVersion = version, true, assetLink);
                 }
@@ -280,7 +295,7 @@ namespace InstallerFunctions
                 string stale = Helper.GetCachedVersion("patch:" + githubAPI, allowStale: true);
                 if (stale != null)
                 {
-                    try { var cj = JObject.Parse(stale); latestAssetDigest = (string)cj["d"]; if (DateTime.TryParse((string)cj["p"], null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime sp)) latestReleaseDate = sp; Log?.Invoke("Using last known patch version (GitHub unavailable / rate-limited).", "info", false); return (latestVersion = (string)cj["v"], true, assetLink = (string)cj["a"]); }   // #18: restore the digest+date too so the cached-zip verify uses the right expected hash on the stale path
+                    try { var cj = JObject.Parse(stale); latestAssetDigest = (string)cj["d"]; latestAssetDigestLink = (string)cj["a"]; if (DateTime.TryParse((string)cj["p"], null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime sp)) latestReleaseDate = sp; Log?.Invoke("Using last known patch version (GitHub unavailable / rate-limited).", "info", false); return (latestVersion = (string)cj["v"], true, assetLink = (string)cj["a"]); }   // #18: restore the digest+date too so the cached-zip verify uses the right expected hash on the stale path
                     catch { }
                 }
                 HttpWebResponse resp = webEx.Response as HttpWebResponse;
@@ -325,8 +340,15 @@ namespace InstallerFunctions
                     // (raw accepts a tag ref) — this skips the extra git/ref/tags API call, so the modloader
                     // check costs ONE rate-limited request instead of two. raw.githubusercontent doesn't
                     // count against the GitHub API rate limit, easing the tokenless 403s.
+                    // The token is for api.github.com ONLY (credential-vault / telemetry-policy): this raw-host
+                    // request uses its own client with no Authorization header — `client` above carries it.
                     string fileUrl = $"{ml.RawBase}/{mlTag}/src/BepInEx/interop/version";
-                    string fileVersion = client.DownloadString(fileUrl).Trim();
+                    string fileVersion;
+                    using (WebClient rawClient = new WebClient())
+                    {
+                        rawClient.Headers.Add("User-Agent", "PriconneReALLTLInstaller");
+                        fileVersion = rawClient.DownloadString(fileUrl).Trim();
+                    }
 
                     Helper.SetCachedVersion("modloader", new JObject { ["v"] = fileVersion, ["s"] = mlTag }.ToString(Newtonsoft.Json.Formatting.None));
                     return (fileVersion, mlTag);
@@ -373,7 +395,7 @@ namespace InstallerFunctions
                 string cachedInst = Helper.GetCachedVersion("installer", ttlHours: Helper.InstallerCheckTtlHours);   // 7-day TTL — mature app, rare releases
                 if (cachedInst != null)
                 {
-                    try { var cj = JObject.Parse(cachedInst); return ((string)cj["v"], (string)cj["b"], (string)cj["a"], true); }
+                    try { var cj = JObject.Parse(cachedInst); installerAssetDigest = (string)cj["d"]; installerAssetDigestLink = (string)cj["a"]; return ((string)cj["v"], (string)cj["b"], (string)cj["a"], true); }
                     catch { }
                 }
 
@@ -399,18 +421,25 @@ namespace InstallerFunctions
                     // "Setup" (a release also ships a "...-Setup.exe" Inno installer for first-time installs;
                     // self-update must not grab that). Fall back to the first asset if none matches.
                     string chosenAsset = null;
+                    string chosenDigest = null;
                     foreach (var a in releaseJson.assets)
                     {
                         string n = (string)a.name ?? "";
                         if (n.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && n.IndexOf("setup", StringComparison.OrdinalIgnoreCase) < 0)
                         {
                             chosenAsset = (string)a.browser_download_url;
+                            try { chosenDigest = (string)a.digest; } catch { }   // "sha256:…"; null on older releases
                             break;
                         }
                     }
-                    assetLink = chosenAsset ?? (string)releaseJson.assets[0].browser_download_url;
-                    Helper.SetCachedVersion("installer", new JObject { ["v"] = version, ["b"] = body, ["a"] = assetLink }.ToString(Newtonsoft.Json.Formatting.None));
-                    return (version, body, assetLink, true);
+                    if (chosenAsset == null) { try { chosenDigest = (string)releaseJson.assets[0].digest; } catch { } }
+                    // A local — NOT the shared `assetLink` field: this Installer instance may also run the
+                    // patch flow, and the installer's own exe link must never overwrite the patch's.
+                    string installerLink = chosenAsset ?? (string)releaseJson.assets[0].browser_download_url;
+                    installerAssetDigest = chosenDigest;
+                    installerAssetDigestLink = installerLink;
+                    Helper.SetCachedVersion("installer", new JObject { ["v"] = version, ["b"] = body, ["a"] = installerLink, ["d"] = chosenDigest ?? "" }.ToString(Newtonsoft.Json.Formatting.None));
+                    return (version, body, installerLink, true);
                 }
             }
             catch (WebException webEx)
@@ -522,16 +551,18 @@ namespace InstallerFunctions
         }
 
         // Verifies a downloaded/cached zip against GitHub's asset SHA256 digest ("sha256:…") so a
-        // truncated/corrupt/tampered file is never extracted over the install. Returns true when the
-        // digest is unavailable (older releases) or the check errors — can't verify, so don't block;
-        // a real MISMATCH returns false. Structurally-corrupt zips still fail at ZipFile.OpenRead.
-        private bool VerifyZipDigest(string path)
+        // truncated/corrupt/tampered file is never extracted over the install. Returns true ONLY when the
+        // digest matches, or when GitHub published no digest at all (older releases — nothing to compare
+        // against, so it is not hard-blocked; the caller logs that the file was not verified). A MISMATCH or
+        // an error while hashing returns false (fail closed). Structurally-corrupt zips also fail at
+        // ZipFile.OpenRead.
+        private bool VerifyZipDigest(string path, string digest, string url)
         {
             try
             {
-                if (string.IsNullOrEmpty(latestAssetDigest)) return true;
-                int c = latestAssetDigest.IndexOf(':');
-                string expected = (c >= 0 ? latestAssetDigest.Substring(c + 1) : latestAssetDigest).Trim();
+                if (string.IsNullOrEmpty(digest)) return true;
+                int c = digest.IndexOf(':');
+                string expected = (c >= 0 ? digest.Substring(c + 1) : digest).Trim();
                 if (expected.Length == 0) return true;
                 using (var sha = System.Security.Cryptography.SHA256.Create())
                 using (var fs = File.OpenRead(path))
@@ -542,11 +573,17 @@ namespace InstallerFunctions
                     // WHICH release/asset diverged without needing to reproduce, since a mismatch here has
                     // had more than one distinct root cause across releases (stale cached digest, a
                     // stale asset link paired with a freshly-refetched digest, a poisoned resumed .part).
-                    if (!match) Log?.Invoke($"Digest mismatch detail — source: {Helper.GetCurrentPatchSource().ShortCode}, version: {latestVersion}, file size: {new FileInfo(path).Length} bytes, expected: {expected}, actual: {actual}, url: {assetLink}", "info", false);
+                    if (!match) Log?.Invoke($"Digest mismatch detail — source: {Helper.GetCurrentPatchSource().ShortCode}, version: {latestVersion}, file size: {new FileInfo(path).Length} bytes, expected: {expected}, actual: {actual}, url: {url}", "info", false);
                     return match;
                 }
             }
-            catch (Exception ex) { Log?.Invoke("Could not verify the download hash: " + ex.Message, "info", false); return true; }
+            catch (Exception ex)
+            {
+                // Fail CLOSED (verify-before-touch): a hash that could not be computed is not a verified file.
+                // Only an absent digest (older release) is allowed through — handled above, and logged by the caller.
+                Log?.Invoke("Could not verify the download hash — treating the file as unverified: " + ex.Message, "info", false);
+                return false;
+            }
         }
 
         // Stamps the zip file's date to its SOURCE date — the release published_at if known (from the
@@ -577,12 +614,43 @@ namespace InstallerFunctions
             // guaranteed by the SHA-256 digest verify, not by auth. (API calls that need the token are elsewhere.)
             try
             {
+                // Which digest this download is checked against — always the one belonging to THIS link.
+                string activeDigest;
+                if (fileToSave != null)
+                {
+                    // installer self-update exe: its own digest (captured by GetLatestInstallerRelease), never the patch's
+                    activeDigest = string.Equals(assetLink, installerAssetDigestLink, StringComparison.OrdinalIgnoreCase) ? installerAssetDigest : null;
+                }
+                else
+                {
+                    // The link, the release version (cache file name) and the digest must all come from ONE
+                    // GetLatestPatchRelease fetch. They are separate fields on this shared instance and the
+                    // link arrives as a parameter, so an interleaved fetch (a fast source switch, a caller
+                    // holding an older link) can leave them from different releases — which shows up as a
+                    // bogus SHA256 mismatch. Re-pair them here, at the single choke point, before downloading.
+                    if (!string.Equals(assetLink, latestAssetDigestLink, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Helper.PatchSource pairSrc = cacheSource ?? Helper.GetCurrentPatchSource();
+                        Log?.Invoke($"Release info was out of step with the download link — re-reading {pairSrc.ShortCode} release info.", "info", false);
+                        (string _, bool reOk, string reLink) = await Task.Run(() => GetLatestPatchRelease(pairSrc.ApiBase));
+                        // A failed re-read leaves the previous (mismatched) fields in place — treat it as "cannot confirm".
+                        if (reOk && !string.IsNullOrEmpty(reLink)) assetLink = reLink;
+                        if (!reOk || !string.Equals(assetLink, latestAssetDigestLink, StringComparison.OrdinalIgnoreCase))
+                        {
+                            ErrorLog?.Invoke("Could not confirm which release this download belongs to — aborting before touching the install. Please try again.");
+                            downloadSuccess = false;
+                            return;
+                        }
+                    }
+                    activeDigest = latestAssetDigest;
+                }
+
                 // Reuse the cached zip for this source+version if present (no re-download); otherwise
                 // purge stale versions and download into the cache. fileToSave != null bypasses caching.
                 string cachePath = (fileToSave == null) ? GetCachedZipPath(cacheSource) : null;
                 if (cachePath != null && File.Exists(cachePath))
                 {
-                    if (VerifyZipDigest(cachePath))
+                    if (VerifyZipDigest(cachePath, activeDigest, assetLink))
                     {
                         tempFile = cachePath;
                         downloadSuccess = true;
@@ -599,6 +667,10 @@ namespace InstallerFunctions
                 // verifies — so an interrupted/partial download can never masquerade as a complete cached
                 // zip that a later run would reuse + extract over the install.
                 string downloadTmp = target + ".part";
+                // The installer's own self-update exe is tiny (no resume benefit) and lands under a user-chosen
+                // name that can be reused for a NEWER release: never resume it — a stale .part from an older
+                // version would get the new asset's tail appended to the old head.
+                if (fileToSave != null) { try { File.Delete(downloadTmp); } catch { } }
 
                 Log?.Invoke("Downloading compressed files...", "info", true);
                 ProgressPictureChange?.Invoke(Resources.pecorun);
@@ -696,13 +768,13 @@ namespace InstallerFunctions
                     return;
                 }
 
-                if (!VerifyZipDigest(downloadTmp))
+                if (!VerifyZipDigest(downloadTmp, activeDigest, assetLink))
                 {
                     // A fully-downloaded file mismatching a FRESH network fetch usually means the cached
                     // release digest is stale (the source replaced the asset under the same tag/URL) —
                     // not a real corruption. Drop the cached check so a retry re-fetches live metadata
                     // instead of repeating this exact same comparison until the 6h TTL expires.
-                    Helper.InvalidateCachedVersion("patch:" + (cacheSource ?? Helper.GetCurrentPatchSource()).ApiBase);
+                    if (fileToSave == null) Helper.InvalidateCachedVersion("patch:" + (cacheSource ?? Helper.GetCurrentPatchSource()).ApiBase);
                     ErrorLog?.Invoke("Downloaded file failed the SHA256 integrity check — aborting before touching the install. Please try again.");
                     try { File.Delete(downloadTmp); } catch { }
                     // A leftover .part gets resumed (appended to, not replaced) on the next attempt — if the
@@ -717,7 +789,9 @@ namespace InstallerFunctions
                 // Verified → promote the temp file to the real target (replace any stale file there).
                 try { if (File.Exists(target)) File.Delete(target); } catch { }
                 File.Move(downloadTmp, target);
-                Log?.Invoke("Download completed and verified.", "info", true);
+                Log?.Invoke(string.IsNullOrWhiteSpace(activeDigest)
+                    ? "Download completed (GitHub published no SHA-256 digest for this file, so it could not be verified)."
+                    : "Download completed and verified.", "info", true);
                 downloadSuccess = true;
                 if (fileToSave == null) StampZipSourceDate(target);   // #34: zips only — never open a downloaded .exe (self-update) as a zip
                 if (cachePath != null) tempFile = cachePath;   // extract from (and keep) the cached zip
@@ -846,8 +920,21 @@ namespace InstallerFunctions
             await DownloadPatchFiles(baseLink, cacheSource: ml);
             if (!downloadSuccess) return false;
             stagedBaseZip = tempFile;
-            // Restore the selected source's release info for the text-layer download/stamps.
-            await Task.Run(() => GetLatestPatchRelease(Helper.GetCurrentPatchSource().ApiBase));
+            // Restore the selected source's release info for the text-layer download/stamps. The result MUST be
+            // checked: when this re-read fails (rate limit, offline, no cached entry) GetLatestPatchRelease
+            // leaves the shared link/digest fields holding the ENGINE BASE's values, and carrying on would
+            // download + "verify" the engine base a second time, never install the text layer, and still report
+            // success after the update path has already removed the source's old files.
+            Helper.PatchSource selected = Helper.GetCurrentPatchSource();
+            (string _, bool selOk, string selLink) = await Task.Run(() => GetLatestPatchRelease(selected.ApiBase));
+            if (!selOk || string.IsNullOrEmpty(selLink)
+                || string.Equals(selLink, baseLink, StringComparison.OrdinalIgnoreCase))
+            {
+                ErrorLog?.Invoke($"Could not read the {selected.ShortCode} release info after staging the modloader base — aborting before touching the install. Please try again.");
+                downloadSuccess = false;
+                stagedBaseZip = null;
+                return false;
+            }
             return true;
         }
 
@@ -1580,7 +1667,20 @@ namespace InstallerFunctions
                 {
                     string selectedFile = saveFileDialog.FileName;
                     Log?.Invoke("Downloading the latest PriconneReALLTLInstaller version...", "info", true);
-                    await DownloadPatchFiles(installerAssetLink, selectedFile);
+                    // This Installer instance (SelfUpdateForm's) never ran the release check, so it has no digest
+                    // for the exe yet. Read it (cached, or live if the cached entry predates digests) so the
+                    // download is SHA-256-verified — and use the link that digest belongs to, so the pair can't diverge.
+                    await Task.Run(() =>
+                    {
+                        GetLatestInstallerRelease();
+                        if (string.IsNullOrEmpty(installerAssetDigest))
+                        {
+                            Helper.BypassVersionCache = true;
+                            try { GetLatestInstallerRelease(); } finally { Helper.BypassVersionCache = false; }
+                        }
+                    });
+                    string selfUpdateLink = !string.IsNullOrEmpty(installerAssetDigestLink) ? installerAssetDigestLink : installerAssetLink;
+                    await DownloadPatchFiles(selfUpdateLink, selectedFile);
 
                     if (downloadSuccess)
                     {

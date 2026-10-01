@@ -45,24 +45,8 @@ namespace PriconneReALLTLInstaller
 
         public MainForm()
         {
-            // Get the current assembly version
-            Version currentVersion = Assembly.GetEntryAssembly().GetName().Version;
-
-            // Get the last known assembly version from settings
-            // Fresh installs have an empty LastKnownVersion; new Version("") would throw before the
-            // form even initializes. Fall back to 0.0.0.0 so the upgrade check runs instead of crashing.
-            if (!Version.TryParse(Properties.Settings.Default.LastKnownVersion, out Version lastKnownVersion))
-                lastKnownVersion = new Version(0, 0, 0, 0);
-
-            // Compare the current version with the last known version
-            if (currentVersion > lastKnownVersion)
-            {
-                // Upgrade is required
-                Properties.Settings.Default.Upgrade();
-                Properties.Settings.Default.LastKnownVersion = currentVersion.ToString();
-                Properties.Settings.Default.Save();
-            }
-
+            // The version-gated settings migration (Settings.Upgrade) now runs once in Program.Main, before
+            // any entry point reads a setting.
             Helper.SetDefaultDMMConfigPath();
             Helper.EnsureDMMConfigPathValid();
             Helper.MigrateIgnoreDefaults();   // one-time: en/ ignore defaults -> lang-agnostic */ glob
@@ -199,6 +183,19 @@ namespace PriconneReALLTLInstaller
 
         private async void InitializeUI()
         {
+            // async void: nothing may escape into the message loop (it would surface as an unhandled crash).
+            try
+            {
+                await InitializeUICore();
+            }
+            catch (Exception ex)
+            {
+                logger?.Error("Startup did not finish: " + ex.Message);
+            }
+        }
+
+        private async Task InitializeUICore()
+        {
             Icon = Resources.jewel;
             this.StartPosition = FormStartPosition.CenterScreen;
             optionsPanel.Height = 87;
@@ -220,6 +217,7 @@ namespace PriconneReALLTLInstaller
 
             launchCheckBox.Enabled = priconnePathValid;
             launchCheckBox.Checked = Settings.Default.launchState;
+            launchCheckBox.Click += launchCheckBox_Click;
             launchCheckBox.Text = " Launch Game (DMM)";   // Arch B: GUI launch = vanilla DMM; per-account launch via wrapped shortcuts
             operationsPanel.Height = launchCheckBox.Checked ? 184 : 154;
             showLogCheckBox.Checked = Settings.Default.showLogChecked;
@@ -380,8 +378,9 @@ namespace PriconneReALLTLInstaller
         private void UpdateUI()
         {
             string githubAPIToken = Helper.DecryptString(Settings.Default.GithubAPIKey);
-            (bool tokenvalid, _) = Helper.ValidateGitHubToken(githubAPIToken);
-            if (!string.IsNullOrEmpty(githubAPIToken) && !tokenvalid) logger.Log("GitHub API token is invalid or expired. Please check and reset it.", "error");
+            var tokenCheck = Helper.ValidateGitHubTokenDetailed(githubAPIToken);
+            // Only a definitive rejection is "invalid or expired" — a failed check (offline, timeout, rate limit) is not.
+            if (!string.IsNullOrEmpty(githubAPIToken) && tokenCheck.rejected) logger.Log("GitHub API token is invalid or expired. Please check and reset it.", "error");
 
             (localVersion, localVersionValid) = installer.GetInstalledPatchVersion();
             (localModLoaderVersion, localModLoaderVersionValid)= installer.GetInstalledModloaderVersion();
@@ -504,12 +503,22 @@ namespace PriconneReALLTLInstaller
             startButton.BackgroundImage = Resources.start_disabled;
         }
 
+        private int _lastProgressPct = -1;
+
         public void OnDownloadProgress(double currentValue, double maxValue)
         {
             // #24: guard a missing Content-Length (maxValue <= 0 → NaN/negative %) — clamp to [0,100]
             // so ProgressBar.Value never throws ArgumentOutOfRangeException on the UI thread.
             int pct = maxValue > 0 ? (int)Math.Min(100, Math.Max(0, currentValue / maxValue * 100)) : 0;
-            statusStrip1.Invoke((Action)(() =>
+            // This is raised once per 80 KB chunk / per extracted file / per removed file — thousands of
+            // times — from the worker thread. A synchronous Invoke each time made the download (and the
+            // extract/remove loops) wait on the UI thread for every chunk: the same download that runs at
+            // ~22 MB/s without UI crawled at ~70 KB/s. Only the percentage is shown, so skip repeats
+            // (<=100 UI updates per phase) and post the rest without blocking the worker.
+            if (pct == _lastProgressPct) return;
+            _lastProgressPct = pct;
+            if (statusStrip1.IsDisposed || !statusStrip1.IsHandleCreated) return;
+            statusStrip1.BeginInvoke((Action)(() =>
             {
                 toolStripProgressBar1.Value = pct;
                 toolStripStatusLabel3.Text = $"{pct}%";
@@ -542,8 +551,10 @@ namespace PriconneReALLTLInstaller
         {
             if (sender is CheckBox checkBox)
             {
-                checkBox.Checked = false;
-                checkBox.Image = checkBox.Enabled ? Resources.check_empty_24x24_2 : Resources._lock;
+                // Re-enabling "Launch Game" restores the user's saved preference instead of dropping it
+                // (the box is force-cleared while disabled; that must not erase the preference).
+                checkBox.Checked = checkBox == launchCheckBox && checkBox.Enabled && Settings.Default.launchState;
+                checkBox.Image = checkBox.Enabled ? (checkBox.Checked ? Resources.check_checked_24x24_2 : Resources.check_empty_24x24_2) : Resources._lock;
             }
                 
         }
@@ -656,6 +667,7 @@ namespace PriconneReALLTLInstaller
         {
             toolStripProgressBar1.Value = 0;
             toolStripStatusLabel3.Text = "";
+            _lastProgressPct = -1;   // the bar was just reset — don't let a repeat of the previous run's last % be skipped
             outputTextBox.Clear();
             startButton.Enabled = false;
             auButton.Enabled = false;
@@ -663,6 +675,9 @@ namespace PriconneReALLTLInstaller
             helpMenuStrip.Items["checkForInstallerUpdatesToolStripMenuItem"].Enabled = false;
             helpMenuStrip.Items["githubAPIRateLimitInfoToolStripMenuItem"].Enabled = false;
             startButton.BackgroundImage = Resources.start_working;
+            // Switching TL source mid-operation would re-point GetCurrentPatchSource() under the running
+            // install (wrong manifest owner, wrong Language=, wrong digest) — lock the selector until it ends.
+            if (patchSourceLinkLabel != null) patchSourceLinkLabel.Enabled = false;
             logger.Log("Starting selected operation(s)...", "info");
             DisableCheckboxes(operationCheckboxes);
             DisableCheckboxes(optionCheckboxes);
@@ -678,6 +693,7 @@ namespace PriconneReALLTLInstaller
             helpMenuStrip.Items["checkForInstallerUpdatesToolStripMenuItem"].Enabled = true;
             helpMenuStrip.Items["githubAPIRateLimitInfoToolStripMenuItem"].Enabled = true;
             startButton.BackgroundImage = Resources.start_complete;
+            if (patchSourceLinkLabel != null) patchSourceLinkLabel.Enabled = true;
             reinstallCheckBox.Checked = false;
             uninstallCheckBox.Checked = false;
             UpdateUI();
@@ -755,7 +771,14 @@ namespace PriconneReALLTLInstaller
 
         private void launchCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            operationsPanel.Height = launchCheckBox.Checked ? 184 : 154; 
+            operationsPanel.Height = launchCheckBox.Checked ? 184 : 154;
+            // NOT persisted here: this also fires for programmatic changes (every operation disables the box and
+            // resets it; a failed version check does the same) which used to overwrite the saved preference with
+            // false. The preference is saved only from a real click — see launchCheckBox_Click.
+        }
+
+        private void launchCheckBox_Click(object sender, EventArgs e)
+        {
             Settings.Default.launchState = launchCheckBox.Checked;
         }
 
@@ -922,6 +945,21 @@ namespace PriconneReALLTLInstaller
 
         private async void SelectPatchSource(int index)
         {
+            // async void: nothing may escape into the message loop (it would surface as an unhandled crash).
+            try
+            {
+                await SelectPatchSourceCore(index);
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Could not switch the translation source: " + ex.Message);
+                RefreshPatchSourceLabel();
+            }
+        }
+
+        private async Task SelectPatchSourceCore(int index)
+        {
+            if (patchSourceLinkLabel != null && !patchSourceLinkLabel.Enabled) return;   // an operation is running — the selector is locked
             if (index == Settings.Default.selectedPatchSource)
             {
                 RefreshPatchSourceLabel();
@@ -947,7 +985,7 @@ namespace PriconneReALLTLInstaller
             RefreshPatchSourceLabel();
             // Switching source changes the context — clear any pending operation/option selection so the
             // user re-picks fresh (avoids a stale checked operation carrying over + the options confusion).
-            foreach (CheckBox cb in operationCheckboxes) cb.Checked = false;
+            foreach (CheckBox cb in operationCheckboxes) if (cb != launchCheckBox) cb.Checked = false;   // "Launch Game" is a saved preference, not a pending operation choice
             foreach (CheckBox cb in optionCheckboxes) cb.Checked = false;
             // Source switch: re-fetch latest off the UI thread (bypass the cache for a live read).
             await LoadLatestVersionInfoAsync(bypassCache: true);

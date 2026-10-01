@@ -1,0 +1,44 @@
+name: CI
+
+# PR build gate. The release pipeline (release.yml) only builds on a `v*` tag and CodeQL skips Dependabot
+# PRs (read-only token), so without this job a Dependabot bump — a NuGet package in particular — would
+# never be compiled before it merges. This is the "build" check the master ruleset requires, which is
+# what makes Dependabot auto-merge (dependabot-auto-merge.yml) wait on a real compile.
+#
+# Deliberately NO `paths` / `paths-ignore` filter: a required check that a PR never triggers stays
+# "expected" forever and blocks the merge. Nothing is published from here — releases stay tag-only CI
+# (release.yml); this job builds and discards.
+
+on:
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build
+    runs-on: windows-latest   # .NET Framework 4.8 + non-SDK packages.config needs Windows + MSBuild
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57   # v3
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@fd55a6f3b34392fa83fde1454582407d8c714123   # v4
+
+      - name: Restore packages
+        run: nuget restore PriconneReALLTLInstaller.sln
+
+      - name: Build (Release)
+        run: msbuild PriconneReALLTLInstaller.sln /p:Configuration=Release

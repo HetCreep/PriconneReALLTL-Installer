@@ -52,22 +52,40 @@ namespace PriconneReALLTLInstaller
             updatelogger.StartSession();
         }
 
+        // Installer/Helper raise Log/ErrorLog from worker threads (DownloadPatchFiles continues off the UI
+        // thread after its first await); the logger writes to a status-strip label — marshal to the UI thread.
         public void OnLog(string message, string color, bool writeToToolStrip = false)
         {
-                updatelogger.Log(message, color, writeToToolStrip);
+            OnUiThread(() => updatelogger.Log(message, color, writeToToolStrip));
         }
 
         private void OnErrorLog(string message)
         {
-                updatelogger.Error(message);
+            OnUiThread(() => updatelogger.Error(message));
         }
+
+        private void OnUiThread(Action action)
+        {
+            if (IsDisposed) return;
+            if (InvokeRequired)
+            {
+                try { Invoke(action); } catch (ObjectDisposedException) { } catch (InvalidOperationException) { }   // form closed mid-callback
+            }
+            else action();
+        }
+
+        private int _lastProgressPct = -1;
 
         public void OnDownloadProgress(double currentValue, double maxValue)
         {
             // #24: guard a missing Content-Length (maxValue <= 0 → NaN/negative %) — clamp to [0,100]
             // so ProgressBar.Value never throws ArgumentOutOfRangeException on the UI thread.
             int pct = maxValue > 0 ? (int)Math.Min(100, Math.Max(0, currentValue / maxValue * 100)) : 0;
-            statusStrip1.Invoke((Action)(() =>
+            // Raised once per download chunk: skip repeats and never make the worker wait on the UI thread.
+            if (pct == _lastProgressPct) return;
+            _lastProgressPct = pct;
+            if (statusStrip1.IsDisposed || !statusStrip1.IsHandleCreated) return;
+            statusStrip1.BeginInvoke((Action)(() =>
             {
                 toolStripProgressBar1.Value = pct;
                 toolStripStatusLabel3.Text = $"{pct}%";
@@ -143,7 +161,8 @@ namespace PriconneReALLTLInstaller
 
         private void SelfUpdateForm_Load(object sender, EventArgs e)
         {
-            ParseMarkdownToRichTextBox(releaseBody);
+            // GitHub returns "body": null for a release published without notes — Split on null would throw here.
+            ParseMarkdownToRichTextBox(releaseBody ?? "");
             changeLogRichTextbox.SelectionStart = 0;
             changeLogRichTextbox.ScrollToCaret(); // Ensure the view scrolls to the caret
             updatelogger.Log($"Found new version: {latestAvailableVersion}!", "info", false);

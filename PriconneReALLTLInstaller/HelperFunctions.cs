@@ -33,28 +33,32 @@ namespace HelperFunctions
 
         [DllImport("gdi32.dll")]
         public static extern IntPtr AddFontMemResourceEx(IntPtr pbFont, uint cbFont, IntPtr pdv, [In] ref uint pcFonts);
+        // GDI+ does NOT copy the buffer handed to PrivateFontCollection.AddMemoryFont — the Font objects built
+        // from the collection keep pointing at it, so it must stay allocated as long as the collection is used.
+        // The font is one embedded resource, so allocate + register it ONCE for the process lifetime and let
+        // every form's collection share it (the old per-form alloc/free left Fonts pointing at freed memory,
+        // and registered a new GDI font handle on every form load that was never removed).
+        private static IntPtr _fontData = IntPtr.Zero;
+        private static int _fontLength;
+        private static readonly object _fontLock = new object();
+
         public void PriconneFont(PrivateFontCollection priconnefont)
         {
-            //Select  font from the resources.
-            int fontLength = Resources.NunitoBold.Length;
+            lock (_fontLock)
+            {
+                if (_fontData == IntPtr.Zero)
+                {
+                    byte[] fontdata = Resources.NunitoBold;
+                    _fontLength = fontdata.Length;
+                    _fontData = Marshal.AllocCoTaskMem(_fontLength);
+                    Marshal.Copy(fontdata, 0, _fontData, _fontLength);
 
-            // create a buffer to read in to
-            byte[] fontdata = Resources.NunitoBold;
+                    uint cFonts = 0;
+                    AddFontMemResourceEx(_fontData, (uint)_fontLength, IntPtr.Zero, ref cFonts);
+                }
 
-            // create an unsafe memory block for the font data
-            System.IntPtr data = Marshal.AllocCoTaskMem(fontLength);
-
-            // copy the bytes to the unsafe memory block
-            Marshal.Copy(fontdata, 0, data, fontLength);
-
-            uint cFonts = 0;
-            AddFontMemResourceEx(data, (uint)fontdata.Length, IntPtr.Zero, ref cFonts);
-
-            // pass the font to the font collection
-            priconnefont.AddMemoryFont(data, fontLength);
-
-            Marshal.FreeCoTaskMem(data);
-
+                priconnefont.AddMemoryFont(_fontData, _fontLength);
+            }
         }
         public void SetFontForAllControls(PrivateFontCollection priconnefont, Control.ControlCollection controls)
         {
@@ -887,7 +891,12 @@ namespace HelperFunctions
 
                 var skip = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 if (Settings.Default.configFiles != null) foreach (string c in Settings.Default.configFiles) skip.Add(c.Replace('\\', '/'));
-                // (ignored files are skipped on extract → never in the manifest, so no need to add them)
+                // Ignored files: only those ignored AT EXTRACT TIME are absent from the manifest. A patch file the
+                // user adds to the ignore list LATER (e.g. a translation they edited) is already recorded as
+                // owned — so match the current ignore patterns here too, or Update/Reinstall would delete it and
+                // the extract (which skips ignored paths) would never restore it. The separate removeIgnored
+                // option still deletes ignored files on request.
+                var ignorePatterns = CurrentSourceIgnoreFiles();
 
                 var toDelete = new System.Collections.Generic.List<string>();
                 var remaining = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>(StringComparer.OrdinalIgnoreCase);
@@ -895,7 +904,7 @@ namespace HelperFunctions
                 {
                     string rel = kv.Key;
                     var owners = kv.Value ?? new System.Collections.Generic.List<string>();
-                    if (skip.Contains(rel)) { remaining[rel] = owners; continue; }   // config/ignored: option-managed, untouched
+                    if (skip.Contains(rel) || IgnoreMatches(rel, ignorePatterns)) { remaining[rel] = owners; continue; }   // config/ignored: option-managed, untouched
                     if (owners.Contains(owner))
                     {
                         owners.Remove(owner);
@@ -1086,6 +1095,44 @@ namespace HelperFunctions
             finally { ReleaseCom(sc); ReleaseCom(wsh); }   // #64
         }
 
+        // Ownership marker stored in the .lnk's own Description field: it travels with the file, so "did WE
+        // create this copy?" is a fact about the file, not a guess from its name (a user's own shortcut that
+        // merely ends in "(TL update)" must never be deleted as if it were ours).
+        private const string ManagedCopyMarker = "PriconneReALLTL Installer - managed TL-update copy";
+
+        /// <summary>Tags a shortcut copy the installer created, so Remove / uninstall delete it (and only it).</summary>
+        public bool MarkAsManagedCopy(string lnkPath)
+        {
+            IWshRuntimeLibrary.WshShell wsh = null;
+            IWshRuntimeLibrary.IWshShortcut sc = null;
+            try
+            {
+                wsh = new IWshRuntimeLibrary.WshShell();
+                sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+                sc.Description = ManagedCopyMarker;
+                sc.Save();
+                return true;
+            }
+            catch { return false; }
+            finally { ReleaseCom(sc); ReleaseCom(wsh); }
+        }
+
+        /// <summary>True only for a shortcut copy this installer created (carries the ownership marker).</summary>
+        public bool IsManagedCopy(string lnkPath)
+        {
+            IWshRuntimeLibrary.WshShell wsh = null;
+            IWshRuntimeLibrary.IWshShortcut sc = null;
+            try
+            {
+                if (!File.Exists(lnkPath)) return false;
+                wsh = new IWshRuntimeLibrary.WshShell();
+                sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+                return string.Equals(sc.Description, ManagedCopyMarker, StringComparison.Ordinal);
+            }
+            catch { return false; }
+            finally { ReleaseCom(sc); ReleaseCom(wsh); }
+        }
+
         /// <summary>#52/#8: un-wrap EVERY managed shortcut — restore in-place wraps to their original
         /// launcher, and delete the Desktop "(TL update)" copies we created. Called headless by the Inno
         /// uninstaller (--unwrap-all) BEFORE the exe is removed (so wrapped .lnks don't end up pointing at
@@ -1097,7 +1144,6 @@ namespace HelperFunctions
             {
                 var col = Settings.Default.fastLauncherLinks;
                 if (col == null || col.Count == 0) return;
-                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 var paths = new string[col.Count];
                 col.CopyTo(paths, 0);
                 foreach (string path in paths)
@@ -1105,12 +1151,10 @@ namespace HelperFunctions
                     if (string.IsNullOrEmpty(path)) continue;
                     try
                     {
-                        // A Desktop "(TL update)" copy is OUR artifact (the protected-folder original was
-                        // never touched) → just delete it. An in-place-wrapped original is the user's own
-                        // .lnk → restore its launcher target instead of deleting.
-                        bool isOurDesktopCopy = path.EndsWith(" (TL update).lnk", StringComparison.OrdinalIgnoreCase)
-                            && string.Equals(Path.GetDirectoryName(path), desktop, StringComparison.OrdinalIgnoreCase);
-                        if (isOurDesktopCopy) { if (File.Exists(path)) File.Delete(path); }
+                        // A copy we created (carries the ownership marker) → just delete it; the protected-folder
+                        // original was never touched. Anything else is the user's own .lnk → restore its launcher
+                        // target and NEVER delete it, whatever it is named.
+                        if (IsManagedCopy(path)) { if (File.Exists(path)) File.Delete(path); }
                         else RestoreShortcut(path);
                     }
                     catch { /* best-effort per shortcut; keep going */ }
@@ -1202,15 +1246,31 @@ namespace HelperFunctions
             using (var sha = System.Security.Cryptography.SHA256.Create())
                 return BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(t))).Replace("-", "");
         }
+        // Hash of a token GitHub definitively rejected ("Bad credentials"). Cached so a revoked/expired
+        // token costs ONE request per session, not a blocking /user call on every UI refresh. Transient
+        // failures (offline, timeout, 5xx, 403 rate limit) are never cached — they must be retried.
+        private static string _rejectedTokenHash;
+
         public static (bool, string) ValidateGitHubToken(string token)
+        {
+            var r = ValidateGitHubTokenDetailed(token);
+            return (r.valid, r.user);
+        }
+
+        // rejected == GitHub said the credentials are bad (definitive); valid == false with rejected == false
+        // means "could not check" — callers must NOT treat that as an invalid token (e.g. never delete it).
+        public static (bool valid, string user, bool rejected) ValidateGitHubTokenDetailed(string token)
         {
             string username = null;
 
             if (string.IsNullOrWhiteSpace(token))
-                return (false, null);
+                return (false, null, false);
 
-            if (_validatedTokenHash != null && TokenHash(token) == _validatedTokenHash)   // #28: compare by hash, not the plaintext token
-                return (true, _validatedUser);
+            string hash = TokenHash(token);
+            if (_validatedTokenHash != null && hash == _validatedTokenHash)   // #28: compare by hash, not the plaintext token
+                return (true, _validatedUser, false);
+            if (_rejectedTokenHash != null && hash == _rejectedTokenHash)
+                return (false, null, true);
 
             try
             {
@@ -1225,7 +1285,7 @@ namespace HelperFunctions
                     username = userJson.login;
                     _validatedTokenHash = TokenHash(token);   // #28: cache the HASH of valid tokens only (not the plaintext)
                     _validatedUser = username;
-                    return (true, username); // Token is valid
+                    return (true, username, false); // Token is valid
                 }
             }
             catch (WebException webEx)
@@ -1241,16 +1301,19 @@ namespace HelperFunctions
                             string message = errorJson.message?.ToString();
 
                             if (message?.Contains("Bad credentials") == true)
-                                return (false, null);
+                            {
+                                _rejectedTokenHash = hash;
+                                return (false, null, true);
+                            }
                         }
                         catch { }
                     }
                 }
-                return (false, null);
+                return (false, null, false);
             }
             catch
             {
-                return (false, null);
+                return (false, null, false);
             }
         }
         public static (int remaining, DateTime resetTime, TimeSpan timeUntilReset, string username) CheckGithubRateLimit()
