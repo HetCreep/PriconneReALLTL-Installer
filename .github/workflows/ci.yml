@@ -25,6 +25,8 @@ jobs:
   build:
     name: build
     runs-on: windows-latest   # .NET Framework 4.8 + non-SDK packages.config needs Windows + MSBuild
+    permissions:
+      contents: read          # job-level on purpose (least privilege stays explicit even if the workflow default changes)
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1

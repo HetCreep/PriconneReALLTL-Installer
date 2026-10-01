@@ -6,7 +6,14 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.7...HEAD)
 
-_Nothing yet._
+### Fixed
+- **A token check that could not complete no longer blocks the window repeatedly.** When GitHub was unreachable or rate-limited the check was retried on the UI thread right after the background one failed the same way; a failed check is now remembered for 60 s (the explicit **Validate** button always re-checks).
+
+### Security
+- Release workflow: pre-release tags (`v1.2.3-rc.1`) are rejected for now — the newest-tag guard cannot order them and the create step would not mark them `--prerelease`, so one would have published as "latest" and stripped the stable release's binaries. Plain `vX.Y.Z` tags only.
+
+### CI
+- `ci.yml` declares its `contents: read` token at job level.
 
 ## [3.1.7](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.7) — 2026-10-01
 

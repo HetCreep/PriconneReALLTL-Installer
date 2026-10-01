@@ -90,7 +90,7 @@ namespace PriconneReALLTLInstaller
             try
             {
                 validateButton.Enabled = false;
-                var (tokenvalid, username, rejected) = await Task.Run(() => Helper.ValidateGitHubTokenDetailed(Helper.DecryptString(Settings.Default.GithubAPIKey)));
+                var (tokenvalid, username, rejected) = await Task.Run(() => Helper.ValidateGitHubTokenDetailed(Helper.DecryptString(Settings.Default.GithubAPIKey), forceRefresh: true));
                 if (tokenvalid) MessageBox.Show($"Token valid!\n\nUsername: {username}", "Token validation", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 else if (!rejected)
                 {

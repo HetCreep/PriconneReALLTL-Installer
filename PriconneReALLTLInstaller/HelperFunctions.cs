@@ -1250,6 +1250,9 @@ namespace HelperFunctions
         // token costs ONE request per session, not a blocking /user call on every UI refresh. Transient
         // failures (offline, timeout, 5xx, 403 rate limit) are never cached — they must be retried.
         private static string _rejectedTokenHash;
+        private static string _transientFailHash;
+        private static int _transientFailTick;
+        private const int TransientFailWindowMs = 60 * 1000;
 
         public static (bool, string) ValidateGitHubToken(string token)
         {
@@ -1259,7 +1262,7 @@ namespace HelperFunctions
 
         // rejected == GitHub said the credentials are bad (definitive); valid == false with rejected == false
         // means "could not check" — callers must NOT treat that as an invalid token (e.g. never delete it).
-        public static (bool valid, string user, bool rejected) ValidateGitHubTokenDetailed(string token)
+        public static (bool valid, string user, bool rejected) ValidateGitHubTokenDetailed(string token, bool forceRefresh = false)
         {
             string username = null;
 
@@ -1271,6 +1274,12 @@ namespace HelperFunctions
                 return (true, _validatedUser, false);
             if (_rejectedTokenHash != null && hash == _rejectedTokenHash)
                 return (false, null, true);
+            // A check that could not complete (offline, timeout, 5xx, rate limit) is remembered for a short
+            // window so the UI thread's own re-check right after the off-thread pre-warm does not repeat a
+            // blocking request that is about to fail the same way. The explicit "Validate" button bypasses it.
+            if (!forceRefresh && _transientFailHash != null && hash == _transientFailHash
+                && unchecked(Environment.TickCount - _transientFailTick) < TransientFailWindowMs)
+                return (false, null, false);
 
             try
             {
@@ -1309,10 +1318,12 @@ namespace HelperFunctions
                         catch { }
                     }
                 }
+                _transientFailHash = hash; _transientFailTick = Environment.TickCount;
                 return (false, null, false);
             }
             catch
             {
+                _transientFailHash = hash; _transientFailTick = Environment.TickCount;
                 return (false, null, false);
             }
         }

@@ -60,8 +60,11 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
         run: |
           $tag = $env:REF_NAME
-          if ($tag -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$') {
-            throw "Refusing to build: '$tag' is not a version tag like v1.2.3 or v1.2.3-rc.1"
+          # Plain X.Y.Z only. A pre-release suffix (v1.2.3-rc.1) is rejected on purpose: the newest-tag guard below
+          # cannot order pre-releases and the create step would not mark them `--prerelease`, so one would publish as
+          # "latest" and strip the stable release's binaries. Add real pre-release support before allowing the suffix.
+          if ($tag -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') {
+            throw "Refusing to build: '$tag' is not a plain version tag like v1.2.3"
           }
           $ver = $tag.TrimStart('v')
           "tag=$tag"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
