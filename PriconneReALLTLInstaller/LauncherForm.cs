@@ -139,10 +139,14 @@ namespace PriconneReALLTLInstaller
                     // Wrap a COPY on the Desktop so wrapping still works without admin rights.
                     try
                     {
-                        string copy = System.IO.Path.Combine(desktop, System.IO.Path.GetFileNameWithoutExtension(file) + " (TL update).lnk");
-                        System.IO.File.Copy(file, copy, true);
+                        // A destination that does not exist yet, copied WITHOUT overwrite: two protected shortcuts
+                        // sharing a name (or an unrelated Desktop file) must never clobber each other. Because the
+                        // path is unique, a failed wrap below deletes only a file this operation created.
+                        string copy = UniqueDesktopCopyPath(desktop, System.IO.Path.GetFileNameWithoutExtension(file));
+                        System.IO.File.Copy(file, copy, false);
                         if (helper.WrapShortcut(copy))
                         {
+                            helper.MarkAsManagedCopy(copy);   // ownership lives in the file, not in its name
                             if (!links.Contains(copy)) links.Add(copy);
                             copied++;
                             continue;
@@ -182,24 +186,49 @@ namespace PriconneReALLTLInstaller
             if (idx < links.Count)
             {
                 string path = links[idx];
-                // #48: a Desktop "(TL update)" copy is OUR artifact (the protected-folder original was
-                // never modified) → delete it so Remove doesn't leave a dead file behind. An in-place-
-                // wrapped original is the user's own .lnk → restore its launcher target instead.
-                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                bool isOurDesktopCopy = path.EndsWith(" (TL update).lnk", StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(Path.GetDirectoryName(path), desktop, StringComparison.OrdinalIgnoreCase);
-                if (isOurDesktopCopy)
+                // #48: a Desktop copy THIS installer created (it carries an ownership marker — never inferred from
+                // the file name) is our artifact (the protected-folder original was never modified) → delete it so
+                // Remove doesn't leave a dead file behind. Any other shortcut is the user's own .lnk → restore its
+                // launcher target instead, and never delete it.
+                bool cleaned;
+                string why = null;
+                if (!File.Exists(path))
                 {
-                    try { if (File.Exists(path)) File.Delete(path); } catch { }
+                    cleaned = true;                       // confirmed absence — nothing left to undo
+                }
+                else if (helper.IsManagedCopy(path))
+                {
+                    try { File.Delete(path); cleaned = true; }
+                    catch (Exception ex) { cleaned = false; why = ex.Message; }
                 }
                 else
                 {
-                    helper.RestoreShortcut(path);   // put the original launcher target back into the .lnk
+                    // RestoreShortcut also returns false for "not wrapped (nothing to restore)" — that is already clean.
+                    cleaned = helper.RestoreShortcut(path) || !helper.IsWrappedShortcut(path);
+                    if (!cleaned) why = "the shortcut could not be restored to its original launcher";
+                }
+
+                if (!cleaned)
+                {
+                    // Keep the entry: dropping it now would leave a wrapped shortcut that later cleanup (and the
+                    // uninstaller's --unwrap-all) no longer knows about, pointing at a removed exe.
+                    MessageBox.Show($"Could not remove this shortcut:\n{path}\n\n{why}\n\nIt was kept in the list so you can retry (close any program using it first).",
+                        "Shortcut not removed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
                 links.RemoveAt(idx);
                 SaveLinks(links);
                 UpdateUI();
             }
+        }
+
+        // "<name> (TL update).lnk" on the Desktop, or "(TL update 2)", "(TL update 3)" … if that name is taken.
+        private static string UniqueDesktopCopyPath(string desktop, string baseName)
+        {
+            string candidate = Path.Combine(desktop, baseName + " (TL update).lnk");
+            for (int n = 2; File.Exists(candidate) && n < 1000; n++)
+                candidate = Path.Combine(desktop, $"{baseName} (TL update {n}).lnk");
+            return candidate;
         }
 
         private void shortcutAddButton_EnabledChanged(object sender, EventArgs e)

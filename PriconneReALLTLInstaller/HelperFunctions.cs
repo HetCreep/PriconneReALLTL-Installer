@@ -1095,6 +1095,44 @@ namespace HelperFunctions
             finally { ReleaseCom(sc); ReleaseCom(wsh); }   // #64
         }
 
+        // Ownership marker stored in the .lnk's own Description field: it travels with the file, so "did WE
+        // create this copy?" is a fact about the file, not a guess from its name (a user's own shortcut that
+        // merely ends in "(TL update)" must never be deleted as if it were ours).
+        private const string ManagedCopyMarker = "PriconneReALLTL Installer - managed TL-update copy";
+
+        /// <summary>Tags a shortcut copy the installer created, so Remove / uninstall delete it (and only it).</summary>
+        public bool MarkAsManagedCopy(string lnkPath)
+        {
+            IWshRuntimeLibrary.WshShell wsh = null;
+            IWshRuntimeLibrary.IWshShortcut sc = null;
+            try
+            {
+                wsh = new IWshRuntimeLibrary.WshShell();
+                sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+                sc.Description = ManagedCopyMarker;
+                sc.Save();
+                return true;
+            }
+            catch { return false; }
+            finally { ReleaseCom(sc); ReleaseCom(wsh); }
+        }
+
+        /// <summary>True only for a shortcut copy this installer created (carries the ownership marker).</summary>
+        public bool IsManagedCopy(string lnkPath)
+        {
+            IWshRuntimeLibrary.WshShell wsh = null;
+            IWshRuntimeLibrary.IWshShortcut sc = null;
+            try
+            {
+                if (!File.Exists(lnkPath)) return false;
+                wsh = new IWshRuntimeLibrary.WshShell();
+                sc = (IWshRuntimeLibrary.IWshShortcut)wsh.CreateShortcut(lnkPath);
+                return string.Equals(sc.Description, ManagedCopyMarker, StringComparison.Ordinal);
+            }
+            catch { return false; }
+            finally { ReleaseCom(sc); ReleaseCom(wsh); }
+        }
+
         /// <summary>#52/#8: un-wrap EVERY managed shortcut — restore in-place wraps to their original
         /// launcher, and delete the Desktop "(TL update)" copies we created. Called headless by the Inno
         /// uninstaller (--unwrap-all) BEFORE the exe is removed (so wrapped .lnks don't end up pointing at
@@ -1106,7 +1144,6 @@ namespace HelperFunctions
             {
                 var col = Settings.Default.fastLauncherLinks;
                 if (col == null || col.Count == 0) return;
-                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 var paths = new string[col.Count];
                 col.CopyTo(paths, 0);
                 foreach (string path in paths)
@@ -1114,12 +1151,10 @@ namespace HelperFunctions
                     if (string.IsNullOrEmpty(path)) continue;
                     try
                     {
-                        // A Desktop "(TL update)" copy is OUR artifact (the protected-folder original was
-                        // never touched) → just delete it. An in-place-wrapped original is the user's own
-                        // .lnk → restore its launcher target instead of deleting.
-                        bool isOurDesktopCopy = path.EndsWith(" (TL update).lnk", StringComparison.OrdinalIgnoreCase)
-                            && string.Equals(Path.GetDirectoryName(path), desktop, StringComparison.OrdinalIgnoreCase);
-                        if (isOurDesktopCopy) { if (File.Exists(path)) File.Delete(path); }
+                        // A copy we created (carries the ownership marker) → just delete it; the protected-folder
+                        // original was never touched. Anything else is the user's own .lnk → restore its launcher
+                        // target and NEVER delete it, whatever it is named.
+                        if (IsManagedCopy(path)) { if (File.Exists(path)) File.Delete(path); }
                         else RestoreShortcut(path);
                     }
                     catch { /* best-effort per shortcut; keep going */ }

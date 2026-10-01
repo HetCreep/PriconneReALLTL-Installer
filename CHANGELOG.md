@@ -6,6 +6,14 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.6...HEAD)
 
+### Fixed
+- **A failed release re-read could install the wrong layer yet report success (Vietnamese / text-only sources).** After staging the modloader base, `PrepareEngineBase` re-read the selected source's release info and ignored the result; if that read failed (rate limit, offline) the shared link/digest still held the engine base's values, so the base was downloaded and "verified" a second time, the text layer was never installed, and — on Update/Reinstall, after the old files were removed — the operation still said "complete". The result is now checked and the operation aborts before touching anything; the same check guards the link/digest re-pairing in the download.
+- **Hash verification now fails closed.** An error while hashing a download used to count as "verified"; it is now treated as unverified. Only an absent digest (very old releases) is allowed through, and the log says so. The README's SHA-256 statement (EN/TH/VI) was narrowed to match.
+- **Wrapped-shortcut copies can no longer clobber or be confused with your own files.** The Desktop "(TL update)" copy now gets a unique name and is created without overwriting; "did the installer create this copy?" is recorded in the shortcut itself instead of guessed from its file name, so a shortcut of yours that merely ends in "(TL update)" is restored, never deleted; and Remove keeps the entry (and tells you) when the delete or restore fails instead of forgetting a still-wrapped shortcut.
+
+### Security
+- Release workflow: the tag name now reaches the shell through `env` and must be a plain version (`v1.2.3`, `v1.2.3-rc.1`) before the privileged job uses it, and the `workflow_dispatch` trigger was removed so a release build runs from a `v*` tag only (ad-hoc builds are `ci.yml`).
+
 ### CI
 - **Dependabot patch/minor bumps now auto-merge** once the required checks pass (`dependabot-auto-merge.yml` + the `master-required-checks` ruleset: `build` and `dependency-review`, owner-bypassable so tag releases still push straight to master). Major bumps — and any major in a grouped PR — still wait for a human. New `ci.yml` `build` job compiles every PR, because CodeQL skips Dependabot PRs and `release.yml` is tag-only, so a bump (a NuGet package especially) was never compiled before merging. Dependabot PRs are assigned to the maintainer for notification.
 

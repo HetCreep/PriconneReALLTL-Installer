@@ -551,9 +551,11 @@ namespace InstallerFunctions
         }
 
         // Verifies a downloaded/cached zip against GitHub's asset SHA256 digest ("sha256:…") so a
-        // truncated/corrupt/tampered file is never extracted over the install. Returns true when the
-        // digest is unavailable (older releases) or the check errors — can't verify, so don't block;
-        // a real MISMATCH returns false. Structurally-corrupt zips still fail at ZipFile.OpenRead.
+        // truncated/corrupt/tampered file is never extracted over the install. Returns true ONLY when the
+        // digest matches, or when GitHub published no digest at all (older releases — nothing to compare
+        // against, so it is not hard-blocked; the caller logs that the file was not verified). A MISMATCH or
+        // an error while hashing returns false (fail closed). Structurally-corrupt zips also fail at
+        // ZipFile.OpenRead.
         private bool VerifyZipDigest(string path, string digest, string url)
         {
             try
@@ -575,7 +577,13 @@ namespace InstallerFunctions
                     return match;
                 }
             }
-            catch (Exception ex) { Log?.Invoke("Could not verify the download hash: " + ex.Message, "info", false); return true; }
+            catch (Exception ex)
+            {
+                // Fail CLOSED (verify-before-touch): a hash that could not be computed is not a verified file.
+                // Only an absent digest (older release) is allowed through — handled above, and logged by the caller.
+                Log?.Invoke("Could not verify the download hash — treating the file as unverified: " + ex.Message, "info", false);
+                return false;
+            }
         }
 
         // Stamps the zip file's date to its SOURCE date — the release published_at if known (from the
@@ -624,9 +632,10 @@ namespace InstallerFunctions
                     {
                         Helper.PatchSource pairSrc = cacheSource ?? Helper.GetCurrentPatchSource();
                         Log?.Invoke($"Release info was out of step with the download link — re-reading {pairSrc.ShortCode} release info.", "info", false);
-                        await Task.Run(() => GetLatestPatchRelease(pairSrc.ApiBase));
-                        if (!string.IsNullOrEmpty(this.assetLink)) assetLink = this.assetLink;
-                        if (!string.Equals(assetLink, latestAssetDigestLink, StringComparison.OrdinalIgnoreCase))
+                        (string _, bool reOk, string reLink) = await Task.Run(() => GetLatestPatchRelease(pairSrc.ApiBase));
+                        // A failed re-read leaves the previous (mismatched) fields in place — treat it as "cannot confirm".
+                        if (reOk && !string.IsNullOrEmpty(reLink)) assetLink = reLink;
+                        if (!reOk || !string.Equals(assetLink, latestAssetDigestLink, StringComparison.OrdinalIgnoreCase))
                         {
                             ErrorLog?.Invoke("Could not confirm which release this download belongs to — aborting before touching the install. Please try again.");
                             downloadSuccess = false;
@@ -911,8 +920,21 @@ namespace InstallerFunctions
             await DownloadPatchFiles(baseLink, cacheSource: ml);
             if (!downloadSuccess) return false;
             stagedBaseZip = tempFile;
-            // Restore the selected source's release info for the text-layer download/stamps.
-            await Task.Run(() => GetLatestPatchRelease(Helper.GetCurrentPatchSource().ApiBase));
+            // Restore the selected source's release info for the text-layer download/stamps. The result MUST be
+            // checked: when this re-read fails (rate limit, offline, no cached entry) GetLatestPatchRelease
+            // leaves the shared link/digest fields holding the ENGINE BASE's values, and carrying on would
+            // download + "verify" the engine base a second time, never install the text layer, and still report
+            // success after the update path has already removed the source's old files.
+            Helper.PatchSource selected = Helper.GetCurrentPatchSource();
+            (string _, bool selOk, string selLink) = await Task.Run(() => GetLatestPatchRelease(selected.ApiBase));
+            if (!selOk || string.IsNullOrEmpty(selLink)
+                || string.Equals(selLink, baseLink, StringComparison.OrdinalIgnoreCase))
+            {
+                ErrorLog?.Invoke($"Could not read the {selected.ShortCode} release info after staging the modloader base — aborting before touching the install. Please try again.");
+                downloadSuccess = false;
+                stagedBaseZip = null;
+                return false;
+            }
             return true;
         }
 
