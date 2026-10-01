@@ -6,7 +6,8 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.6...HEAD)
 
-_Nothing yet._
+### CI
+- **Dependabot patch/minor bumps now auto-merge** once the required checks pass (`dependabot-auto-merge.yml` + the `master-required-checks` ruleset: `build` and `dependency-review`, owner-bypassable so tag releases still push straight to master). Major bumps — and any major in a grouped PR — still wait for a human. New `ci.yml` `build` job compiles every PR, because CodeQL skips Dependabot PRs and `release.yml` is tag-only, so a bump (a NuGet package especially) was never compiled before merging. Dependabot PRs are assigned to the maintainer for notification.
 
 ## [3.1.6](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.6) — 2026-10-01
 
