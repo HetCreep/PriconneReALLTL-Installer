@@ -667,6 +667,7 @@ namespace PriconneReALLTLInstaller
         {
             toolStripProgressBar1.Value = 0;
             toolStripStatusLabel3.Text = "";
+            _lastProgressPct = -1;   // the bar was just reset — don't let a repeat of the previous run's last % be skipped
             outputTextBox.Clear();
             startButton.Enabled = false;
             auButton.Enabled = false;
