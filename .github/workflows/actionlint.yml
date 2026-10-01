@@ -1,0 +1,26 @@
+name: Lint Workflows
+
+# actionlint — static check of the GitHub Actions workflow files (shell errors inside `run:`,
+# bad `${{ }}` expressions, deprecated syntax, common security smells). Catches a broken or unsafe
+# workflow before it ever runs in CI. The release pipeline uses non-trivial PowerShell, so this
+# guards against silent workflow bugs.
+
+on:
+  push:
+    branches: [ master ]
+    paths: [ '.github/workflows/**' ]
+  pull_request:
+    branches: [ master ]
+    paths: [ '.github/workflows/**' ]
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+      - name: actionlint
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7   # v2

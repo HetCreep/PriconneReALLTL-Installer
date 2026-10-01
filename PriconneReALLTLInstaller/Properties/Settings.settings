@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="PriconneReALLTLInstaller.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="ignoreFiles" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;string&gt;BepInEx/Translation/*/Text/_Postprocessors.txt&lt;/string&gt;
+  &lt;string&gt;BepInEx/Translation/*/Text/_Preprocessors.txt&lt;/string&gt;
+  &lt;string&gt;BepInEx/Translation/*/Text/_Substitutions.txt&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="configFiles" Type="System.Collections.Specialized.StringCollection" Scope="Application">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;string&gt;BepInEx/config/AutoTranslatorConfig.ini&lt;/string&gt;
+  &lt;string&gt;BepInEx/config/PriconneTLFixup.cfg&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="aboutText" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">
+Multi-Account · ALL-TL (EN/TH) edition — fork by HetCreep
+Based on tynave/PriconneReTL-Installer
+Inspired by touanu/PriconeTL_Updater
+
+All assets used in this application are properties of CyberAgent, Inc., Cygames, Inc. / their respective creators.</Value>
+    </Setting>
+    <Setting Name="installMode" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Install</Value>
+    </Setting>
+    <Setting Name="installModeDescription" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Installs the translation patch.
+Keeps config files, ignored files and 
+any user created files already present.</Value>
+    </Setting>
+    <Setting Name="uninstallMode" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Uninstall</Value>
+    </Setting>
+    <Setting Name="uninstallModeDescription" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Removes the translation patch.
+Keeps any user created files.
+Depending on the options selected, keeps or removes config/ignored/interop files.</Value>
+    </Setting>
+    <Setting Name="reinstallMode" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Reinstall</Value>
+    </Setting>
+    <Setting Name="reinstallModeDescription" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Removes the translation patch, and then installs the latest version.
+Keeps any user created files.
+Depending on the options selected, keeps or removes config/ignored/interop files.</Value>
+    </Setting>
+    <Setting Name="updateMode" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Update</Value>
+    </Setting>
+    <Setting Name="updateModeDescription" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Updates the current translation patch installation by removing the the current version and installing the latest.
+Keeps user files, as well as config/ignored files.</Value>
+    </Setting>
+    <Setting Name="disabledMode" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Disabled</Value>
+    </Setting>
+    <Setting Name="disabledModeDescription" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Operation disabled due to an error.
+See log for details.</Value>
+    </Setting>
+    <Setting Name="launchMode" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Launch Game</Value>
+    </Setting>
+    <Setting Name="launchModeDescrption" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Launches the game using the selected launcher.</Value>
+    </Setting>
+    <Setting Name="noOperationMode" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">No Operation</Value>
+    </Setting>
+    <Setting Name="noOperationModeDescription" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">No operation selected.</Value>
+    </Setting>
+    <Setting Name="launchState" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="fastLauncherLink" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="fastLauncherLinks" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" /&gt;</Value>
+    </Setting>
+    <Setting Name="LastKnownVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1.5.0.0</Value>
+    </Setting>
+    <Setting Name="selectedPatchSource" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="checkForInstallerUpdates" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="showLogChecked" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="DMMConfigPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="GithubAPIKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="versionCacheJson" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>

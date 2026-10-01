@@ -1,0 +1,236 @@
+namespace PriconneReALLTLInstaller
+{
+    partial class LauncherForm
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.setLauncherLabel = new System.Windows.Forms.Label();
+            this.backButton = new System.Windows.Forms.Button();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.launcherComboBox = new System.Windows.Forms.ComboBox();
+            this.setFastlauncherLinkLabel = new System.Windows.Forms.Label();
+            this.dmmfastlauncherLabel = new System.Windows.Forms.Label();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.shortcutAddButton = new System.Windows.Forms.Button();
+            this.shortcutRemoveButton = new System.Windows.Forms.Button();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.shortcutListBox = new System.Windows.Forms.ListBox();
+            this.shortcutListLabel = new System.Windows.Forms.Label();
+            this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // setLauncherLabel
+            // 
+            this.setLauncherLabel.AutoSize = true;
+            this.setLauncherLabel.BackColor = System.Drawing.Color.Transparent;
+            this.setLauncherLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.setLauncherLabel.Location = new System.Drawing.Point(11, 6);
+            this.setLauncherLabel.Name = "setLauncherLabel";
+            this.setLauncherLabel.Size = new System.Drawing.Size(141, 16);
+            this.setLauncherLabel.TabIndex = 6;
+            this.setLauncherLabel.Text = "Select launcher to use:";
+            // 
+            // backButton
+            // 
+            this.backButton.BackColor = System.Drawing.Color.Transparent;
+            this.backButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.back_arrow;
+            this.backButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.backButton.FlatAppearance.BorderSize = 0;
+            this.backButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
+            this.backButton.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
+            this.backButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.backButton.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.backButton.Location = new System.Drawing.Point(589, 7);
+            this.backButton.Name = "backButton";
+            this.backButton.Size = new System.Drawing.Size(39, 28);
+            this.backButton.TabIndex = 5;
+            this.backButton.UseVisualStyleBackColor = false;
+            this.backButton.Click += new System.EventHandler(this.backButton_Click);
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.Filter = "Shortcut files (*.lnk)|*.lnk";
+            this.openFileDialog1.Multiselect = true;
+            // 
+            // launcherComboBox
+            // 
+            this.launcherComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.launcherComboBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.launcherComboBox.FormattingEnabled = true;
+            this.launcherComboBox.Location = new System.Drawing.Point(14, 29);
+            this.launcherComboBox.Name = "launcherComboBox";
+            this.launcherComboBox.Size = new System.Drawing.Size(303, 24);
+            this.launcherComboBox.TabIndex = 34;
+            this.launcherComboBox.SelectedIndexChanged += new System.EventHandler(this.launcherComboBox_SelectedIndexChanged);
+            // 
+            // setFastlauncherLinkLabel
+            // 
+            this.setFastlauncherLinkLabel.AutoSize = true;
+            this.setFastlauncherLinkLabel.BackColor = System.Drawing.Color.Transparent;
+            this.setFastlauncherLinkLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.setFastlauncherLinkLabel.Location = new System.Drawing.Point(10, 5);
+            this.setFastlauncherLinkLabel.Name = "setFastlauncherLinkLabel";
+            this.setFastlauncherLinkLabel.Size = new System.Drawing.Size(271, 16);
+            this.setFastlauncherLinkLabel.TabIndex = 35;
+            this.setFastlauncherLinkLabel.Text = "Set DMMGamePlayerFastLauncher shortcuts:";
+            // 
+            // dmmfastlauncherLabel
+            // 
+            this.dmmfastlauncherLabel.BackColor = System.Drawing.Color.Transparent;
+            this.dmmfastlauncherLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.dmmfastlauncherLabel.ForeColor = System.Drawing.Color.Red;
+            this.dmmfastlauncherLabel.Location = new System.Drawing.Point(7, 62);
+            this.dmmfastlauncherLabel.Name = "dmmfastlauncherLabel";
+            this.dmmfastlauncherLabel.Size = new System.Drawing.Size(570, 22);
+            this.dmmfastlauncherLabel.TabIndex = 36;
+            this.dmmfastlauncherLabel.Text = "DMMGamePlayerFastLauncher not installed! Falling back to DMMGamePlayer!";
+            this.dmmfastlauncherLabel.Visible = false;
+            // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.Color.Transparent;
+            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel1.Controls.Add(this.setLauncherLabel);
+            this.panel1.Controls.Add(this.launcherComboBox);
+            this.panel1.Controls.Add(this.dmmfastlauncherLabel);
+            this.panel1.Location = new System.Drawing.Point(12, 12);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(571, 90);
+            this.panel1.TabIndex = 40;
+            // 
+            // shortcutAddButton
+            // 
+            this.shortcutAddButton.BackColor = System.Drawing.Color.Transparent;
+            this.shortcutAddButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.shortcutadd_button;
+            this.shortcutAddButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.shortcutAddButton.FlatAppearance.BorderSize = 0;
+            this.shortcutAddButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
+            this.shortcutAddButton.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
+            this.shortcutAddButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.shortcutAddButton.Location = new System.Drawing.Point(13, 28);
+            this.shortcutAddButton.Name = "shortcutAddButton";
+            this.shortcutAddButton.Size = new System.Drawing.Size(152, 48);
+            this.shortcutAddButton.TabIndex = 8;
+            this.shortcutAddButton.UseVisualStyleBackColor = false;
+            this.shortcutAddButton.EnabledChanged += new System.EventHandler(this.shortcutAddButton_EnabledChanged);
+            this.shortcutAddButton.Click += new System.EventHandler(this.shortcutAddButton_Click);
+            // 
+            // shortcutRemoveButton
+            // 
+            this.shortcutRemoveButton.BackColor = System.Drawing.Color.Transparent;
+            this.shortcutRemoveButton.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.shortcutremove_button_disabled;
+            this.shortcutRemoveButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.shortcutRemoveButton.Enabled = false;
+            this.shortcutRemoveButton.FlatAppearance.BorderSize = 0;
+            this.shortcutRemoveButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent;
+            this.shortcutRemoveButton.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent;
+            this.shortcutRemoveButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.shortcutRemoveButton.Location = new System.Drawing.Point(177, 28);
+            this.shortcutRemoveButton.Name = "shortcutRemoveButton";
+            this.shortcutRemoveButton.Size = new System.Drawing.Size(152, 48);
+            this.shortcutRemoveButton.TabIndex = 9;
+            this.shortcutRemoveButton.UseVisualStyleBackColor = false;
+            this.shortcutRemoveButton.EnabledChanged += new System.EventHandler(this.shortcutRemoveButton_EnabledChanged);
+            this.shortcutRemoveButton.Click += new System.EventHandler(this.shortcutRemoveButton_Click);
+            // 
+            // shortcutListLabel
+            // 
+            this.shortcutListLabel.AutoSize = true;
+            this.shortcutListLabel.BackColor = System.Drawing.Color.Transparent;
+            this.shortcutListLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.shortcutListLabel.Location = new System.Drawing.Point(10, 85);
+            this.shortcutListLabel.Name = "shortcutListLabel";
+            this.shortcutListLabel.Size = new System.Drawing.Size(120, 13);
+            this.shortcutListLabel.TabIndex = 37;
+            this.shortcutListLabel.Text = "Configured shortcuts:";
+            this.shortcutListLabel.BackColor = System.Drawing.Color.Transparent;
+            // 
+            // shortcutListBox
+            // 
+            this.shortcutListBox.BackColor = System.Drawing.SystemColors.Window;
+            this.shortcutListBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
+            this.shortcutListBox.FormattingEnabled = true;
+            this.shortcutListBox.HorizontalScrollbar = true;
+            this.shortcutListBox.Location = new System.Drawing.Point(13, 101);
+            this.shortcutListBox.Name = "shortcutListBox";
+            this.shortcutListBox.Size = new System.Drawing.Size(540, 82);
+            this.shortcutListBox.TabIndex = 38;
+            this.shortcutListBox.SelectedIndexChanged += new System.EventHandler(this.shortcutListBox_SelectedIndexChanged);
+            // 
+            // panel2
+            // 
+            this.panel2.BackColor = System.Drawing.Color.Transparent;
+            this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel2.Controls.Add(this.shortcutListBox);
+            this.panel2.Controls.Add(this.shortcutListLabel);
+            this.panel2.Controls.Add(this.setFastlauncherLinkLabel);
+            this.panel2.Controls.Add(this.shortcutRemoveButton);
+            this.panel2.Controls.Add(this.shortcutAddButton);
+            this.panel2.Location = new System.Drawing.Point(12, 108);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(570, 195);
+            this.panel2.TabIndex = 41;
+            // 
+            // LauncherForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackgroundImage = global::PriconneReALLTLInstaller.Properties.Resources.bg2;
+            this.ClientSize = new System.Drawing.Size(640, 315);
+            this.ControlBox = false;
+            this.Controls.Add(this.panel2);
+            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.backButton);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;   // custom-chrome (no OS title bar). NOT FixedSingle: with a non-empty this.Text it shows the caption — the v3.0.6 blue-bar regression.
+            this.Name = "LauncherForm";
+            this.Text = "Priconne Re:ALLTL Installer - Launch Shortcuts";   // #45: window caption
+            this.Load += new System.EventHandler(this.FastLauncherForm_Load);
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
+            this.ResumeLayout(false);
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Button backButton;
+        private System.Windows.Forms.Label setLauncherLabel;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.ComboBox launcherComboBox;
+        private System.Windows.Forms.Label setFastlauncherLinkLabel;
+        private System.Windows.Forms.Label dmmfastlauncherLabel;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Button shortcutAddButton;
+        private System.Windows.Forms.Button shortcutRemoveButton;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.ListBox shortcutListBox;
+        private System.Windows.Forms.Label shortcutListLabel;
+    }
+}

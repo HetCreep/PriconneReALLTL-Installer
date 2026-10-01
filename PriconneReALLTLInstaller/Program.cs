@@ -1,0 +1,112 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace PriconneReALLTLInstaller
+{
+    internal static class Program
+    {
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void Main(string[] args)
+        {
+            // Single-exe: Newtonsoft.Json is embedded as a resource (see the .csproj EmbeddedResource)
+            // and resolved from there, so the installer runs without a loose Newtonsoft.Json.dll
+            // sitting next to the exe. Registered before any Newtonsoft type is touched.
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveEmbeddedAssembly;
+
+            // user.config lives in a per-assembly-version folder, so after an update every entry point must
+            // migrate the previous version's settings BEFORE reading any — not just the main window. Otherwise a
+            // wrapped-shortcut `autoupdate` run (or the uninstaller's --unwrap-all) started before the UI was ever
+            // opened would read empty defaults: no game path, source 0 (EN), no token, no wrapped-shortcut list.
+            try { MigrateSettings(); }
+            catch (Exception) when (args.Length > 0 && args[0] == "--unwrap-all") { return; }   // uninstall step: an unreadable user.config must not pop an error dialog (nothing to unwrap without it)
+
+            // #52/#8: headless un-wrap of every managed shortcut, invoked by the Inno uninstaller
+            // (--unwrap-all) BEFORE the exe is deleted, so wrapped .lnks don't end up pointing at a
+            // removed installer exe. No UI; exits immediately.
+            if (args.Length > 0 && args[0] == "--unwrap-all")
+            {
+                try { new HelperFunctions.Helper().UnwrapAllManagedShortcuts(); } catch { }
+                return;
+            }
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            if (args.Length > 0 && args[0] == "autoupdate")
+            {
+                // A wrapped/created AutoUpdate shortcut may encode the launch target to run
+                // after the patch update completes (base64 so paths/args need no quoting):
+                //   --launch <b64 exe-or-lnk> [--targs <b64 args>] [--tdir <b64 workingdir>]
+                // No --launch (or --dmm) => launch via the DMM Game Player URI (also fallback).
+                string target = DecodeArg(args, "--launch");
+                string targetArgs = DecodeArg(args, "--targs");
+                string targetDir = DecodeArg(args, "--tdir");
+                Application.Run(new AutoUpdateForm(target, targetArgs, targetDir));
+            }
+            else
+            {
+                // #38: hold a named mutex while the main UI runs so the Inno installer/uninstaller
+                // (AppMutex=PriconneReALLTLInstaller) can detect a running instance and offer to close it,
+                // instead of failing to replace/remove the locked exe ("some elements could not be
+                // removed"). Session-local name matches the per-user Setup's AppMutex.
+                using (new System.Threading.Mutex(false, "PriconneReALLTLInstaller"))
+                {
+                    Application.Run(new MainForm());
+                }
+            }
+        }
+
+        private static void MigrateSettings()
+        {
+            Version currentVersion = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
+
+            // Fresh installs have an empty LastKnownVersion; new Version("") would throw. Fall back to
+            // 0.0.0.0 so the upgrade check runs instead of crashing.
+            if (!Version.TryParse(Properties.Settings.Default.LastKnownVersion, out Version lastKnownVersion))
+                lastKnownVersion = new Version(0, 0, 0, 0);
+
+            if (currentVersion > lastKnownVersion)
+            {
+                Properties.Settings.Default.Upgrade();
+                Properties.Settings.Default.LastKnownVersion = currentVersion.ToString();
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        // Loads an embedded assembly (e.g. Newtonsoft.Json.dll) from the exe's resources when the
+        // runtime can't find it on disk. Returns null for anything not embedded so normal probing continues.
+        private static System.Reflection.Assembly ResolveEmbeddedAssembly(object sender, ResolveEventArgs eventArgs)
+        {
+            string wanted = new System.Reflection.AssemblyName(eventArgs.Name).Name + ".dll";
+            System.Reflection.Assembly self = System.Reflection.Assembly.GetExecutingAssembly();
+            string resource = self.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith(wanted, StringComparison.OrdinalIgnoreCase));
+            if (resource == null) return null;
+            using (System.IO.Stream stream = self.GetManifestResourceStream(resource))
+            {
+                if (stream == null) return null;
+                byte[] bytes = new byte[stream.Length];
+                stream.Read(bytes, 0, bytes.Length);
+                return System.Reflection.Assembly.Load(bytes);
+            }
+        }
+
+        private static string DecodeArg(string[] args, string flag)
+        {
+            for (int i = 0; i < args.Length - 1; i++)
+            {
+                if (args[i] == flag)
+                {
+                    try { return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(args[i + 1])); }
+                    catch { return null; }
+                }
+            }
+            return null;
+        }
+    }
+}
