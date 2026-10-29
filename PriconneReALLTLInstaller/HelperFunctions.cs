@@ -498,6 +498,20 @@ namespace HelperFunctions
             return result;
         }
 
+        // An ignore pattern is a RELATIVE path under the game folder: no rooted/UNC/drive prefix, no ':' (drive or
+        // alternate data stream), no '..' segment. Settings can come from an imported XML file, so every consumer
+        // checks this before the pattern touches the filesystem or a regex (a UNC prefix makes Directory.Exists
+        // start an SMB/NTLM exchange; '..' can alias another language's folder past the active-language guard).
+        public static bool IsSafeIgnorePattern(string pat)
+        {
+            if (string.IsNullOrWhiteSpace(pat)) return false;
+            string g = pat.Replace('\\', '/');
+            if (g.StartsWith("/") || g.IndexOf(':') >= 0 || g.IndexOfAny(Path.GetInvalidPathChars()) >= 0) return false;
+            foreach (string seg in g.Split('/'))
+                if (seg == "..") return false;
+            return true;
+        }
+
         // True if relPath matches any ignore pattern. A pattern may use '*' = exactly one path segment
         // (BepInEx/Translation/*/Text/_Postprocessors.txt → matches en, th, …). Patterns without '*'
         // match exactly (e.g. the config files). Case-insensitive; '/'-normalised.
@@ -507,8 +521,9 @@ namespace HelperFunctions
             string p = relPath.Replace('\\', '/');
             foreach (string pat in patterns)
             {
-                if (string.IsNullOrEmpty(pat)) continue;
+                if (!IsSafeIgnorePattern(pat)) continue;   // a stored/imported pattern is untrusted input
                 string g = pat.Replace('\\', '/');
+                g = System.Text.RegularExpressions.Regex.Replace(g, @"\*+", "*");   // "**" means the same as "*": adjacent stars would otherwise stack overlapping [^/]+ and backtrack catastrophically
                 if (g.IndexOf('*') < 0)
                 {
                     if (string.Equals(g, p, System.StringComparison.OrdinalIgnoreCase)) return true;
@@ -516,7 +531,8 @@ namespace HelperFunctions
                 else
                 {
                     string rx = "^" + System.Text.RegularExpressions.Regex.Escape(g).Replace("\\*", "[^/]+") + "$";
-                    if (System.Text.RegularExpressions.Regex.IsMatch(p, rx, System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return true;
+                    try { if (System.Text.RegularExpressions.Regex.IsMatch(p, rx, System.Text.RegularExpressions.RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250))) return true; }
+                    catch (System.Text.RegularExpressions.RegexMatchTimeoutException) { /* bounded: treat as no match rather than stall the operation */ }
                 }
             }
             return false;
@@ -1557,7 +1573,14 @@ namespace HelperFunctions
 
                     // Apply only the portable preferences.
                     Settings.Default.launchState = importedSettings.launchState;
-                    Settings.Default.ignoreFiles = importedSettings.ignoreFiles ?? new System.Collections.Specialized.StringCollection();   // null if the <ignoreFiles> element was absent
+                    // Keep only safe relative patterns - the file is untrusted (see IsSafeIgnorePattern).
+                    var safeIgnore = new System.Collections.Specialized.StringCollection();   // empty if the <ignoreFiles> element was absent
+                    int droppedIgnore = 0;
+                    if (importedSettings.ignoreFiles != null)
+                        foreach (string pat in importedSettings.ignoreFiles)
+                            if (IsSafeIgnorePattern(pat)) safeIgnore.Add(pat); else droppedIgnore++;
+                    if (droppedIgnore > 0) Log?.Invoke($"Skipped {droppedIgnore} unsafe ignore entr{(droppedIgnore == 1 ? "y" : "ies")} from the imported file (absolute, network or '..' paths are not allowed).", "info", false);
+                    Settings.Default.ignoreFiles = safeIgnore;
                     Settings.Default.selectedPatchSource = importedSettings.selectedPatchSource;
                     Settings.Default.checkForInstallerUpdates = importedSettings.checkForInstallerUpdates;
                     Settings.Default.showLogChecked = importedSettings.showLogChecked;

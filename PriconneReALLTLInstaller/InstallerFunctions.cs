@@ -1391,7 +1391,7 @@ namespace InstallerFunctions
         private System.Collections.Generic.List<string> ExpandIgnoreGlob(string pattern)
         {
             var result = new System.Collections.Generic.List<string>();
-            if (string.IsNullOrEmpty(pattern)) return result;
+            if (!Helper.IsSafeIgnorePattern(pattern)) return result;   // before ANY filesystem probe: a UNC prefix would make Directory.Exists contact that host
             string norm = pattern.Replace('\\', '/');
             int star = norm.IndexOf('*');
             if (star < 0) { result.Add(norm); return result; }                       // exact (config files etc.)
@@ -1432,16 +1432,18 @@ namespace InstallerFunctions
                 {
                     foreach (string rel in ExpandIgnoreGlob(entry == null ? "" : entry.ToString()))   // glob (e.g. */) -> actual files
                     {
-                        string relNorm = rel.Replace('\\', '/');
-                        // #10: skip ANOTHER language's ignored data — only remove the active source's language
-                        if (activeLangPrefix != null
-                            && relNorm.StartsWith("BepInEx/Translation/", StringComparison.OrdinalIgnoreCase)
-                            && !relNorm.StartsWith(activeLangPrefix, StringComparison.OrdinalIgnoreCase))
-                            continue;
                         string fullPath = Path.Combine(priconnePath, rel.Replace('/', Path.DirectorySeparatorChar));
                         string full;
                         try { full = Path.GetFullPath(fullPath); } catch { continue; }
                         if (!full.StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase)) continue;
+                        // #10: skip ANOTHER language's ignored data — only remove the active source's language.
+                        // Decided on the CANONICAL path (after GetFullPath resolved any '.' or '..' alias), never on
+                        // the raw entry, so an alias cannot name one language and delete another.
+                        string relNorm = full.Substring(gameRoot.Length).Replace('\\', '/');
+                        if (activeLangPrefix != null
+                            && relNorm.StartsWith("BepInEx/Translation/", StringComparison.OrdinalIgnoreCase)
+                            && !relNorm.StartsWith(activeLangPrefix, StringComparison.OrdinalIgnoreCase))
+                            continue;
                         if (File.Exists(full))
                         {
                             File.Delete(full);
