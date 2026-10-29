@@ -4,7 +4,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.8...HEAD)
+## [Unreleased](https://github.com/HetCreep/PriconneReALLTL-Installer/compare/v3.1.9...HEAD)
+
+_Nothing yet._
+
+## [3.1.9](https://github.com/HetCreep/PriconneReALLTL-Installer/releases/tag/v3.1.9) — 2026-10-29
+
+Security hardening from a CodeRabbit Deep Scan; every finding was verified against the code first.
 
 ### Security
 - **Imported ignore patterns are now validated.** A settings file (Settings -> Import) is untrusted input and its ignore entries reach the filesystem and a regex. Three findings from a CodeRabbit Deep Scan, all from this one gap: (1) a UNC pattern such as `\\host\share\*\x` made the glob expansion call `Directory.Exists` on it, starting an SMB/NTLM exchange with an attacker host; (2) a `..` entry could alias another language's folder past the active-language guard and delete that language's user-edited file; (3) a pattern with many adjacent `*` stacked overlapping regex repetitions and could stall an install by catastrophic backtracking. Now only relative patterns without a drive/UNC/rooted prefix, `:` or `..` are accepted at import (dropped ones are logged) and again at every use; adjacent `*` collapse to one and the match has a 250 ms bound; the active-language check runs on the canonical path.

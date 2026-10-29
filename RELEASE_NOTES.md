@@ -1,16 +1,11 @@
-**PriconneReALLTL Installer v3.1.8** — small follow-up fixes from the CodeRabbit review of the v3.1.7 code. Nothing here changes how you install or update; one is a window-freeze fix for when GitHub is unreachable.
-
-## Fixed
-
-- **A GitHub-token check that could not complete no longer blocks the window over and over.** When GitHub was unreachable or rate-limited, the check was retried on the window's own thread right after the background check had already failed the same way. A failed check is now remembered for 60 seconds. The **Validate** button in the token window always re-checks.
+**PriconneReALLTL Installer v3.1.9** — security hardening from a CodeRabbit Deep Scan of the whole repository. Three findings, one root cause: the ignore-file list in a settings file you **Import** is untrusted, but its entries reached the filesystem and a regex unchecked. Low severity (it needs you to import a file someone crafted), but worth updating.
 
 ## Security
 
-- Release workflow: pre-release tags (`v1.2.3-rc.1`) are rejected for now. The newest-tag guard cannot order them and the create step would not mark them as pre-releases, so one would have been published as "latest" and stripped the stable release's binaries. Plain `vX.Y.Z` tags only.
-
-## CI
-
-- The PR build check declares its read-only token at job level.
+- **Imported ignore patterns are now validated.** Only relative patterns are accepted: anything rooted, a network (UNC) path, a drive or `:` (alternate data stream), or a `..` segment is refused at import (the skipped entries are logged) and again at every use, so a list saved by an older version is covered too.
+  - A network pattern could make the installer probe that path while expanding wildcards, which starts a Windows network-authentication exchange with the host named in it. Nothing is contacted now.
+  - A `..` entry could name one language folder while resolving to another, slipping past the "only remove the active language" guard and deleting that other language's user-edited file. The guard now runs on the resolved path.
+  - A pattern with many adjacent `*` could stall an install by catastrophic regex backtracking. Adjacent `*` now count as one, and a match is bounded to 250 ms.
 
 <!-- NOTE: do NOT add a "## Verification" section here — release.yml auto-appends one with the
      build-computed SHA-256 hashes + the Authenticode note. A manual one here duplicates it. -->
@@ -22,9 +17,8 @@
 
 ## Upgrade Notes
 
-- Drop-in over v3.1.7 — settings, token, and your installed patch are unaffected.
+- Drop-in over v3.1.8 — settings, token, and your installed patch are unaffected. The default ignore entries (the three `_Postprocessors` / `_Preprocessors` / `_Substitutions` rule files) and any ordinary relative entry you added keep working; an entry that was absolute or contained `..` is now ignored.
 
 ## Known Issues
 
 - A Vietnamese install shows the game's images untranslated (Japanese) — the English image pack lives under the `en` language folder and does not load under `Language=vi`. Text is fully translated; image support is a possible future enhancement.
-- With a saved token and no network, the very first token check can still pause the window once (until the request times out); it is no longer repeated.
